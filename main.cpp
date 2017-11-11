@@ -8,6 +8,7 @@ int main(int argc, char *argv[])
     // the LC_NUMERIC category to be set to "C", so change it back.
     setlocale(LC_NUMERIC, "C");
     MainWindow w;
+    w.setWindowTitle("QLivePlayer");
     w.show();
     return a.exec();
 }

@@ -3,6 +3,10 @@
 
 #include <QtWidgets/QWidget>
 #include <QLabel>
+#include <QProcess>
+#include <QString>
+#include <QApplication>
+#include <QStringList>
 
 class MpvWidget;
 class QSlider;
@@ -24,6 +28,7 @@ private:
     QPushButton *m_openBtn;
     QPushButton *m_playBtn;
     QLabel* mLabel;
+    QProcess* mProcess;
 };
 
 #endif // MainWindow_H

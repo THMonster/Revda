@@ -25,8 +25,10 @@ def write_temp_danmaku():
     timer = threading.Timer(2, write_temp_danmaku)
     timer.start()
 
-dmc = DanMuClient('http://www.douyu.com/58428')
-if not dmc.isValid(): print('Url not valid')
+dmc = DanMuClient(sys.argv[1])
+if not dmc.isValid(): 
+    print('Url not valid')
+    sys.exit()
 
 @dmc.danmu
 def danmu_fn(msg):

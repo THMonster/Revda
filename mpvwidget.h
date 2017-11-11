@@ -31,7 +31,7 @@ public:
     void command(const QVariant& params);
     void setProperty(const QString& name, const QVariant& value);
     QVariant getProperty(const QString& name) const;
-    QSize sizeHint() const { return QSize(480, 270);}
+    QSize sizeHint() const { return QSize(1280, 720);}
 
     void addNewDanmaku(QString danmaku);
     void initDanmaku();

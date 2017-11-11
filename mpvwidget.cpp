@@ -124,7 +124,7 @@ void MpvWidget::launchDanmaku()
         QLabel* danmaku;
         danmaku = new QLabel(this);
         QPalette mPalette;
-        mPalette.setColor(QPalette::WindowText,Qt::gray);
+        mPalette.setColor(QPalette::WindowText,Qt::white);
         danmaku->setPalette(mPalette);
         danmakuPool[readDanmakuIndex].remove(0, 1);
         danmaku->setText(danmakuPool[readDanmakuIndex]);
