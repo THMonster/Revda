@@ -109,29 +109,24 @@ void MpvWidget::initLoadDanmakuTimer()
 {
     loadDanmakuTimer = new QTimer(this);
     connect(loadDanmakuTimer, &QTimer::timeout, this, &MpvWidget::loadDanmaku);
-    loadDanmakuTimer->start(500);
+    loadDanmakuTimer->start(1500);
 }
 
 void MpvWidget::launchDanmaku()
 {
     if((danmakuPool[readDanmakuIndex] != "NULL") && (danmakuPool[readDanmakuIndex].at(0) != "1"))
     {
-//        qDebug() << "launch";
-
-        int danmakuPos = ((qrand()%10) * (this->height() / 10));
+        int danmakuPos = getAvailDanmakuChannel() * (this->height() / 16);
         int danmakuSpeed = this->width() * 11;
 
         QLabel* danmaku;
         danmaku = new QLabel(this);
-        QPalette mPalette;
-        mPalette.setColor(QPalette::WindowText,Qt::white);
-        danmaku->setPalette(mPalette);
         danmakuPool[readDanmakuIndex].remove(0, 1);
         danmaku->setText(danmakuPool[readDanmakuIndex]);
         danmakuPool[readDanmakuIndex++].insert(0, "1");
         readDanmakuIndex = readDanmakuIndex % 20;
 
-        danmaku->setFont(QFont("思源黑体 CN", 12, QFont::Bold));
+        danmaku->setStyleSheet("color: white; font-size: 18px; font-weight: bold");
         QPropertyAnimation* mAnimation=new QPropertyAnimation(danmaku, "pos");
         mAnimation->setStartValue(QPoint(-80, danmakuPos));
         mAnimation->setEndValue(QPoint(this->width(), danmakuPos));
@@ -141,7 +136,8 @@ void MpvWidget::launchDanmaku()
         mAnimation->start();
 
         connect(mAnimation, &QPropertyAnimation::finished, danmaku, &QLabel::deleteLater);
-    }else
+    }
+    else
     {
         readDanmakuIndex++;
         readDanmakuIndex = readDanmakuIndex % 20;
@@ -166,6 +162,32 @@ void MpvWidget::loadDanmaku()
             }
         }
         file.close();
+    }
+}
+
+int MpvWidget::getAvailDanmakuChannel()
+{
+    int flag = 0;
+    int count = 16;
+    int channel = 0;
+    while(flag == 0 && count != 0)
+    {
+        channel = qrand() % 16;
+        if(((quint32)pow(2, channel) & danmakuChannelMask) != 0)
+        {
+            danmakuChannelMask = danmakuChannelMask & ~(quint32)pow(2, channel);
+            flag = 1;
+        }
+        count--;
+    }
+    if(count == 0)
+    {
+        danmakuChannelMask = 0x0000FFFF;
+        return getAvailDanmakuChannel();
+    }
+    else
+    {
+        return channel;
     }
 }
 

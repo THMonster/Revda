@@ -21,6 +21,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QIODevice>
+#include <cmath>
 
 class MpvWidget Q_DECL_FINAL: public QOpenGLWidget
 {
@@ -39,6 +40,7 @@ public:
     void initLoadDanmakuTimer();
     void launchDanmaku();
     void loadDanmaku();
+    int getAvailDanmakuChannel();
 
 
 Q_SIGNALS:
@@ -61,6 +63,7 @@ private:
     QTimer* danmakuDensityTimer;
     QTimer* loadDanmakuTimer;
     QString timeStamp;
+    quint32 danmakuChannelMask = 0x0000FFFF;
 
     mpv::qt::Handle mpv;
     mpv_opengl_cb_context *mpv_gl;

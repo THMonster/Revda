@@ -35,6 +35,12 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     mProcess->start("/home/midorikawa/src/QLivePlayer/danmu-client.py " + arguments[1]);
 }
 
+MainWindow::~MainWindow()
+{
+    QProcess rm(this);
+    rm.execute("rm /tmp/danmaku.temp");
+}
+
 void MainWindow::openMedia()
 {
     QString file = QFileDialog::getOpenFileName(0, "Open a video");
