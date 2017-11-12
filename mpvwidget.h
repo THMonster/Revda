@@ -39,7 +39,6 @@ public:
     void initDensityTimer();
     void initLoadDanmakuTimer();
     void launchDanmaku();
-    void loadDanmaku();
     int getAvailDanmakuChannel();
 
 
@@ -61,7 +60,6 @@ private:
     int readDanmakuIndex;
     int writeDanmakuIndex;
     QTimer* danmakuDensityTimer;
-    QTimer* loadDanmakuTimer;
     QString timeStamp;
     quint32 danmakuChannelMask = 0x0000FFFF;
 

@@ -47,7 +47,6 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
     mpv_set_wakeup_callback(mpv, wakeup, this);
 
     initDanmaku();
-    initLoadDanmakuTimer();
     initDensityTimer();
 }
 
@@ -105,13 +104,6 @@ void MpvWidget::initDensityTimer()
     danmakuDensityTimer->start(100);
 }
 
-void MpvWidget::initLoadDanmakuTimer()
-{
-    loadDanmakuTimer = new QTimer(this);
-    connect(loadDanmakuTimer, &QTimer::timeout, this, &MpvWidget::loadDanmaku);
-    loadDanmakuTimer->start(1500);
-}
-
 void MpvWidget::launchDanmaku()
 {
     if((danmakuPool[readDanmakuIndex] != "NULL") && (danmakuPool[readDanmakuIndex].at(0) != "1"))
@@ -128,8 +120,8 @@ void MpvWidget::launchDanmaku()
 
         danmaku->setStyleSheet("color: white; font-size: 18px; font-weight: bold");
         QPropertyAnimation* mAnimation=new QPropertyAnimation(danmaku, "pos");
-        mAnimation->setStartValue(QPoint(-80, danmakuPos));
-        mAnimation->setEndValue(QPoint(this->width(), danmakuPos));
+        mAnimation->setStartValue(QPoint(this->width(), danmakuPos));
+        mAnimation->setEndValue(QPoint(-500, danmakuPos));
         mAnimation->setDuration(danmakuSpeed);
         mAnimation->setEasingCurve(QEasingCurve::Linear);
         danmaku->show();
@@ -145,25 +137,6 @@ void MpvWidget::launchDanmaku()
     }
 }
 
-void MpvWidget::loadDanmaku()
-{
-//    qDebug() << "load";
-    QFile file("/tmp/danmaku.temp");
-    if(file.open(QIODevice::ReadOnly | QIODevice::Text))
-    {
-        QTextStream in(&file);
-        QString newTimeStamp(in.readLine());
-        if(timeStamp != newTimeStamp)
-        {
-            timeStamp = newTimeStamp;
-            while(!in.atEnd())
-            {
-                addNewDanmaku(in.readLine());
-            }
-        }
-        file.close();
-    }
-}
 
 int MpvWidget::getAvailDanmakuChannel()
 {

@@ -32,13 +32,14 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 
     QStringList arguments = QCoreApplication::arguments();
     mProcess = new QProcess(this);
+    connect(mProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readDanmaku);
     mProcess->start("/home/midorikawa/src/QLivePlayer/danmu-client.py " + arguments[1]);
+
 }
 
 MainWindow::~MainWindow()
 {
-    QProcess rm(this);
-    rm.execute("rm /tmp/danmaku.temp");
+    mProcess->deleteLater();
 }
 
 void MainWindow::openMedia()
@@ -59,6 +60,13 @@ void MainWindow::pauseResume()
 {
     const bool paused = m_mpv->getProperty("pause").toBool();
     m_mpv->setProperty("pause", !paused);
+}
+
+void MainWindow::readDanmaku()
+{
+    QString newDanmaku(mProcess->readLine());
+    qDebug() << newDanmaku;
+    m_mpv->addNewDanmaku(newDanmaku);
 }
 
 void MainWindow::setSliderRange(int duration)

@@ -4,26 +4,11 @@ import threading
 
 from danmu import DanMuClient
 
-danmaku_temp = str((time.time())) + '\n'
 
 def pp(msg):
-    print(msg.encode(sys.stdin.encoding, 'ignore').
-        decode(sys.stdin.encoding))
+    print(msg)
+    sys.stdout.flush()
 
-def append_danmaku(danmaku):
-    global danmaku_temp
-    #print(danmaku)
-    danmaku_temp += danmaku + '\n'
-
-def write_temp_danmaku():
-    global danmaku_temp
-    f = open('/tmp/danmaku.temp', 'w')
-    f.write(danmaku_temp)
-    f.close()
-    danmaku_temp = str((time.time())) + '\n'
-    global timer
-    timer = threading.Timer(2, write_temp_danmaku)
-    timer.start()
 
 dmc = DanMuClient(sys.argv[1])
 if not dmc.isValid(): 
@@ -32,9 +17,6 @@ if not dmc.isValid():
 
 @dmc.danmu
 def danmu_fn(msg):
-    append_danmaku('%s' % (msg['Content']))
-    #pp('%s' % (msg['Content']))
+    pp('[%s] %s' % (msg['NickName'], msg['Content']))
 
-timer = threading.Timer(2, write_temp_danmaku)
-timer.start()
 dmc.start(blockThread = True)

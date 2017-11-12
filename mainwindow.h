@@ -17,10 +17,14 @@ class MainWindow : public QWidget
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
 public Q_SLOTS:
     void openMedia();
     void seek(int pos);
     void pauseResume();
+
+    void readDanmaku();
+
 private Q_SLOTS:
     void setSliderRange(int duration);
 private:
