@@ -31,8 +31,6 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 //    connect(m_mpv, SIGNAL(positionChanged(int)), m_slider, SLOT(setValue(int)));
 //    connect(m_mpv, SIGNAL(durationChanged(int)), this, SLOT(setSliderRange(int)));
 
-//    QString dmcPy("exec(\"\"\"\\\nimport time, sys\\\nimport threading\\\nfrom danmu import DanMuClient\\\ndef pp(msg):\\\n    print(msg)\\\n    sys.stdout.flush()\\\ndmc = DanMuClient(sys.argv[1])\\\nif not dmc.isValid(): \\\n    print('Url not valid')\\\n    sys.exit()\\\n@dmc.danmu\\\ndef danmu_fn(msg):\\\n    pp('[%s] %s' % (msg['NickName'], msg['Content']))\\\ndmc.start(blockThread = True)\\\n\"\"\")");
-
     QStringList arguments = QCoreApplication::arguments();
     QStringList dmcPy;
     dmcPy.append("-c");
@@ -40,9 +38,6 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     dmcPy.append(arguments[1]);
     mProcess = new QProcess(this);
     connect(mProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readDanmaku);
-//    mProcess->start("/home/midorikawa/src/QLivePlayer/danmu-client.py " + arguments[1]);
-//    mProcess->start("/bin/python -c \"exec(\\\"\\\"\\\"\\\\nimport time, sys\\\\nimport threading\\\\nfrom danmu import DanMuClient\\\\ndef pp(msg):\\\\n    print(msg)\\\\n    sys.stdout.flush()\\\\ndmc = DanMuClient(sys.argv[1])\\\\nif not dmc.isValid(): \\\\n    print('Url not valid')\\\\n    sys.exit()\\\\n@dmc.danmu\\\\ndef danmu_fn(msg):\\\\n    pp('[%s] %s' % (msg['NickName'], msg['Content']))\\\\ndmc.start(blockThread = True)\\\\n\\\"\\\"\\\")\" " + arguments[1]);
-//    mProcess->start("python -c \"print('hgasdfsdfsdf\\nsdfsdfasdfsdf\\nsdfasdf')\nsys.stdout.flush\"");
     mProcess->start("python", dmcPy);
 }
 
