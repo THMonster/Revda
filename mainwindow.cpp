@@ -68,9 +68,12 @@ void MainWindow::pauseResume()
 
 void MainWindow::readDanmaku()
 {
-    QString newDanmaku(mProcess->readLine());
-    qDebug() << newDanmaku;
-    m_mpv->addNewDanmaku(newDanmaku.remove(QRegExp("^\\[.*\\] ")));
+    while(!mProcess->atEnd())
+    {
+        QString newDanmaku(mProcess->readLine());
+        qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")) + "                                                                    ";
+        m_mpv->addNewDanmaku(newDanmaku.remove(QRegExp("^\\[.*\\] ")));
+    }
 }
 
 void MainWindow::setSliderRange(int duration)
