@@ -7,6 +7,7 @@
 #include <QString>
 #include <QApplication>
 #include <QStringList>
+#include <QRegExp>
 
 class MpvWidget;
 class QSlider;
