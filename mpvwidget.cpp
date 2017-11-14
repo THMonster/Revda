@@ -26,7 +26,7 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
         throw std::runtime_error("could not create mpv context");
 
     mpv_set_option_string(mpv, "terminal", "yes");
-    mpv_set_option_string(mpv, "msg-level", "all=v");
+//    mpv_set_option_string(mpv, "msg-level", "all=v");
     if (mpv_initialize(mpv) < 0)
         throw std::runtime_error("could not initialize mpv context");
 
@@ -163,55 +163,39 @@ DanmakuPlayer::DanmakuPlayer(QWidget *parent, Qt::WindowFlags f) : MpvWidget(par
 {
     setFocusPolicy(Qt::StrongFocus);
     initDanmaku();
-    initDensityTimer();
+
 }
 
 DanmakuPlayer::~DanmakuPlayer()
 {
-    danmakuDensityTimer->deleteLater();
+
 }
 
-void DanmakuPlayer::addNewDanmaku(QString danmaku)
-{
-    danmakuPool[writeDanmakuIndex++] = "0" + danmaku; //0为未读
-    writeDanmakuIndex = writeDanmakuIndex % 20;
-}
+
 
 void DanmakuPlayer::initDanmaku()
 {
-    writeDanmakuIndex = 0;
-    readDanmakuIndex = 0;
-    danmakuPool.clear();
-    int i;
-    for(i = 0; i < 20; i++)
-    {
-        danmakuPool << "NULL";
-    }
+
 }
 
-void DanmakuPlayer::initDensityTimer()
+bool DanmakuPlayer::isDanmakuVisible()
 {
-    danmakuDensityTimer = new QTimer(this);
-    connect(danmakuDensityTimer, &QTimer::timeout, this, &DanmakuPlayer::launchDanmaku);
-    danmakuDensityTimer->start(100);
+    return danmakuShowFlag;
 }
 
-void DanmakuPlayer::launchDanmaku()
+
+
+void DanmakuPlayer::launchDanmaku(QString danmakuText)
 {
-    if((danmakuPool[readDanmakuIndex] != "NULL") && (danmakuPool[readDanmakuIndex].at(0) != "1"))
-    {
         int danmakuPos = getAvailDanmakuChannel() * (this->height() / 16);
         int danmakuSpeed = this->width() * 11;
 
         QLabel* danmaku;
         danmaku = new QLabel(this);
 
-        danmakuPool[readDanmakuIndex].remove(0, 1);
-        danmaku->setText(danmakuPool[readDanmakuIndex]);
-        danmakuPool[readDanmakuIndex++].insert(0, "1");
+        danmaku->setText(danmakuText);
 
-        readDanmakuIndex = readDanmakuIndex % 20;
-        danmaku->setStyleSheet("color: white; font-size: 18px; font-weight: bold");
+        danmaku->setStyleSheet("color: #FFFFFF; font-size: 18px; font-weight: bold");
 
         QGraphicsDropShadowEffect *danmakuTextShadowEffect = new QGraphicsDropShadowEffect(this);
         danmakuTextShadowEffect->setColor(QColor("#000000"));
@@ -229,13 +213,6 @@ void DanmakuPlayer::launchDanmaku()
 
         connect(this, &DanmakuPlayer::closeDanmaku, danmaku, &QLabel::close);
         connect(mAnimation, &QPropertyAnimation::finished, danmaku, &QLabel::deleteLater);
-    }
-    else
-    {
-        readDanmakuIndex++;
-        readDanmakuIndex = readDanmakuIndex % 20;
-        return;
-    }
 }
 
 
@@ -271,11 +248,10 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
     case Qt::Key_D:
         danmakuShowFlag = !danmakuShowFlag;
         if(danmakuShowFlag == false) {
-            danmakuDensityTimer->stop();
             Q_EMIT closeDanmaku();
+
         }else {
             initDanmaku();
-            danmakuDensityTimer->start(100);
         }
         break;
     default:

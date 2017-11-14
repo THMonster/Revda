@@ -73,8 +73,9 @@ void MainWindow::readDanmaku()
     while(!mProcess->atEnd())
     {
         QString newDanmaku(mProcess->readLine());
-        qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")) + "                                                                    ";
-        danmakuPlayer->addNewDanmaku(newDanmaku.remove(QRegExp("^\\[.*\\] ")));
+        qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(55, ' ');
+        if(danmakuPlayer->isDanmakuVisible())
+            danmakuPlayer->launchDanmaku(newDanmaku.remove(QRegExp("^\\[.*\\] ")));
     }
 }
 

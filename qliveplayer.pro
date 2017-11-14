@@ -8,8 +8,6 @@ PKGCONFIG += mpv
 HEADERS = \
     mpvwidget.h \
     mainwindow.h
-#    danmakuplayer.h
 SOURCES = main.cpp \
     mpvwidget.cpp \
     mainwindow.cpp
-#    danmakuplayer.cpp

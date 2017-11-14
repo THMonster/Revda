@@ -61,10 +61,10 @@ class DanmakuPlayer : public MpvWidget
 public:
     DanmakuPlayer(QWidget *parent = 0, Qt::WindowFlags f = 0);
     ~DanmakuPlayer();
-    void addNewDanmaku(QString danmaku);
+
     void initDanmaku();
-    void initDensityTimer();
-    void launchDanmaku();
+    bool isDanmakuVisible();
+    void launchDanmaku(QString danmakuText);
     int getAvailDanmakuChannel();
 
 protected:
@@ -74,10 +74,7 @@ signals:
     void closeDanmaku();
 
 private:
-    QStringList danmakuPool;
-    int readDanmakuIndex;
-    int writeDanmakuIndex;
-    QTimer* danmakuDensityTimer;
+
     quint32 danmakuChannelMask = 0x0000FFFF;
     bool danmakuShowFlag = true;
 };
