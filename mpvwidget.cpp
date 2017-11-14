@@ -46,8 +46,6 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
     mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
     mpv_set_wakeup_callback(mpv, wakeup, this);
 
-    initDanmaku();
-    initDensityTimer();
 }
 
 
@@ -78,91 +76,6 @@ QVariant MpvWidget::getProperty(const QString &name) const
     return mpv::qt::get_property_variant(mpv, name);
 }
 
-void MpvWidget::addNewDanmaku(QString danmaku)
-{
-    danmakuPool[writeDanmakuIndex++] = "0" + danmaku; //0为未读
-    writeDanmakuIndex = writeDanmakuIndex % 20;
-}
-
-void MpvWidget::initDanmaku()
-{
-    writeDanmakuIndex = 0;
-    readDanmakuIndex = 0;
-    timeStamp = "";
-
-    int i;
-    for(i = 0; i < 20; i++)
-    {
-        danmakuPool << "NULL";
-    }
-}
-
-void MpvWidget::initDensityTimer()
-{
-    danmakuDensityTimer = new QTimer(this);
-    connect(danmakuDensityTimer, &QTimer::timeout, this, &MpvWidget::launchDanmaku);
-    danmakuDensityTimer->start(100);
-}
-
-void MpvWidget::launchDanmaku()
-{
-    if((danmakuPool[readDanmakuIndex] != "NULL") && (danmakuPool[readDanmakuIndex].at(0) != "1"))
-    {
-        int danmakuPos = getAvailDanmakuChannel() * (this->height() / 16);
-        int danmakuSpeed = this->width() * 11;
-
-        QLabel* danmaku;
-        danmaku = new QLabel(this);
-        danmakuPool[readDanmakuIndex].remove(0, 1);
-        danmaku->setText(danmakuPool[readDanmakuIndex]);
-        danmakuPool[readDanmakuIndex++].insert(0, "1");
-        readDanmakuIndex = readDanmakuIndex % 20;
-
-        danmaku->setStyleSheet("color: white; font-size: 18px; font-weight: bold");
-        QPropertyAnimation* mAnimation=new QPropertyAnimation(danmaku, "pos");
-        mAnimation->setStartValue(QPoint(this->width(), danmakuPos));
-        mAnimation->setEndValue(QPoint(-500, danmakuPos));
-        mAnimation->setDuration(danmakuSpeed);
-        mAnimation->setEasingCurve(QEasingCurve::Linear);
-        danmaku->show();
-        mAnimation->start();
-
-        connect(mAnimation, &QPropertyAnimation::finished, danmaku, &QLabel::deleteLater);
-    }
-    else
-    {
-        readDanmakuIndex++;
-        readDanmakuIndex = readDanmakuIndex % 20;
-        return;
-    }
-}
-
-
-int MpvWidget::getAvailDanmakuChannel()
-{
-    int flag = 0;
-    int count = 16;
-    int channel = 0;
-    while(flag == 0 && count != 0)
-    {
-        channel = qrand() % 16;
-        if(((quint32)pow(2, channel) & danmakuChannelMask) != 0)
-        {
-            danmakuChannelMask = danmakuChannelMask & ~(quint32)pow(2, channel);
-            flag = 1;
-        }
-        count--;
-    }
-    if(count == 0)
-    {
-        danmakuChannelMask = 0x0000FFFF;
-        return getAvailDanmakuChannel();
-    }
-    else
-    {
-        return channel;
-    }
-}
 
 void MpvWidget::initializeGL()
 {
@@ -240,4 +153,133 @@ void MpvWidget::maybeUpdate()
 void MpvWidget::on_update(void *ctx)
 {
     QMetaObject::invokeMethod((MpvWidget*)ctx, "maybeUpdate");
+}
+
+/*************************DanmakuPlayer BEGIN*************************/
+
+
+DanmakuPlayer::DanmakuPlayer(QWidget *parent, Qt::WindowFlags f) : MpvWidget(parent, f)
+
+{
+    setFocusPolicy(Qt::StrongFocus);
+    initDanmaku();
+    initDensityTimer();
+}
+
+DanmakuPlayer::~DanmakuPlayer()
+{
+    danmakuDensityTimer->deleteLater();
+}
+
+void DanmakuPlayer::addNewDanmaku(QString danmaku)
+{
+    danmakuPool[writeDanmakuIndex++] = "0" + danmaku; //0为未读
+    writeDanmakuIndex = writeDanmakuIndex % 20;
+}
+
+void DanmakuPlayer::initDanmaku()
+{
+    writeDanmakuIndex = 0;
+    readDanmakuIndex = 0;
+    danmakuPool.clear();
+    int i;
+    for(i = 0; i < 20; i++)
+    {
+        danmakuPool << "NULL";
+    }
+}
+
+void DanmakuPlayer::initDensityTimer()
+{
+    danmakuDensityTimer = new QTimer(this);
+    connect(danmakuDensityTimer, &QTimer::timeout, this, &DanmakuPlayer::launchDanmaku);
+    danmakuDensityTimer->start(100);
+}
+
+void DanmakuPlayer::launchDanmaku()
+{
+    if((danmakuPool[readDanmakuIndex] != "NULL") && (danmakuPool[readDanmakuIndex].at(0) != "1"))
+    {
+        int danmakuPos = getAvailDanmakuChannel() * (this->height() / 16);
+        int danmakuSpeed = this->width() * 11;
+
+        QLabel* danmaku;
+        danmaku = new QLabel(this);
+
+        danmakuPool[readDanmakuIndex].remove(0, 1);
+        danmaku->setText(danmakuPool[readDanmakuIndex]);
+        danmakuPool[readDanmakuIndex++].insert(0, "1");
+
+        readDanmakuIndex = readDanmakuIndex % 20;
+        danmaku->setStyleSheet("color: white; font-size: 18px; font-weight: bold");
+
+        QGraphicsDropShadowEffect *danmakuTextShadowEffect = new QGraphicsDropShadowEffect(this);
+        danmakuTextShadowEffect->setColor(QColor("#000000"));
+        danmakuTextShadowEffect->setBlurRadius(4);
+        danmakuTextShadowEffect->setOffset(1,1);
+        danmaku->setGraphicsEffect(danmakuTextShadowEffect);
+
+        QPropertyAnimation* mAnimation=new QPropertyAnimation(danmaku, "pos");
+        mAnimation->setStartValue(QPoint(this->width(), danmakuPos));
+        mAnimation->setEndValue(QPoint(-500, danmakuPos));
+        mAnimation->setDuration(danmakuSpeed);
+        mAnimation->setEasingCurve(QEasingCurve::Linear);
+        danmaku->show();
+        mAnimation->start();
+
+        connect(this, &DanmakuPlayer::closeDanmaku, danmaku, &QLabel::close);
+        connect(mAnimation, &QPropertyAnimation::finished, danmaku, &QLabel::deleteLater);
+    }
+    else
+    {
+        readDanmakuIndex++;
+        readDanmakuIndex = readDanmakuIndex % 20;
+        return;
+    }
+}
+
+
+int DanmakuPlayer::getAvailDanmakuChannel()
+{
+    int flag = 0;
+    int count = 16;
+    int channel = 0;
+    while(flag == 0 && count != 0)
+    {
+        channel = qrand() % 16;
+        if(((quint32)pow(2, channel) & danmakuChannelMask) != 0)
+        {
+            danmakuChannelMask = danmakuChannelMask & ~(quint32)pow(2, channel);
+            flag = 1;
+        }
+        count--;
+    }
+    if(count == 0)
+    {
+        danmakuChannelMask = 0x0000FFFF;
+        return getAvailDanmakuChannel();
+    }
+    else
+    {
+        return channel;
+    }
+}
+
+void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
+{
+    switch (event->key()) {
+    case Qt::Key_D:
+        danmakuShowFlag = !danmakuShowFlag;
+        if(danmakuShowFlag == false) {
+            danmakuDensityTimer->stop();
+            Q_EMIT closeDanmaku();
+        }else {
+            initDanmaku();
+            danmakuDensityTimer->start(100);
+        }
+        break;
+    default:
+        break;
+    }
+    MpvWidget::keyPressEvent(event);
 }

@@ -9,7 +9,7 @@
 
 MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 {
-    m_mpv = new MpvWidget(this);
+    danmakuPlayer = new DanmakuPlayer(this);
 //    m_slider = new QSlider();
 
 //    m_slider->setOrientation(Qt::Horizontal);
@@ -20,11 +20,11 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
 //    hb->addWidget(m_playBtn);
     QVBoxLayout *vl = new QVBoxLayout(this);
     vl->setContentsMargins(0,0,0,0);
-    vl->addWidget(m_mpv);
+    vl->addWidget(danmakuPlayer);
 //    vl->addWidget(m_slider);
 //    vl->addLayout(hb);
     setLayout(vl);
-    m_mpv->command(QStringList() << "loadfile" << "-");
+    danmakuPlayer->command(QStringList() << "loadfile" << "-");
 //    connect(m_slider, SIGNAL(sliderMoved(int)), SLOT(seek(int)));
 //    connect(m_openBtn, SIGNAL(clicked()), SLOT(openMedia()));
 //    connect(m_playBtn, SIGNAL(clicked()), SLOT(pauseResume()));
@@ -38,11 +38,13 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     dmcPy.append(arguments[1]);
     mProcess = new QProcess(this);
     connect(mProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readDanmaku);
-    mProcess->start("python", dmcPy);
+    mProcess->start("python3", dmcPy);
 }
 
 MainWindow::~MainWindow()
 {
+    mProcess->terminate();
+    mProcess->waitForFinished(3000);
     mProcess->deleteLater();
 }
 
@@ -52,18 +54,18 @@ void MainWindow::openMedia()
     if (file.isEmpty())
         return;
 //    m_mpv->command(QStringList() << "loadfile" << file);
-    m_mpv->command(QStringList() << "loadfile" << "-");
+    danmakuPlayer->command(QStringList() << "loadfile" << "-");
 }
 
 void MainWindow::seek(int pos)
 {
-    m_mpv->command(QVariantList() << "seek" << pos << "absolute");
+    danmakuPlayer->command(QVariantList() << "seek" << pos << "absolute");
 }
 
 void MainWindow::pauseResume()
 {
-    const bool paused = m_mpv->getProperty("pause").toBool();
-    m_mpv->setProperty("pause", !paused);
+    const bool paused = danmakuPlayer->getProperty("pause").toBool();
+    danmakuPlayer->setProperty("pause", !paused);
 }
 
 void MainWindow::readDanmaku()
@@ -72,7 +74,7 @@ void MainWindow::readDanmaku()
     {
         QString newDanmaku(mProcess->readLine());
         qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")) + "                                                                    ";
-        m_mpv->addNewDanmaku(newDanmaku.remove(QRegExp("^\\[.*\\] ")));
+        danmakuPlayer->addNewDanmaku(newDanmaku.remove(QRegExp("^\\[.*\\] ")));
     }
 }
 

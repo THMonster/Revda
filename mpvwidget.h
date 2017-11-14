@@ -22,8 +22,10 @@
 #include <QTextStream>
 #include <QIODevice>
 #include <cmath>
+#include <QKeyEvent>
+#include <QGraphicsDropShadowEffect>
 
-class MpvWidget Q_DECL_FINAL: public QOpenGLWidget
+class MpvWidget : public QOpenGLWidget
 {
     Q_OBJECT
 public:
@@ -33,14 +35,6 @@ public:
     void setProperty(const QString& name, const QVariant& value);
     QVariant getProperty(const QString& name) const;
     QSize sizeHint() const { return QSize(1280, 720);}
-
-    void addNewDanmaku(QString danmaku);
-    void initDanmaku();
-    void initDensityTimer();
-    void initLoadDanmakuTimer();
-    void launchDanmaku();
-    int getAvailDanmakuChannel();
-
 
 Q_SIGNALS:
     void durationChanged(int value);
@@ -56,18 +50,37 @@ private:
     void handle_mpv_event(mpv_event *event);
     static void on_update(void *ctx);
 
-    QStringList danmakuPool;
-    int readDanmakuIndex;
-    int writeDanmakuIndex;
-    QTimer* danmakuDensityTimer;
-    QString timeStamp;
-    quint32 danmakuChannelMask = 0x0000FFFF;
-
     mpv::qt::Handle mpv;
     mpv_opengl_cb_context *mpv_gl;
 
 };
 
+class DanmakuPlayer : public MpvWidget
+{
+    Q_OBJECT
+public:
+    DanmakuPlayer(QWidget *parent = 0, Qt::WindowFlags f = 0);
+    ~DanmakuPlayer();
+    void addNewDanmaku(QString danmaku);
+    void initDanmaku();
+    void initDensityTimer();
+    void launchDanmaku();
+    int getAvailDanmakuChannel();
+
+protected:
+    void keyPressEvent(QKeyEvent *event);
+
+signals:
+    void closeDanmaku();
+
+private:
+    QStringList danmakuPool;
+    int readDanmakuIndex;
+    int writeDanmakuIndex;
+    QTimer* danmakuDensityTimer;
+    quint32 danmakuChannelMask = 0x0000FFFF;
+    bool danmakuShowFlag = true;
+};
 
 
 #endif // PLAYERWINDOW_H

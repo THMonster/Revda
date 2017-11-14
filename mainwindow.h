@@ -8,6 +8,7 @@
 #include <QApplication>
 #include <QStringList>
 #include <QRegExp>
+#include "mpvwidget.h"
 
 class MpvWidget;
 class QSlider;
@@ -29,7 +30,7 @@ public Q_SLOTS:
 private Q_SLOTS:
     void setSliderRange(int duration);
 private:
-    MpvWidget *m_mpv;
+    DanmakuPlayer *danmakuPlayer;
     QSlider *m_slider;
     QPushButton *m_openBtn;
     QPushButton *m_playBtn;
