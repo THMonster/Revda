@@ -26,7 +26,7 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
         throw std::runtime_error("could not create mpv context");
 
     mpv_set_option_string(mpv, "terminal", "yes");
-//    mpv_set_option_string(mpv, "msg-level", "all=v");
+    //    mpv_set_option_string(mpv, "msg-level", "all=v");
     if (mpv_initialize(mpv) < 0)
         throw std::runtime_error("could not initialize mpv context");
 
@@ -159,11 +159,9 @@ void MpvWidget::on_update(void *ctx)
 
 
 DanmakuPlayer::DanmakuPlayer(QWidget *parent, Qt::WindowFlags f) : MpvWidget(parent, f)
-
 {
     setFocusPolicy(Qt::StrongFocus);
     initDanmaku();
-
 }
 
 DanmakuPlayer::~DanmakuPlayer()
@@ -171,10 +169,15 @@ DanmakuPlayer::~DanmakuPlayer()
 
 }
 
-
-
 void DanmakuPlayer::initDanmaku()
 {
+    for(int i = 0; i < 24; i++)
+    {
+        danmakuChannelSequence[i] = i;
+    }
+
+    setRandomSequence(23, 12);
+    setRandomSequence(11, 12);
 
 }
 
@@ -183,63 +186,95 @@ bool DanmakuPlayer::isDanmakuVisible()
     return danmakuShowFlag;
 }
 
-
-
 void DanmakuPlayer::launchDanmaku(QString danmakuText)
 {
-        int danmakuPos = getAvailDanmakuChannel() * (this->height() / 16);
-        int danmakuSpeed = this->width() * 11;
+    danmakuFrequency[2]++;
+    int danmakuPos = getAvailDanmakuChannel() * (this->height() / 24);
+    int danmakuSpeed = this->width() * 13;
 
-        QLabel* danmaku;
-        danmaku = new QLabel(this);
+    QLabel* danmaku;
+    danmaku = new QLabel(this);
 
-        danmaku->setText(danmakuText);
+    danmaku->setText(danmakuText);
 
-        danmaku->setStyleSheet("color: #FFFFFF; font-size: 18px; font-weight: bold");
+    danmaku->setStyleSheet("color: #FFFFFF; font-size: 18px; font-weight: bold");
 
-        QGraphicsDropShadowEffect *danmakuTextShadowEffect = new QGraphicsDropShadowEffect(this);
-        danmakuTextShadowEffect->setColor(QColor("#000000"));
-        danmakuTextShadowEffect->setBlurRadius(4);
-        danmakuTextShadowEffect->setOffset(1,1);
-        danmaku->setGraphicsEffect(danmakuTextShadowEffect);
+    QGraphicsDropShadowEffect *danmakuTextShadowEffect = new QGraphicsDropShadowEffect(this);
+    danmakuTextShadowEffect->setColor(QColor("#000000"));
+    danmakuTextShadowEffect->setBlurRadius(4);
+    danmakuTextShadowEffect->setOffset(1,1);
+    danmaku->setGraphicsEffect(danmakuTextShadowEffect);
 
-        QPropertyAnimation* mAnimation=new QPropertyAnimation(danmaku, "pos");
-        mAnimation->setStartValue(QPoint(this->width(), danmakuPos));
-        mAnimation->setEndValue(QPoint(-500, danmakuPos));
-        mAnimation->setDuration(danmakuSpeed);
-        mAnimation->setEasingCurve(QEasingCurve::Linear);
-        danmaku->show();
-        mAnimation->start();
+    QPropertyAnimation* mAnimation=new QPropertyAnimation(danmaku, "pos");
+    mAnimation->setStartValue(QPoint(this->width(), danmakuPos));
+    mAnimation->setEndValue(QPoint(-500, danmakuPos));
+    mAnimation->setDuration(danmakuSpeed);
+    mAnimation->setEasingCurve(QEasingCurve::Linear);
+    danmaku->show();
+    mAnimation->start();
 
-        connect(this, &DanmakuPlayer::closeDanmaku, danmaku, &QLabel::close);
-        connect(mAnimation, &QPropertyAnimation::finished, danmaku, &QLabel::deleteLater);
+    connect(this, &DanmakuPlayer::closeDanmaku, danmaku, &QLabel::close);
+    connect(mAnimation, &QPropertyAnimation::finished, danmaku, &QLabel::deleteLater);
 }
-
 
 int DanmakuPlayer::getAvailDanmakuChannel()
 {
-    int flag = 0;
-    int count = 16;
-    int channel = 0;
-    while(flag == 0 && count != 0)
+    int channel = danmakuChannelSequence[danmakuChannelIndex];
+    if(danmakuFrequency[3] >= 4)
     {
-        channel = qrand() % 16;
-        if(((quint32)pow(2, channel) & danmakuChannelMask) != 0)
-        {
-            danmakuChannelMask = danmakuChannelMask & ~(quint32)pow(2, channel);
-            flag = 1;
-        }
-        count--;
-    }
-    if(count == 0)
-    {
-        danmakuChannelMask = 0x0000FFFF;
-        return getAvailDanmakuChannel();
+        danmakuHighFreqMode = true;
     }
     else
     {
-        return channel;
+        danmakuHighFreqMode = false;
     }
+
+
+    if(danmakuHighFreqMode == false)
+    {
+        if(danmakuFrequency[3] == -11)
+        {
+//            setRandomSequence(15, 8);
+//            setRandomSequence(7, 8);
+        }
+        danmakuChannelIndex++;
+        danmakuChannelIndex = danmakuChannelIndex % 12;
+    }
+    else
+    {
+        danmakuChannelIndex++;
+        danmakuChannelIndex = danmakuChannelIndex % 24;
+    }
+    return channel;
+}
+
+void DanmakuPlayer::setRandomSequence(int baseIndex, int lengh)
+{
+    int i;
+    int temp = 0;
+    if((baseIndex - lengh) < -1)
+    {
+        lengh = 1 + baseIndex;
+    }
+    for(i = 0; i < lengh; i++)
+    {
+        temp = danmakuChannelSequence[baseIndex-i];
+        int rdOffset = qrand() % lengh;
+        danmakuChannelSequence[baseIndex-i] = danmakuChannelSequence[baseIndex - rdOffset];
+        danmakuChannelSequence[baseIndex - rdOffset] = temp;
+    }
+}
+
+void DanmakuPlayer::updateDanmakuFrequency()
+{
+    int temp;
+//    danmakuFrequency[3] = (danmakuFrequency[2] + danmakuFrequency[1] + danmakuFrequency[0]) / 3;
+    danmakuFrequency[3] = danmakuFrequency[2];
+    temp = danmakuFrequency[2];
+    danmakuFrequency[2] = 0;
+    danmakuFrequency[0] = danmakuFrequency[1];
+    danmakuFrequency[1] = temp;
+
 }
 
 void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
@@ -249,9 +284,15 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
         danmakuShowFlag = !danmakuShowFlag;
         if(danmakuShowFlag == false) {
             Q_EMIT closeDanmaku();
-
         }else {
             initDanmaku();
+        }
+        break;
+    case Qt::Key_F:
+        if(!QApplication::activeWindow()->isFullScreen()) {
+            QApplication::activeWindow()->showFullScreen();
+        }else {
+            QApplication::activeWindow()->showNormal();
         }
         break;
     default:
@@ -259,3 +300,4 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
     }
     MpvWidget::keyPressEvent(event);
 }
+

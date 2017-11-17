@@ -24,6 +24,9 @@
 #include <cmath>
 #include <QKeyEvent>
 #include <QGraphicsDropShadowEffect>
+#include <QMainWindow>
+#include <QCoreApplication>
+#include <QApplication>
 
 class MpvWidget : public QOpenGLWidget
 {
@@ -66,6 +69,8 @@ public:
     bool isDanmakuVisible();
     void launchDanmaku(QString danmakuText);
     int getAvailDanmakuChannel();
+    void setRandomSequence(int baseIndex, int lengh);
+    void updateDanmakuFrequency();
 
 protected:
     void keyPressEvent(QKeyEvent *event);
@@ -74,7 +79,10 @@ signals:
     void closeDanmaku();
 
 private:
-
+    bool danmakuHighFreqMode = false;
+    int danmakuFrequency[4] = {0};
+    int danmakuChannelIndex = 0;
+    int danmakuChannelSequence[24] = {0};
     quint32 danmakuChannelMask = 0x0000FFFF;
     bool danmakuShowFlag = true;
 };
