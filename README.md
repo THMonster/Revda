@@ -63,3 +63,5 @@ Example:
 * `space` 暂停/播放
 * `-/=` 音量减/加
 * `m` 静音/取消静音
+## Support Sites
+取决于上游的[streamlink](https://github.com/streamlink/streamlink)以及[danmu](https://github.com/littlecodersh/danmu)，两者的交集就是支持的直播平台。
