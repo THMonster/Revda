@@ -32,9 +32,7 @@ int main(int argc, char *argv[])
 
     if(QCoreApplication::arguments().at(1) != "bypass-parser")
     {
-        QProcess* restart;
-        restart = new QProcess;
-        restart->startDetached("bash -c \"streamlink " + parser.value(urlOption) + " " + parser.value(streamOption) + " -O | " + QCoreApplication::applicationFilePath() + " bypass-parser " + parser.value(urlOption) + "\"");
+        QProcess::startDetached("bash -c \"streamlink " + parser.value(urlOption) + " " + parser.value(streamOption) + " -O | " + QCoreApplication::applicationFilePath() + " bypass-parser " + parser.value(urlOption) + "\"");
         exit(0);
     }
 

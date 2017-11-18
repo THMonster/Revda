@@ -190,7 +190,7 @@ void DanmakuPlayer::launchDanmaku(QString danmakuText)
 {
     danmakuFrequency[2]++;
     int danmakuPos = getAvailDanmakuChannel() * (this->height() / 24);
-    int danmakuSpeed = this->width() * 13;
+    int danmakuSpeed = this->width() * 10;
 
     QLabel* danmaku;
     danmaku = new QLabel(this);
@@ -229,13 +229,12 @@ int DanmakuPlayer::getAvailDanmakuChannel()
         danmakuHighFreqMode = false;
     }
 
-
     if(danmakuHighFreqMode == false)
     {
-        if(danmakuFrequency[3] == -11)
+        if(danmakuFrequency[3] == 0)
         {
-//            setRandomSequence(15, 8);
-//            setRandomSequence(7, 8);
+//            setRandomSequence(23, 12);
+//            setRandomSequence(11, 12);
         }
         danmakuChannelIndex++;
         danmakuChannelIndex = danmakuChannelIndex % 12;
@@ -268,8 +267,8 @@ void DanmakuPlayer::setRandomSequence(int baseIndex, int lengh)
 void DanmakuPlayer::updateDanmakuFrequency()
 {
     int temp;
-//    danmakuFrequency[3] = (danmakuFrequency[2] + danmakuFrequency[1] + danmakuFrequency[0]) / 3;
-    danmakuFrequency[3] = danmakuFrequency[2];
+    danmakuFrequency[3] = (danmakuFrequency[2] + danmakuFrequency[1] + danmakuFrequency[0]) / 3;
+//    danmakuFrequency[3] = danmakuFrequency[2];
     temp = danmakuFrequency[2];
     danmakuFrequency[2] = 0;
     danmakuFrequency[0] = danmakuFrequency[1];
@@ -295,6 +294,37 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
             QApplication::activeWindow()->showNormal();
         }
         break;
+    case Qt::Key_Q:
+        exit(0);
+        break;
+    case Qt::Key_Space:
+    {
+        const bool paused = getProperty("pause").toBool();
+        setProperty("pause", !paused);
+        break;
+    }
+    case Qt::Key_M:
+    {
+        const bool muted = getProperty("ao-mute").toBool();
+        setProperty("ao-mute", !muted);
+        break;
+    }
+    case Qt::Key_Minus:
+    {
+        int volume = getProperty("ao-volume").toInt();
+        if(volume > 0)
+            volume -= 5;
+        setProperty("ao-volume", QString::number(volume));
+        break;
+    }
+    case Qt::Key_Equal:
+    {
+        int volume = getProperty("ao-volume").toInt();
+        if(volume < 100)
+            volume += 5;
+        setProperty("ao-volume", QString::number(volume));
+        break;
+    }
     default:
         break;
     }
