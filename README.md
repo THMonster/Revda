@@ -36,6 +36,7 @@ Linux平台下的弹幕直播播放器
 * [danmu](https://github.com/littlecodersh/danmu)
 * Qt5
 * qmake
+* Python3
 ## Installation
 ### From source
 ```
