@@ -25,9 +25,12 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     dmcPy.append("exec(\"\"\"\\nimport time, sys\\nimport threading\\nfrom danmu import DanMuClient\\ndef pp(msg):\\n    print(msg)\\n    sys.stdout.flush()\\ndmc = DanMuClient(sys.argv[1])\\nif not dmc.isValid(): \\n    print('Url not valid')\\n    sys.exit()\\n@dmc.danmu\\ndef danmu_fn(msg):\\n    pp('[%s] %s' % (msg['NickName'], msg['Content']))\\ndmc.start(blockThread = True)\\n\"\"\")");
     dmcPy.append(arguments[2]);
     mProcess = new QProcess(this);
-    connect(mProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readDanmaku);
+//    connect(mProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readDanmaku);
     mProcess->start("python3", dmcPy);
 
+    readDanmakuTimer = new QTimer(this);
+    readDanmakuTimer->start(200);
+    connect(readDanmakuTimer, &QTimer::timeout, this, &MainWindow::readDanmaku);
 }
 
 MainWindow::~MainWindow()
@@ -61,10 +64,11 @@ void MainWindow::readDanmaku()
 {
     while(!mProcess->atEnd())
     {
-        QThread::msleep(10);
+//        QThread::msleep(10);
         QString newDanmaku(mProcess->readLine());
         qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
         if(danmakuPlayer->isDanmakuVisible())
+//            disconnect(mProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readDanmaku);
             danmakuPlayer->launchDanmaku(newDanmaku.remove(QRegExp("^\\[.*\\] ")));
     }
 }

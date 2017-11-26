@@ -31,6 +31,7 @@ public Q_SLOTS:
 private Q_SLOTS:
     void setSliderRange(int duration);
 private:
+    QTimer* readDanmakuTimer;
     DanmakuPlayer *danmakuPlayer;
     QSlider *m_slider;
     QPushButton *m_openBtn;

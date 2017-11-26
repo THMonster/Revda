@@ -14,6 +14,7 @@ public:
     void checkVideoResolution();
     int getAvailDanmakuChannel();
 private:
+    bool streamReady = false;
     QTime time;
     QTimer* mTimer;
     QProcess* mProcess;

@@ -39,7 +39,7 @@ void CLIRecorder::readDanmaku()
         QString newDanmaku(mProcess->readLine());
         qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
 //        danmakuPlayer->launchDanmaku(newDanmaku.remove(QRegExp("^\\[.*\\] ")));
-        if(mTimer  == nullptr && (QCoreApplication::arguments().at(3) != "false"))
+        if(streamReady == true && (QCoreApplication::arguments().at(3) != "false"))
         {
             int availDChannel = getAvailDanmakuChannel();
             danmakuRecorder->danmaku2ASS(newDanmaku.remove(QRegExp("^\\[.*\\] ")), 13000, 24, availDChannel);
@@ -52,14 +52,21 @@ void CLIRecorder::readDanmaku()
 
 void CLIRecorder::checkVideoResolution()
 {
+//    qDebug() << mpvWidget->getProperty("video-params/w").toString();
     if(mpvWidget->getProperty("video-params/w").toString() != QString(""))
     {
-        mTimer->stop();
-        delete mTimer;
-        mTimer = nullptr;
+
+        mTimer->start(5000);
+        streamReady = true;
         if(QCoreApplication::arguments().at(3) != "false")
 //            danmakuRecorder = new DanmakuRecorder(getProperty("video-params/w").toInt(), getProperty("video-params/h").toInt(), QCoreApplication::arguments().at(3));
             danmakuRecorder = new DanmakuRecorder(1280, 720, QCoreApplication::arguments().at(3));
+    }
+    else if(streamReady == true)
+    {
+        mTimer->stop();
+        mTimer->deleteLater();
+        QApplication::exit(2);
     }
 }
 

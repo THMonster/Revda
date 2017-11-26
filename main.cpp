@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QApplication::setApplicationName("QLivePlayer");
-    QApplication::setApplicationVersion("1.1");
+    QApplication::setApplicationVersion("1.12");
 
     QCommandLineParser parser;
     parser.setApplicationDescription("A cute and useful Live Stream Player with danmaku support.");

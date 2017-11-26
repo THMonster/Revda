@@ -248,7 +248,8 @@ int DanmakuPlayer::getAvailDanmakuChannel()
         if((currentTime - danmakuTimeNodeSeq[i]) > danmakuTimeLengthSeq[i])
             return i;
     }
-    return 0;
+    i = qrand()%24;
+    return i;
 }
 
 void DanmakuPlayer::checkVideoResolution()

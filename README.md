@@ -1,5 +1,6 @@
 # QLivePlayer
 Linux平台下的弹幕直播播放器。
+
 2017.11.26: 已更新1.1版本～
 ## Features
 * 带弹幕支持的直播播放功能
@@ -65,9 +66,13 @@ Options:
 
 ```
 Example:
+
 直接观看 `qliveplayer  -u https://www.douyu.com/2550505 -s source_http`
+
 观看的同时录制直播流以及弹幕`qliveplayer  -u https://www.douyu.com/2550505 -s source_http --record-stream ~/out.flv --record-danmaku ~/out.ass`
+
 仅录制`qliveplayer  -u https://www.douyu.com/2550505 -s source_http --record-stream ~/out.flv --record-danmaku ~/out.ass -c`
+
 ## Keyboard Control
 * `d` 显示/隐藏弹幕
 * `f` 全屏/窗口化
