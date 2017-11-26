@@ -18,34 +18,55 @@ static void *get_proc_address(void *ctx, const char *name) {
     return (void *)glctx->getProcAddress(QByteArray(name));
 }
 
-MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f)
+MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
     : QOpenGLWidget(parent, f)
 {
-    mpv = mpv::qt::Handle::FromRawHandle(mpv_create());
-    if (!mpv)
-        throw std::runtime_error("could not create mpv context");
+    if(cli == true)
+    {
+        mpv = mpv::qt::Handle::FromRawHandle(mpv_create());
+        if (!mpv)
+            throw std::runtime_error("could not create mpv context");
 
-    mpv_set_option_string(mpv, "terminal", "yes");
-    //    mpv_set_option_string(mpv, "msg-level", "all=v");
-    if (mpv_initialize(mpv) < 0)
-        throw std::runtime_error("could not initialize mpv context");
+        mpv_set_option_string(mpv, "terminal", "yes");
+        if (mpv_initialize(mpv) < 0)
+            throw std::runtime_error("could not initialize mpv context");
 
-    // Make use of the MPV_SUB_API_OPENGL_CB API.
-    mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
+        mpv::qt::set_option_variant(mpv, "vo", "null");
 
-    // Request hw decoding, just for testing.
-    mpv::qt::set_option_variant(mpv, "hwdec", "auto");
+        mpv::qt::set_option_variant(mpv, "ao", "null");
 
-    mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
-    if (!mpv_gl)
-        throw std::runtime_error("OpenGL not compiled in");
-    mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
-    connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
+        mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
+        mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
+        mpv_set_wakeup_callback(mpv, wakeup, this);
+    }
+    else
+    {
+        mpv = mpv::qt::Handle::FromRawHandle(mpv_create());
+        if (!mpv)
+            throw std::runtime_error("could not create mpv context");
 
-    mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
-    mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
-    mpv_set_wakeup_callback(mpv, wakeup, this);
+        mpv_set_option_string(mpv, "terminal", "yes");
+        //    mpv_set_option_string(mpv, "msg-level", "all=v");
+        if (mpv_initialize(mpv) < 0)
+            throw std::runtime_error("could not initialize mpv context");
 
+        // Make use of the MPV_SUB_API_OPENGL_CB API.
+        mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
+
+        // Request hw decoding, just for testing.
+        mpv::qt::set_option_variant(mpv, "hwdec", "vaapi");
+
+        mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
+        if (!mpv_gl)
+            throw std::runtime_error("OpenGL not compiled in");
+        mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
+        connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
+
+        mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
+        mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
+        mpv_set_wakeup_callback(mpv, wakeup, this);
+
+    }
 }
 
 
@@ -161,7 +182,12 @@ void MpvWidget::on_update(void *ctx)
 DanmakuPlayer::DanmakuPlayer(QWidget *parent, Qt::WindowFlags f) : MpvWidget(parent, f)
 {
     setFocusPolicy(Qt::StrongFocus);
+    checkVideoResolutionTimer = new QTimer(this);
+    checkVideoResolutionTimer->start(500);
+    time.start();
     initDanmaku();
+
+    connect(checkVideoResolutionTimer, &QTimer::timeout, this, &DanmakuPlayer::checkVideoResolution);
 }
 
 DanmakuPlayer::~DanmakuPlayer()
@@ -171,13 +197,6 @@ DanmakuPlayer::~DanmakuPlayer()
 
 void DanmakuPlayer::initDanmaku()
 {
-    for(int i = 0; i < 24; i++)
-    {
-        danmakuChannelSequence[i] = i;
-    }
-
-    setRandomSequence(23, 12);
-    setRandomSequence(11, 12);
 
 }
 
@@ -188,15 +207,15 @@ bool DanmakuPlayer::isDanmakuVisible()
 
 void DanmakuPlayer::launchDanmaku(QString danmakuText)
 {
-    danmakuFrequency[2]++;
-    int danmakuPos = getAvailDanmakuChannel() * (this->height() / 24);
-    int danmakuSpeed = this->width() * 10;
+    int availDChannel = getAvailDanmakuChannel();
+    if(checkVideoResolutionTimer == nullptr && (QCoreApplication::arguments().at(3) != "false"))
+        danmakuRecorder->danmaku2ASS(danmakuText, 13000, 24, availDChannel);
+    int danmakuPos = availDChannel * (this->height() / 24);
+    int danmakuSpeed = (this->width()+500) / 0.17;//0.17 pixel per second
 
     QLabel* danmaku;
     danmaku = new QLabel(this);
-
     danmaku->setText(danmakuText);
-
     danmaku->setStyleSheet("color: #FFFFFF; font-size: 18px; font-weight: bold");
 
     QGraphicsDropShadowEffect *danmakuTextShadowEffect = new QGraphicsDropShadowEffect(this);
@@ -212,6 +231,9 @@ void DanmakuPlayer::launchDanmaku(QString danmakuText)
     mAnimation->setEasingCurve(QEasingCurve::Linear);
     danmaku->show();
     mAnimation->start();
+    danmakuTimeNodeSeq[availDChannel] = time.elapsed();
+    danmakuTimeLengthSeq[availDChannel] = (danmaku->width() / 0.17) + 100;
+
 
     connect(this, &DanmakuPlayer::closeDanmaku, danmaku, &QLabel::close);
     connect(mAnimation, &QPropertyAnimation::finished, danmaku, &QLabel::deleteLater);
@@ -219,61 +241,27 @@ void DanmakuPlayer::launchDanmaku(QString danmakuText)
 
 int DanmakuPlayer::getAvailDanmakuChannel()
 {
-    int channel = danmakuChannelSequence[danmakuChannelIndex];
-    if(danmakuFrequency[3] >= 4)
-    {
-        danmakuHighFreqMode = true;
-    }
-    else
-    {
-        danmakuHighFreqMode = false;
-    }
-
-    if(danmakuHighFreqMode == false)
-    {
-        if(danmakuFrequency[3] == 0)
-        {
-//            setRandomSequence(23, 12);
-//            setRandomSequence(11, 12);
-        }
-        danmakuChannelIndex++;
-        danmakuChannelIndex = danmakuChannelIndex % 12;
-    }
-    else
-    {
-        danmakuChannelIndex++;
-        danmakuChannelIndex = danmakuChannelIndex % 24;
-    }
-    return channel;
-}
-
-void DanmakuPlayer::setRandomSequence(int baseIndex, int lengh)
-{
+    int currentTime = time.elapsed();
     int i;
-    int temp = 0;
-    if((baseIndex - lengh) < -1)
+    for(i = 0; i < 24; i++)
     {
-        lengh = 1 + baseIndex;
+        if((currentTime - danmakuTimeNodeSeq[i]) > danmakuTimeLengthSeq[i])
+            return i;
     }
-    for(i = 0; i < lengh; i++)
-    {
-        temp = danmakuChannelSequence[baseIndex-i];
-        int rdOffset = qrand() % lengh;
-        danmakuChannelSequence[baseIndex-i] = danmakuChannelSequence[baseIndex - rdOffset];
-        danmakuChannelSequence[baseIndex - rdOffset] = temp;
-    }
+    return 0;
 }
 
-void DanmakuPlayer::updateDanmakuFrequency()
+void DanmakuPlayer::checkVideoResolution()
 {
-    int temp;
-    danmakuFrequency[3] = (danmakuFrequency[2] + danmakuFrequency[1] + danmakuFrequency[0]) / 3;
-//    danmakuFrequency[3] = danmakuFrequency[2];
-    temp = danmakuFrequency[2];
-    danmakuFrequency[2] = 0;
-    danmakuFrequency[0] = danmakuFrequency[1];
-    danmakuFrequency[1] = temp;
-
+    if(getProperty("video-params/w").toString() != QString(""))
+    {
+        checkVideoResolutionTimer->stop();
+        delete checkVideoResolutionTimer;
+        checkVideoResolutionTimer = nullptr;
+        if(QCoreApplication::arguments().at(3) != "false")
+//            danmakuRecorder = new DanmakuRecorder(getProperty("video-params/w").toInt(), getProperty("video-params/h").toInt(), QCoreApplication::arguments().at(3));
+            danmakuRecorder = new DanmakuRecorder(1280, 720, QCoreApplication::arguments().at(3));
+    }
 }
 
 void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
@@ -295,7 +283,7 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
         }
         break;
     case Qt::Key_Q:
-        exit(0);
+        QApplication::exit();
         break;
     case Qt::Key_Space:
     {

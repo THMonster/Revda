@@ -4,12 +4,13 @@
 #include <QCoreApplication>
 #include <QProcess>
 #include "mainwindow.h"
+#include "clirecorder.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QApplication::setApplicationName("QLivePlayer");
-    QApplication::setApplicationVersion("1.0");
+    QApplication::setApplicationVersion("1.1");
 
     QCommandLineParser parser;
     parser.setApplicationDescription("A cute and useful Live Stream Player with danmaku support.");
@@ -20,8 +21,15 @@ int main(int argc, char *argv[])
     parser.addOption(urlOption);
     QCommandLineOption streamOption(QStringList() << "s" << "stream", "The stream to open, default is \"best\".", "stream", "best");
     parser.addOption(streamOption);
+    QCommandLineOption streamRecordOption(QStringList() << "record-stream", "File to save recorded stream", "filepath", "false");
+    parser.addOption(streamRecordOption);
+    QCommandLineOption danmakuRecordOption(QStringList() << "record-danmaku", "File to save recorded danmaku", "filepath", "false");
+    parser.addOption(danmakuRecordOption);
+    QCommandLineOption withoutGUIOption(QStringList() << "c" << "without-gui", "CLI mode, available only with recording.");
+    parser.addOption(withoutGUIOption);
 
     parser.process(a);
+
 
     if(QCoreApplication::arguments().size() <= 1)
     {
@@ -32,14 +40,30 @@ int main(int argc, char *argv[])
 
     if(QCoreApplication::arguments().at(1) != "bypass-parser")
     {
-        QProcess::startDetached("bash -c \"streamlink " + parser.value(urlOption) + " " + parser.value(streamOption) + " -O | " + QCoreApplication::applicationFilePath() + " bypass-parser " + parser.value(urlOption) + "\"");
-        exit(0);
+        if(parser.value(streamRecordOption) != "false")
+        {
+            QProcess::execute("bash -c \"streamlink " + parser.value(urlOption) + " " + parser.value(streamOption) + " -O | tee '" + parser.value(streamRecordOption) + "' | " + QCoreApplication::applicationFilePath() + " bypass-parser " + parser.value(urlOption) + " '" + parser.value(danmakuRecordOption) + "' " + QString(parser.isSet(withoutGUIOption) ? "true" : "false") + "\"");
+            exit(0);
+        }
+        else
+        {
+            QProcess::execute("bash -c \"streamlink " + parser.value(urlOption) + " " + parser.value(streamOption) + " -O | " + QCoreApplication::applicationFilePath() + " bypass-parser " + parser.value(urlOption) + " '" + parser.value(danmakuRecordOption) + "' " + QString(parser.isSet(withoutGUIOption) ? "true" : "false") + "\"");
+            exit(0);
+        }
     }
 
+    setlocale(LC_NUMERIC, "C");
+
+    if(QCoreApplication::arguments().at(4) == "true")
+    {
+//        QCoreApplication b(argc, argv);
+        CLIRecorder cliRecorder;
+        return a.exec();
+    }
 
     // Qt sets the locale in the QApplication constructor, but libmpv requires
     // the LC_NUMERIC category to be set to "C", so change it back.
-    setlocale(LC_NUMERIC, "C");
+
     MainWindow w;
     w.setWindowTitle("QLivePlayer");
     w.show();

@@ -1,6 +1,7 @@
 #ifndef PLAYERWINDOW_H
 #define PLAYERWINDOW_H
 
+#include "danmakurecorder.h"
 #include <QtWidgets/QOpenGLWidget>
 #include <mpv/client.h>
 #include <mpv/opengl_cb.h>
@@ -27,12 +28,13 @@
 #include <QMainWindow>
 #include <QCoreApplication>
 #include <QApplication>
+#include <QTime>
 
 class MpvWidget : public QOpenGLWidget
 {
     Q_OBJECT
 public:
-    MpvWidget(QWidget *parent = 0, Qt::WindowFlags f = 0);
+    MpvWidget(QWidget *parent = 0, Qt::WindowFlags f = 0, bool cli = false);
     ~MpvWidget();
     void command(const QVariant& params);
     void setProperty(const QString& name, const QVariant& value);
@@ -69,8 +71,7 @@ public:
     bool isDanmakuVisible();
     void launchDanmaku(QString danmakuText);
     int getAvailDanmakuChannel();
-    void setRandomSequence(int baseIndex, int lengh);
-    void updateDanmakuFrequency();
+    void checkVideoResolution();
 
 protected:
     void keyPressEvent(QKeyEvent *event);
@@ -79,11 +80,15 @@ signals:
     void closeDanmaku();
 
 private:
+
+    QTimer* checkVideoResolutionTimer;
+    DanmakuRecorder* danmakuRecorder;
     bool danmakuHighFreqMode = false;
-    int danmakuFrequency[4] = {0};
-    int danmakuChannelIndex = 0;
-    int danmakuChannelSequence[24] = {0};
-    quint32 danmakuChannelMask = 0x0000FFFF;
+//    int danmakuFrequency[4] = {0};
+//    int danmakuChannelIndex = 0;
+    int danmakuTimeNodeSeq[24] = {0};
+    int danmakuTimeLengthSeq[24]= {0};
+    QTime time;
     bool danmakuShowFlag = true;
 };
 

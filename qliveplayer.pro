@@ -7,7 +7,14 @@ PKGCONFIG += mpv
 
 HEADERS = \
     mpvwidget.h \
-    mainwindow.h
+    mainwindow.h \
+    danmakurecorder.h \
+    clirecorder.h
 SOURCES = main.cpp \
     mpvwidget.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    danmakurecorder.cpp \
+    clirecorder.cpp
+
+RESOURCES += \
+    resource.qrc

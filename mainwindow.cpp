@@ -28,10 +28,6 @@ MainWindow::MainWindow(QWidget *parent) : QWidget(parent)
     connect(mProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readDanmaku);
     mProcess->start("python3", dmcPy);
 
-    oneSecond = new QTimer(this);
-    connect(oneSecond, &QTimer::timeout, danmakuPlayer, &DanmakuPlayer::updateDanmakuFrequency);
-    oneSecond->start(1000);
-
 }
 
 MainWindow::~MainWindow()
@@ -65,6 +61,7 @@ void MainWindow::readDanmaku()
 {
     while(!mProcess->atEnd())
     {
+        QThread::msleep(10);
         QString newDanmaku(mProcess->readLine());
         qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
         if(danmakuPlayer->isDanmakuVisible())

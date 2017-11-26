@@ -1,5 +1,10 @@
 # QLivePlayer
-Linux平台下的弹幕直播播放器
+Linux平台下的弹幕直播播放器。
+2017.11.26: 已更新1.1版本～
+## Features
+* 带弹幕支持的直播播放功能
+* 直播流录制
+* 超超超实用的弹幕录制功能！！！将弹幕数据转换成ASS文件，可以在任何主流视频播放器（推荐使用[mpv](https://mpv.io)）下配合录制的视频食用，回看也有弹幕的欢乐～
 ## Screenshots
 [![Screenshot_20171117_221638.png](https://i.loli.net/2017/11/18/5a0f94bf383cc.png)](https://i.loli.net/2017/11/18/5a0f94bf383cc.png)
 
@@ -50,13 +55,19 @@ Usage: qliveplayer [options]
 A cute and useful Live Stream Player with danmaku support.
 
 Options:
-  -h, --help             Displays this help.
-  -v, --version          Displays version information.
-  -u, --url <url>        The Live Stream url to open.
-  -s, --stream <stream>  The stream to open, default is "best".
+  -h, --help                   Displays this help.
+  -v, --version                Displays version information.
+  -u, --url <url>              The Live Stream url to open.
+  -s, --stream <stream>        The stream to open, default is "best".
+  --record-stream <filepath>   File to save recorded stream
+  --record-danmaku <filepath>  File to save recorded danmaku
+  -c, --without-gui            CLI mode, available only with recording.
+
 ```
 Example:
-`qliveplayer  -u https://www.douyu.com/2550505 -s source_http`
+直接观看 `qliveplayer  -u https://www.douyu.com/2550505 -s source_http`
+观看的同时录制直播流以及弹幕`qliveplayer  -u https://www.douyu.com/2550505 -s source_http --record-stream ~/out.flv --record-danmaku ~/out.ass`
+仅录制`qliveplayer  -u https://www.douyu.com/2550505 -s source_http --record-stream ~/out.flv --record-danmaku ~/out.ass -c`
 ## Keyboard Control
 * `d` 显示/隐藏弹幕
 * `f` 全屏/窗口化
