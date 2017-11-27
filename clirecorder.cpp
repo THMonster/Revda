@@ -62,7 +62,7 @@ void CLIRecorder::checkVideoResolution()
 //            danmakuRecorder = new DanmakuRecorder(getProperty("video-params/w").toInt(), getProperty("video-params/h").toInt(), QCoreApplication::arguments().at(3));
             danmakuRecorder = new DanmakuRecorder(1280, 720, QCoreApplication::arguments().at(3));
     }
-    else if(mpvWidget->getProperty("video-params/w").toString() != QString("") && streamReady == true)
+    else if(mpvWidget->getProperty("video-params/w").toString() == QString("") && streamReady == true)
     {
         mTimer->stop();
         mTimer->deleteLater();
