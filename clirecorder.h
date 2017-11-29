@@ -8,16 +8,21 @@ class CLIRecorder : public QObject
 {
     Q_OBJECT
 public:
-    CLIRecorder();
+    CLIRecorder(QStringList args);
     ~CLIRecorder();
     void readDanmaku();
     void checkVideoResolution();
     int getAvailDanmakuChannel();
+    void startStreamlinkProcess();
+    void onStreamlinkFinished(int exitCode, QProcess::ExitStatus exitStatus);
 private:
+    QStringList args;
+    QString namedPipe;
     bool streamReady = false;
     QTime time;
     QTimer* mTimer;
-    QProcess* mProcess;
+    QProcess* dmcPyProcess;
+    QProcess* streamlinkProcess;
     MpvWidget* mpvWidget;
     DanmakuRecorder* danmakuRecorder;
     int danmakuTimeNodeSeq[24] = {0};

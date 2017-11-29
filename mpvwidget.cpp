@@ -179,15 +179,18 @@ void MpvWidget::on_update(void *ctx)
 /*************************DanmakuPlayer BEGIN*************************/
 
 
-DanmakuPlayer::DanmakuPlayer(QWidget *parent, Qt::WindowFlags f) : MpvWidget(parent, f)
+DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags f) : MpvWidget(parent, f)
 {
+    this->args = args;
     setFocusPolicy(Qt::StrongFocus);
     checkVideoResolutionTimer = new QTimer(this);
-    checkVideoResolutionTimer->start(500);
     time.start();
-    initDanmaku();
-
-    connect(checkVideoResolutionTimer, &QTimer::timeout, this, &DanmakuPlayer::checkVideoResolution);
+    if(args.at(3) != "false")
+    {
+        checkVideoResolutionTimer->start(500);
+        connect(checkVideoResolutionTimer, &QTimer::timeout, this, &DanmakuPlayer::checkVideoResolution);
+    }
+//    initDanmaku();
 }
 
 DanmakuPlayer::~DanmakuPlayer()
@@ -207,8 +210,9 @@ bool DanmakuPlayer::isDanmakuVisible()
 
 void DanmakuPlayer::launchDanmaku(QString danmakuText)
 {
+//    qDebug() << QString("my object thread id:") << QThread::currentThreadId();
     int availDChannel = getAvailDanmakuChannel();
-    if(checkVideoResolutionTimer == nullptr && (QCoreApplication::arguments().at(3) != "false"))
+    if(checkVideoResolutionTimer == nullptr && (args.at(3) != "false"))
         danmakuRecorder->danmaku2ASS(danmakuText, 13000, 24, availDChannel);
     int danmakuPos = availDChannel * (this->height() / 24);
     int danmakuSpeed = (this->width()+500) / 0.17;//0.17 pixel per second
@@ -259,9 +263,8 @@ void DanmakuPlayer::checkVideoResolution()
         checkVideoResolutionTimer->stop();
         delete checkVideoResolutionTimer;
         checkVideoResolutionTimer = nullptr;
-        if(QCoreApplication::arguments().at(3) != "false")
 //            danmakuRecorder = new DanmakuRecorder(getProperty("video-params/w").toInt(), getProperty("video-params/h").toInt(), QCoreApplication::arguments().at(3));
-            danmakuRecorder = new DanmakuRecorder(1280, 720, QCoreApplication::arguments().at(3));
+        danmakuRecorder = new DanmakuRecorder(1280, 720, args.at(3));
     }
 }
 

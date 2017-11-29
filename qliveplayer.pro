@@ -9,12 +9,14 @@ HEADERS = \
     mpvwidget.h \
     mainwindow.h \
     danmakurecorder.h \
-    clirecorder.h
+    clirecorder.h \
+    danmakulauncher.h
 SOURCES = main.cpp \
     mpvwidget.cpp \
     mainwindow.cpp \
     danmakurecorder.cpp \
-    clirecorder.cpp
+    clirecorder.cpp \
+    danmakulauncher.cpp
 
 RESOURCES += \
     resource.qrc

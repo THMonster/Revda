@@ -3,6 +3,7 @@
 #include <QCommandLineOption>
 #include <QCoreApplication>
 #include <QProcess>
+#include <QStringList>
 #include "mainwindow.h"
 #include "clirecorder.h"
 
@@ -10,7 +11,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     QApplication::setApplicationName("QLivePlayer");
-    QApplication::setApplicationVersion("1.12");
+    QApplication::setApplicationVersion("1.2");
 
     QCommandLineParser parser;
     parser.setApplicationDescription("A cute and useful Live Stream Player with danmaku support.");
@@ -38,33 +39,19 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    if(QCoreApplication::arguments().at(1) != "bypass-parser")
-    {
-        if(parser.value(streamRecordOption) != "false")
-        {
-            QProcess::execute("bash -c \"streamlink " + parser.value(urlOption) + " " + parser.value(streamOption) + " -O | tee '" + parser.value(streamRecordOption) + "' | " + QCoreApplication::applicationFilePath() + " bypass-parser " + parser.value(urlOption) + " '" + parser.value(danmakuRecordOption) + "' " + QString(parser.isSet(withoutGUIOption) ? "true" : "false") + "\"");
-            exit(0);
-        }
-        else
-        {
-            QProcess::execute("bash -c \"streamlink " + parser.value(urlOption) + " " + parser.value(streamOption) + " -O | " + QCoreApplication::applicationFilePath() + " bypass-parser " + parser.value(urlOption) + " '" + parser.value(danmakuRecordOption) + "' " + QString(parser.isSet(withoutGUIOption) ? "true" : "false") + "\"");
-            exit(0);
-        }
-    }
-
+    // Qt sets the locale in the QApplication constructor, but libmpv requires
+    // the LC_NUMERIC category to be set to "C", so change it back.
     setlocale(LC_NUMERIC, "C");
 
-    if(QCoreApplication::arguments().at(4) == "true")
+    if(parser.isSet(withoutGUIOption))
     {
-//        QCoreApplication b(argc, argv);
-        CLIRecorder cliRecorder;
+        CLIRecorder cliRecorder(QStringList() << parser.value(urlOption) << parser.value(streamOption) << parser.value(streamRecordOption) << parser.value(danmakuRecordOption));
         return a.exec();
     }
 
-    // Qt sets the locale in the QApplication constructor, but libmpv requires
-    // the LC_NUMERIC category to be set to "C", so change it back.
 
-    MainWindow w;
+
+    MainWindow w(QStringList() << parser.value(urlOption) << parser.value(streamOption) << parser.value(streamRecordOption) << parser.value(danmakuRecordOption));
     w.setWindowTitle("QLivePlayer");
     w.show();
     return a.exec();

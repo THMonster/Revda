@@ -64,7 +64,7 @@ class DanmakuPlayer : public MpvWidget
 {
     Q_OBJECT
 public:
-    DanmakuPlayer(QWidget *parent = 0, Qt::WindowFlags f = 0);
+    DanmakuPlayer(QStringList args, QWidget *parent = 0, Qt::WindowFlags f = 0);
     ~DanmakuPlayer();
 
     void initDanmaku();
@@ -80,7 +80,7 @@ signals:
     void closeDanmaku();
 
 private:
-
+    QStringList args;
     QTimer* checkVideoResolutionTimer;
     DanmakuRecorder* danmakuRecorder;
     bool danmakuHighFreqMode = false;
