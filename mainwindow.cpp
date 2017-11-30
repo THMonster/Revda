@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QLabel>
 #include <QFile>
+#include <QUuid>
 
 MainWindow::MainWindow(QStringList args,QWidget *parent) : QWidget(parent)
 {
@@ -51,7 +52,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::startStreamlinkProcess()
 {
-    namedPipe = "/tmp/qlivesplayersdfadsfsdewe";
+    namedPipe = "/tmp/qlivesplayer-" + QUuid::createUuid().toString();
     QProcess::execute("mkfifo " + namedPipe);
     streamLinkProcess = new QProcess(this);
     if(args.at(2) == QString("false")) {

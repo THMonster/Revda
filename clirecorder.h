@@ -15,18 +15,25 @@ public:
     int getAvailDanmakuChannel();
     void startStreamlinkProcess();
     void onStreamlinkFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void checkStreamAvailable();
+public slots:
+    void onStreamlinkStderrReady();
 private:
     QStringList args;
-    QString namedPipe;
+    QString namedPipe = "";
+    bool streamAvailable = false;
     bool streamReady = false;
+    int pausedTime = 0;
     QTime time;
-    QTimer* mTimer;
+    QTimer* checkStreamReadyTimer;
     QProcess* dmcPyProcess;
     QProcess* streamlinkProcess;
+    QProcess* checkProcess;
     MpvWidget* mpvWidget;
     DanmakuRecorder* danmakuRecorder;
     int danmakuTimeNodeSeq[24] = {0};
     int danmakuTimeLengthSeq[24]= {0};
+    int videoPart = 1;
 };
 
 #endif // CLIRECORDER_H

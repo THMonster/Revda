@@ -30,7 +30,7 @@ ui_*.h
 *.jsc
 Makefile*
 *build-*
-
+qliveplayer
 # Qt unit tests
 target_wrapper.*
 

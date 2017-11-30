@@ -213,7 +213,7 @@ void DanmakuPlayer::launchDanmaku(QString danmakuText)
 //    qDebug() << QString("my object thread id:") << QThread::currentThreadId();
     int availDChannel = getAvailDanmakuChannel();
     if(checkVideoResolutionTimer == nullptr && (args.at(3) != "false"))
-        danmakuRecorder->danmaku2ASS(danmakuText, 13000, 24, availDChannel);
+        danmakuRecorder->danmaku2ASS("", danmakuText, 13000, 24, availDChannel);
     int danmakuPos = availDChannel * (this->height() / 24);
     int danmakuSpeed = (this->width()+500) / 0.17;//0.17 pixel per second
 
