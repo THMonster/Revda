@@ -2,6 +2,7 @@
 #define PLAYERWINDOW_H
 
 #include "danmakurecorder.h"
+#include "danmakulauncher.h"
 #include <QtWidgets/QOpenGLWidget>
 #include <mpv/client.h>
 #include <mpv/opengl_cb.h>
@@ -29,7 +30,7 @@
 #include <QCoreApplication>
 #include <QApplication>
 #include <QTime>
-
+class DanmakuLauncher;
 class MpvWidget : public QOpenGLWidget
 {
     Q_OBJECT
@@ -67,10 +68,8 @@ public:
     DanmakuPlayer(QStringList args, QWidget *parent = 0, Qt::WindowFlags f = 0);
     ~DanmakuPlayer();
 
-    void initDanmaku();
     bool isDanmakuVisible();
-    void launchDanmaku(QString danmakuText);
-    int getAvailDanmakuChannel();
+    void showDanmakuAnimation(QString danmakuText, int durationMs, int y);
     void checkVideoResolution();
 
 protected:
@@ -83,12 +82,8 @@ private:
     QStringList args;
     QTimer* checkVideoResolutionTimer;
     DanmakuRecorder* danmakuRecorder;
-    bool danmakuHighFreqMode = false;
-//    int danmakuFrequency[4] = {0};
-//    int danmakuChannelIndex = 0;
-    int danmakuTimeNodeSeq[24] = {0};
-    int danmakuTimeLengthSeq[24]= {0};
-    QTime time;
+    DanmakuLauncher* danmakuLauncher;
+    QThread* danmakuThread;
     bool danmakuShowFlag = true;
 };
 

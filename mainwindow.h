@@ -27,19 +27,15 @@ public Q_SLOTS:
     void openMedia();
     void seek(int pos);
     void pauseResume();
-    void startThread();
-    void readDanmaku();
 
 private Q_SLOTS:
     void setSliderRange(int duration);
 private:
-//    QThread* mThread;
     QTimer* readDanmakuTimer;
     DanmakuPlayer *danmakuPlayer;
     QSlider *m_slider;
     QPushButton *m_openBtn;
     QPushButton *m_playBtn;
-    QLabel* mLabel;
     QProcess* dmcPyProcess;
     QProcess* streamLinkProcess;
     QStringList args;

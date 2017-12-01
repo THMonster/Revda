@@ -22,29 +22,12 @@ MainWindow::MainWindow(QStringList args,QWidget *parent) : QWidget(parent)
     setLayout(vl);
     danmakuPlayer->command(QStringList() << "loadfile" << namedPipe);
 
-    QStringList dmcPy;
-    dmcPy.append("-c");
-    dmcPy.append("exec(\"\"\"\\nimport time, sys\\nimport threading\\nfrom danmu import DanMuClient\\ndef pp(msg):\\n    print(msg)\\n    sys.stdout.flush()\\ndmc = DanMuClient(sys.argv[1])\\nif not dmc.isValid(): \\n    print('Url not valid')\\n    sys.exit()\\n@dmc.danmu\\ndef danmu_fn(msg):\\n    pp('[%s] %s' % (msg['NickName'], msg['Content']))\\ndmc.start(blockThread = True)\\n\"\"\")");
-    dmcPy.append(args.at(0));
-    dmcPyProcess = new QProcess(this);
-//    connect(mProcess, &QProcess::readyReadStandardOutput, this, &MainWindow::readDanmaku);
-    dmcPyProcess->start("python3", dmcPy);
-
-    readDanmakuTimer = new QTimer(this);
-    readDanmakuTimer->start(200);
-//    mThread = new QThread(this);
 //    qDebug() << QString("main thread id:") << QThread::currentThreadId();
-
-//    connect(mThread, &QThread::started, this, &MainWindow::startThread);
-    connect(readDanmakuTimer, &QTimer::timeout, this, &MainWindow::readDanmaku);
 }
 
 MainWindow::~MainWindow()
 {
     QProcess::execute("rm " + namedPipe);
-    dmcPyProcess->terminate();
-    dmcPyProcess->waitForFinished(3000);
-    dmcPyProcess->deleteLater();
     streamLinkProcess->terminate();
     streamLinkProcess->waitForFinished(3000);
     streamLinkProcess->deleteLater();
@@ -81,23 +64,6 @@ void MainWindow::pauseResume()
 {
     const bool paused = danmakuPlayer->getProperty("pause").toBool();
     danmakuPlayer->setProperty("pause", !paused);
-}
-
-void MainWindow::startThread()
-{
-//    emit mThread->start();
-}
-
-void MainWindow::readDanmaku()
-{
-    while(!dmcPyProcess->atEnd())
-    {
-//        QThread::msleep(10);
-        QString newDanmaku(dmcPyProcess->readLine());
-        qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
-        if(danmakuPlayer->isDanmakuVisible())
-            danmakuPlayer->launchDanmaku(newDanmaku.remove(QRegExp("^\\[.*\\] ")));
-    }
 }
 
 void MainWindow::setSliderRange(int duration)
