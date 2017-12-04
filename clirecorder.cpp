@@ -131,8 +131,8 @@ void CLIRecorder::checkStreamAvailable()
     {
         streamAvailable = true;
         QThread::msleep(500);
-        checkStreamReadyTimer->start(100);
         startStreamlinkProcess();
+        checkStreamReadyTimer->start(100);    
     }
     else
     {
