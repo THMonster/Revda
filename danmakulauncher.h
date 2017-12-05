@@ -24,11 +24,12 @@ public:
     void launchDanmaku();
     int getAvailDanmakuChannel();
     void paintDanmaku(QPainter *painter, QPaintEvent *event);
+    void initDL();
 signals:
     void sendDanmaku(QString danmakuText, int durationMs, int y);
 
 private:
-//    QMutex mutex;
+    QMutex mutex;
     QQueue<Danmaku_t> danmakuQueue;
     QTimer* launchDanmakuTimer;
     QTimer* paintTimer;
@@ -38,7 +39,7 @@ private:
     int danmakuTimeNodeSeq[24] = {0};
     int danmakuTimeLengthSeq[24]= {0};
     QTime time;
-//    int ssss = 0;
+
     QPen textPen;
     QFont font;
 };

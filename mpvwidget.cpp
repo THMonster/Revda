@@ -2,8 +2,6 @@
 #include <stdexcept>
 #include <QtGui/QOpenGLContext>
 #include <QtCore/QMetaObject>
-#include <QFontMetrics>
-#include <QPainterPath>
 
 static void wakeup(void *ctx)
 {
@@ -54,7 +52,7 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
         mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
 
         // Request hw decoding, just for testing.
-        mpv::qt::set_option_variant(mpv, "hwdec", "vaapi");
+        mpv::qt::set_option_variant(mpv, "hwdec", "no");
 
         mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
         if (!mpv_gl)
@@ -108,6 +106,12 @@ void MpvWidget::initializeGL()
 void MpvWidget::paintGL()
 {
     mpv_opengl_cb_draw(mpv_gl, defaultFramebufferObject(), width(), -height());
+//    QOpenGLPaintDevice fboPaintDev(width(), height());
+//    QPainter painter(&fboPaintDev);
+//    painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
+//    painter.drawText(20, 40, "Foo");
+//    painter.fillRect(0,0,400,400,Qt::white);
+//    painter.end();
 }
 
 void MpvWidget::swapped()
@@ -191,7 +195,11 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
 //    connect(danmakuLauncher, &DanmakuLauncher::sendDanmaku, this, &DanmakuPlayer::showDanmakuAnimation);
 //    connect(danmakuThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDmcPy);
 //    danmakuThread->start();
+    QVBoxLayout *vl = new QVBoxLayout(this);
+    vl->setContentsMargins(0,0,0,0);
+
     danmakuGLWidget = new DanmakuGLWidget(args, this);
+    vl->addWidget(danmakuGLWidget);
     if(args.at(3) != "false")
     {
         checkVideoResolutionTimer->start(500);

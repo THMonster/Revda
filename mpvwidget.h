@@ -30,7 +30,8 @@
 #include <QMainWindow>
 #include <QCoreApplication>
 #include <QApplication>
-#include <QTime>
+#include <QtGui>
+#include <QVBoxLayout>
 class DanmakuGLWidget;
 class DanmakuLauncher;
 class MpvWidget : public QOpenGLWidget

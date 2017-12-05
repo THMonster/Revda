@@ -9,7 +9,7 @@ class DanmakuGLWidget : public QOpenGLWidget
     Q_OBJECT
 public:
     DanmakuGLWidget(QStringList args, QWidget *parent = 0, Qt::WindowFlags f = Qt::WindowFlags());
-
+    ~DanmakuGLWidget();
 public slots:
     void animate();
 
