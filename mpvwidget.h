@@ -3,6 +3,7 @@
 
 #include "danmakurecorder.h"
 #include "danmakulauncher.h"
+#include "danmakuglwidget.h"
 #include <QtWidgets/QOpenGLWidget>
 #include <mpv/client.h>
 #include <mpv/opengl_cb.h>
@@ -30,6 +31,7 @@
 #include <QCoreApplication>
 #include <QApplication>
 #include <QTime>
+class DanmakuGLWidget;
 class DanmakuLauncher;
 class MpvWidget : public QOpenGLWidget
 {
@@ -83,6 +85,7 @@ private:
     QTimer* checkVideoResolutionTimer;
     DanmakuRecorder* danmakuRecorder;
     DanmakuLauncher* danmakuLauncher;
+    DanmakuGLWidget* danmakuGLWidget;
     QThread* danmakuThread;
     bool danmakuShowFlag = true;
 };

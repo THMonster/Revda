@@ -184,13 +184,14 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
     this->args = args;
     setFocusPolicy(Qt::StrongFocus);
 //    checkVideoResolutionTimer = new QTimer(this);
-    danmakuThread = new QThread();
-    danmakuLauncher = new DanmakuLauncher(args, this);
-    danmakuLauncher->moveToThread(danmakuThread);
-    connect(danmakuThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
-    connect(danmakuLauncher, &DanmakuLauncher::sendDanmaku, this, &DanmakuPlayer::showDanmakuAnimation);
-    connect(danmakuThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDmcPy);
-    danmakuThread->start();
+//    danmakuThread = new QThread();
+//    danmakuLauncher = new DanmakuLauncher(args, this);
+//    danmakuLauncher->moveToThread(danmakuThread);
+//    connect(danmakuThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
+//    connect(danmakuLauncher, &DanmakuLauncher::sendDanmaku, this, &DanmakuPlayer::showDanmakuAnimation);
+//    connect(danmakuThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDmcPy);
+//    danmakuThread->start();
+    danmakuGLWidget = new DanmakuGLWidget(args, this);
     if(args.at(3) != "false")
     {
         checkVideoResolutionTimer->start(500);
@@ -201,7 +202,7 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
 
 DanmakuPlayer::~DanmakuPlayer()
 {
-    danmakuThread->quit();
+//    danmakuThread->quit();
 //    danmakuLauncher->deleteLater();
 
 }
