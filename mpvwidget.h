@@ -31,7 +31,7 @@
 #include <QCoreApplication>
 #include <QApplication>
 #include <QtGui>
-#include <QVBoxLayout>
+#include <QElapsedTimer>
 class DanmakuGLWidget;
 class DanmakuLauncher;
 class MpvWidget : public QOpenGLWidget
@@ -51,6 +51,8 @@ Q_SIGNALS:
 protected:
     void initializeGL() Q_DECL_OVERRIDE;
     void paintGL() Q_DECL_OVERRIDE;
+    DanmakuLauncher* danmakuLauncher = 0;
+    QTimer* updateTimer;
 private Q_SLOTS:
     void swapped();
     void on_mpv_events();
@@ -59,6 +61,7 @@ private:
     void handle_mpv_event(mpv_event *event);
     static void on_update(void *ctx);
 
+    QElapsedTimer fps;
     mpv::qt::Handle mpv;
     mpv_opengl_cb_context *mpv_gl;
 
@@ -85,8 +88,8 @@ private:
     QStringList args;
     QTimer* checkVideoResolutionTimer;
     DanmakuRecorder* danmakuRecorder;
-    DanmakuLauncher* danmakuLauncher;
-    DanmakuGLWidget* danmakuGLWidget;
+//    DanmakuLauncher* danmakuLauncher;
+//    DanmakuGLWidget* danmakuGLWidget;
     QThread* danmakuThread;
     bool danmakuShowFlag = true;
 };

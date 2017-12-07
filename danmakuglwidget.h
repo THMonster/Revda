@@ -15,9 +15,10 @@ public slots:
 
 
 protected:
-    void paintEvent(QPaintEvent *event) override;
+//    void paintEvent(QPaintEvent *event) override;
 
 private:
+    QTimer* paintTimer;
     DanmakuLauncher* danmakuLauncher;
     QThread* danmakuThread;
 };

@@ -53,18 +53,22 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
 
         // Request hw decoding, just for testing.
         mpv::qt::set_option_variant(mpv, "hwdec", "no");
-
+                mpv::qt::set_option_variant(mpv, "fps", "60");
         mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
         if (!mpv_gl)
             throw std::runtime_error("OpenGL not compiled in");
-        mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
+//        mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
         connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
 
         mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
         mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
         mpv_set_wakeup_callback(mpv, wakeup, this);
+        fps.start();
 
     }
+    updateTimer = new QTimer(this);
+    connect(updateTimer, &QTimer::timeout, this, &MpvWidget::maybeUpdate);
+//    updateTimer->start(16);
 }
 
 
@@ -105,13 +109,22 @@ void MpvWidget::initializeGL()
 
 void MpvWidget::paintGL()
 {
+    QOpenGLFramebufferObject newFBO(width(), height());
     mpv_opengl_cb_draw(mpv_gl, defaultFramebufferObject(), width(), -height());
-//    QOpenGLPaintDevice fboPaintDev(width(), height());
-//    QPainter painter(&fboPaintDev);
-//    painter.setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-//    painter.drawText(20, 40, "Foo");
+    newFBO.bindDefault();
+    QOpenGLPaintDevice fboPaintDev(width(), height());
+    QPainter painter(&fboPaintDev);
+    painter.setRenderHints(QPainter::Antialiasing);
+    danmakuLauncher->paintDanmaku(&painter);
+//    painter.setCompositionMode(QPainter::CompositionMode_Source);
+//    painter->fillRect(event->rect(), Qt::transparent);
 //    painter.fillRect(0,0,400,400,Qt::white);
-//    painter.end();
+
+//    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+//    painter.drawText(200, 400, "TEST");
+
+    painter.end();
+//    qDebug() << 1000 / fps.restart();
 }
 
 void MpvWidget::swapped()
@@ -188,18 +201,20 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
     this->args = args;
     setFocusPolicy(Qt::StrongFocus);
 //    checkVideoResolutionTimer = new QTimer(this);
-//    danmakuThread = new QThread();
-//    danmakuLauncher = new DanmakuLauncher(args, this);
-//    danmakuLauncher->moveToThread(danmakuThread);
-//    connect(danmakuThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
+    danmakuThread = new QThread();
+    danmakuLauncher = new DanmakuLauncher(args, this);
+    danmakuLauncher->moveToThread(danmakuThread);
+    connect(danmakuThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
 //    connect(danmakuLauncher, &DanmakuLauncher::sendDanmaku, this, &DanmakuPlayer::showDanmakuAnimation);
-//    connect(danmakuThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDmcPy);
-//    danmakuThread->start();
-    QVBoxLayout *vl = new QVBoxLayout(this);
-    vl->setContentsMargins(0,0,0,0);
+    connect(danmakuThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDL);
+    danmakuThread->start();
+    updateTimer->start(16);
+//    QVBoxLayout *vl = new QVBoxLayout(this);
+//    vl->setContentsMargins(0,0,0,0);
 
-    danmakuGLWidget = new DanmakuGLWidget(args, this);
-    vl->addWidget(danmakuGLWidget);
+//    danmakuGLWidget = new DanmakuGLWidget(args, this);
+//    vl->addWidget(danmakuGLWidget);
+//    danmakuGLWidget->show();
     if(args.at(3) != "false")
     {
         checkVideoResolutionTimer->start(500);
@@ -210,8 +225,8 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
 
 DanmakuPlayer::~DanmakuPlayer()
 {
-//    danmakuThread->quit();
-//    danmakuLauncher->deleteLater();
+    danmakuThread->quit();
+    danmakuLauncher->deleteLater();
 
 }
 

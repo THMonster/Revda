@@ -18,12 +18,12 @@ class DanmakuLauncher : public QObject
 {
     Q_OBJECT
 public:
-    DanmakuLauncher(QStringList args, DanmakuGLWidget* parent = 0);
+    DanmakuLauncher(QStringList args, QWidget *parent = 0);
     ~DanmakuLauncher();
     void initDmcPy();
     void launchDanmaku();
     int getAvailDanmakuChannel();
-    void paintDanmaku(QPainter *painter, QPaintEvent *event);
+    void paintDanmaku(QPainter *painter);
     void initDL();
 signals:
     void sendDanmaku(QString danmakuText, int durationMs, int y);
@@ -33,13 +33,16 @@ private:
     QQueue<Danmaku_t> danmakuQueue;
     QTimer* launchDanmakuTimer;
     QTimer* paintTimer;
-    DanmakuGLWidget* dglw;
+    QWidget* dglw;
     QStringList args;
     QProcess* dmcPyProcess;
     int danmakuTimeNodeSeq[24] = {0};
     int danmakuTimeLengthSeq[24]= {0};
     QTime time;
 
+//    QPainterPath textPath;
+//    QBrush textBrush;
+    QPen borderPen;
     QPen textPen;
     QFont font;
 };
