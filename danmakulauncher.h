@@ -8,10 +8,12 @@
 struct Danmaku_t
 {
     QString text;
-    int posX;
-    int posY;
-    float step;
+    double posX;
+    double posY;
+    double length;
+    double step;
 };
+
 class DanmakuGLWidget;
 class DanmakuPlayer;
 class DanmakuLauncher : public QObject
@@ -22,9 +24,11 @@ public:
     ~DanmakuLauncher();
     void initDmcPy();
     void launchDanmaku();
-    int getAvailDanmakuChannel();
+    int getAvailDanmakuChannel(double currentSpeed);
     void paintDanmaku(QPainter *painter);
     void initDL();
+    void clearDanmakuQueue();
+    void setDanmakuShowFlag(bool flag);
 signals:
     void sendDanmaku(QString danmakuText, int durationMs, int y);
 
@@ -37,9 +41,10 @@ private:
     QStringList args;
     QProcess* dmcPyProcess;
     int danmakuTimeNodeSeq[24] = {0};
-    int danmakuTimeLengthSeq[24]= {0};
+    double danmakuWidthSeq[24]= {0};
+    double danmakuSpeedSeq[24] = {0};
     QTime time;
-
+    bool danmakuShowFlag = true;
 //    QPainterPath textPath;
 //    QBrush textBrush;
     QPen borderPen;

@@ -35,57 +35,70 @@ void DanmakuLauncher::launchDanmaku()
 {
     while(!dmcPyProcess->atEnd())
     {
-        QMutexLocker lock(&mutex);
+//        QMutexLocker lock(&mutex);
+        mutex.lock();
         if(!danmakuQueue.isEmpty())
         {
-            if ((*danmakuQueue.begin()).posX < -500)
+            if ((*danmakuQueue.begin()).posX + (*danmakuQueue.begin()).length < 0)
             {
                 danmakuQueue.dequeue();
-                if ((*danmakuQueue.begin()).posX < -500)
+                if ((*danmakuQueue.begin()).posX + (*danmakuQueue.begin()).length < 0)
                 {
                     danmakuQueue.dequeue();
                 }
             }
         }
+        mutex.unlock();
 
 //        qDebug() << QString("my launch thread id:") << QThread::currentThreadId();
         QString newDanmaku(dmcPyProcess->readLine());
         qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
 
-//        if(!dglw->isDanmakuVisible())
-//            return;
+        if(!danmakuShowFlag)
+            return;
 
         Danmaku_t d;
 
-        int availDChannel = getAvailDanmakuChannel();
-        //    if(checkVideoResolutionTimer == nullptr && (args.at(3) != "false"))
-        //        danmakuRecorder->danmaku2ASS("", danmakuText, 13000, 24, availDChannel);
-
-        int danmakuPos = availDChannel * (dglw->height() / 24);
-//        int danmakuSpeed = (dmp->width()+500) / 0.17;//0.17 pixel per second
-
         newDanmaku.remove(QRegExp("^\\[.*\\] "));
         d.text = newDanmaku;
-        d.posY = danmakuPos;
 //        qDebug() << dglw->width();
         d.posX = dglw->width();
-        d.step = 3;
+        QFontMetrics fm(font);
+        d.length = fm.width(newDanmaku);
+        d.step = 2.0 * sqrt(sqrt(d.length/250.0)) + 0.5;
+//        qDebug() << d.step;
+        int availDChannel = getAvailDanmakuChannel(d.step);
+        //    if(checkVideoResolutionTimer == nullptr && (args.at(3) != "false"))
+        //        danmakuRecorder->danmaku2ASS("", danmakuText, 13000, 24, availDChannel);
+        int danmakuPos = availDChannel * (dglw->height() / 24);
+        d.posY = danmakuPos;
+        mutex.lock();
         danmakuQueue.enqueue(d);
-//        QFontMetrics fm(font);
-//        emit sendDanmaku(newDanmaku, danmakuSpeed, danmakuPos);
+        mutex.unlock();
+
         danmakuTimeNodeSeq[availDChannel] = time.elapsed();
-        danmakuTimeLengthSeq[availDChannel] = (500 / 0.15) + 100;
+        danmakuWidthSeq[availDChannel] = d.length;
+        danmakuSpeedSeq[availDChannel] = d.step;
     }
 }
 
-int DanmakuLauncher::getAvailDanmakuChannel()
+int DanmakuLauncher::getAvailDanmakuChannel(double currentSpeed)
 {
     int currentTime = time.elapsed();
     int i;
     for(i = 0; i < 24; i++)
     {
-        if((currentTime - danmakuTimeNodeSeq[i]) > danmakuTimeLengthSeq[i])
-            return i;
+        if ((((currentTime - danmakuTimeNodeSeq[i]) * 60 * currentSpeed / 1000) - danmakuWidthSeq[i]) > 0)
+        {
+            if ((((double)(currentTime - danmakuTimeNodeSeq[i]) * danmakuSpeedSeq[i] / 16.67) - danmakuWidthSeq[i]) / (currentSpeed - danmakuSpeedSeq[i]) > ((double)dglw->width() / currentSpeed))
+            {
+                return i;
+            }
+            else if (currentSpeed - danmakuSpeedSeq[i] <= 0)
+            {
+                return i;
+            }
+        }
     }
     i = qrand()%24;
     return i;
@@ -93,44 +106,48 @@ int DanmakuLauncher::getAvailDanmakuChannel()
 
 void DanmakuLauncher::paintDanmaku(QPainter *painter)
 {
-//    qDebug() << "hello";
     QMutexLocker lock(&mutex);
-//    QPainterPath textPath;
-
-//    painter->setPen(borderPen);
-//    painter->setBrush(textBrush);
 
     painter->setFont(font);
-//    painter->setCompositionMode (QPainter::CompositionMode_Source);
-//    painter->fillRect(event->rect(), Qt::transparent);
-//    painter->setCompositionMode (QPainter::CompositionMode_SourceOver);
 
     QQueue<Danmaku_t>::iterator i;
     for (i = danmakuQueue.begin(); i != danmakuQueue.end(); ++i)
     {
-//        textPath.addText(i->posX, i->posY+20, font, i->text);
         painter->setPen(borderPen);
-        painter->drawText(i->posX, i->posY+20, i->text);
+        painter->drawText(QPointF(i->posX, i->posY+20.0), i->text);
         painter->setPen(textPen);
-        painter->drawText(i->posX-1, i->posY+19, i->text);
+        painter->drawText(QPointF(i->posX-1.0, i->posY+19.0), i->text);
         (*i).posX = (*i).posX - (*i).step;
     }
-//    painter->drawPath(textPath);
 }
 
 void DanmakuLauncher::initDL()
 {
     borderPen = QPen(Qt::black);
-//    borderPen.setWidth(1);
+
     textPen.setColor(Qt::white);
-//    textBrush.setColor(Qt::white);
-//    textBrush.setStyle(Qt::SolidPattern);
-//    font.setFamily("Source Han Sans CN");
+
     font.setPixelSize(20);
     font.setBold(true);
-//    font.setStyleHint(QFont::SansSerif, QFont::PreferAntialias);
-//    paintTimer = new QTimer(this);
-//    paintTimer->start(16);
-//    connect(paintTimer, &QTimer::timeout, dglw, &DanmakuGLWidget::animate);
+
+    for (int i = 0; i < 24; i++)
+    {
+        danmakuWidthSeq[i] = -1000000;
+        danmakuTimeNodeSeq[i] = -100000;
+    }
     initDmcPy();
 }
+
+void DanmakuLauncher::clearDanmakuQueue()
+{
+    QMutexLocker lock(&mutex);
+    danmakuQueue.clear();
+    danmakuShowFlag = false;
+}
+
+void DanmakuLauncher::setDanmakuShowFlag(bool flag)
+{
+    danmakuShowFlag = flag;
+}
+
+

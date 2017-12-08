@@ -44,21 +44,26 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
             throw std::runtime_error("could not create mpv context");
 
         mpv_set_option_string(mpv, "terminal", "yes");
-        //    mpv_set_option_string(mpv, "msg-level", "all=v");
+//            mpv_set_option_string(mpv, "msg-level", "all=v");
         if (mpv_initialize(mpv) < 0)
             throw std::runtime_error("could not initialize mpv context");
 
-        // Make use of the MPV_SUB_API_OPENGL_CB API.
+//         Make use of the MPV_SUB_API_OPENGL_CB API.
+//        mpv::qt::set_option_variant(mpv, "opengl-swapinterval", "0");
+
         mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
 
         // Request hw decoding, just for testing.
         mpv::qt::set_option_variant(mpv, "hwdec", "no");
-                mpv::qt::set_option_variant(mpv, "fps", "60");
+        mpv::qt::set_option_variant(mpv, "display-fps", "60");
+        mpv::qt::set_option_variant(mpv, "video-sync", "display-resample");
+
+
         mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
         if (!mpv_gl)
             throw std::runtime_error("OpenGL not compiled in");
-//        mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
-        connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
+        mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
+//        connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
 
         mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
         mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
@@ -67,7 +72,7 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
 
     }
     updateTimer = new QTimer(this);
-    connect(updateTimer, &QTimer::timeout, this, &MpvWidget::maybeUpdate);
+//    connect(updateTimer, &QTimer::timeout, this, &MpvWidget::maybeUpdate);
 //    updateTimer->start(16);
 }
 
@@ -278,9 +283,9 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
     case Qt::Key_D:
         danmakuShowFlag = !danmakuShowFlag;
         if(danmakuShowFlag == false) {
-            Q_EMIT closeDanmaku();
+            danmakuLauncher->clearDanmakuQueue();
         }else {
-
+            danmakuLauncher->setDanmakuShowFlag(true);
         }
         break;
     case Qt::Key_F:
