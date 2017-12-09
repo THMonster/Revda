@@ -62,7 +62,7 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
         mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
         if (!mpv_gl)
             throw std::runtime_error("OpenGL not compiled in");
-        mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
+//        mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
         connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
 
         mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
@@ -72,7 +72,7 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
 
     }
     updateTimer = new QTimer(this);
-//    connect(updateTimer, &QTimer::timeout, this, &MpvWidget::maybeUpdate);
+    connect(updateTimer, &QTimer::timeout, this, &MpvWidget::maybeUpdate);
 //    updateTimer->start(16);
 }
 
@@ -324,6 +324,12 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
             volume += 5;
         setProperty("ao-volume", QString::number(volume));
         break;
+    }
+    case Qt::Key_R:
+    {
+        qDebug() << getProperty("display-fps");
+//        setProperty("display-fps", 60);
+//        command(QStringList() << "loadfile" << namedPipe);
     }
     default:
         break;

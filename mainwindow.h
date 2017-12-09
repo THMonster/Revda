@@ -28,6 +28,7 @@ public Q_SLOTS:
     void seek(int pos);
     void pauseResume();
 
+
 private Q_SLOTS:
     void setSliderRange(int duration);
 private:
