@@ -63,12 +63,12 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
         if (!mpv_gl)
             throw std::runtime_error("OpenGL not compiled in");
         mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
-//        connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
+        connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
 
         mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
         mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
         mpv_set_wakeup_callback(mpv, wakeup, this);
-        fps.start();
+//        fps.start();
 
     }
     updateTimer = new QTimer(this);
@@ -114,9 +114,8 @@ void MpvWidget::initializeGL()
 
 void MpvWidget::paintGL()
 {
-    QOpenGLFramebufferObject newFBO(width(), height());
     mpv_opengl_cb_draw(mpv_gl, defaultFramebufferObject(), width(), -height());
-    newFBO.bindDefault();
+    QOpenGLFramebufferObject::bindDefault();
     QOpenGLPaintDevice fboPaintDev(width(), height());
     QPainter painter(&fboPaintDev);
     painter.setRenderHints(QPainter::Antialiasing);

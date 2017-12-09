@@ -85,6 +85,7 @@ signals:
     void closeDanmaku();
 
 private:
+
     QStringList args;
     QTimer* checkVideoResolutionTimer;
     DanmakuRecorder* danmakuRecorder;
