@@ -52,7 +52,7 @@ void DanmakuLauncher::launchDanmaku()
 
 //        qDebug() << QString("my launch thread id:") << QThread::currentThreadId();
         QString newDanmaku(dmcPyProcess->readLine());
-//        qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
+        qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
 
         if(!danmakuShowFlag)
             return;

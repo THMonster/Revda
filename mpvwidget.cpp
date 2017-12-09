@@ -63,7 +63,7 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
         if (!mpv_gl)
             throw std::runtime_error("OpenGL not compiled in");
 //        mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
-        connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
+//        connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
 
         mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
         mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
@@ -185,7 +185,7 @@ void MpvWidget::maybeUpdate()
         makeCurrent();
         paintGL();
         context()->swapBuffers(context()->surface());
-        swapped();
+//        swapped();
         doneCurrent();
     } else {
         update();
@@ -224,11 +224,13 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
         checkVideoResolutionTimer->start(500);
         connect(checkVideoResolutionTimer, &QTimer::timeout, this, &DanmakuPlayer::checkVideoResolution);
     }
+    QProcess::execute("xset s off -dpms");
 //    qDebug() << QString("my dmk thread id:") << QThread::currentThreadId();
 }
 
 DanmakuPlayer::~DanmakuPlayer()
 {
+    QProcess::execute("xset s on +dpms");
     danmakuThread->quit();
     danmakuLauncher->deleteLater();
 
