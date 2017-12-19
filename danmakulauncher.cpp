@@ -68,6 +68,8 @@ void DanmakuLauncher::launchDanmaku()
         d.step = 2.0 * sqrt(sqrt(d.length/250.0)) + 0.5;
 //        qDebug() << d.step;
         int availDChannel = getAvailDanmakuChannel(d.step);
+        if (availDChannel < 0)
+            return;
         //    if(checkVideoResolutionTimer == nullptr && (args.at(3) != "false"))
         //        danmakuRecorder->danmaku2ASS("", danmakuText, 13000, 24, availDChannel);
         int danmakuPos = availDChannel * (dglw->height() / 24);
@@ -100,8 +102,8 @@ int DanmakuLauncher::getAvailDanmakuChannel(double currentSpeed)
             }
         }
     }
-    i = qrand()%24;
-    return i;
+//    i = qrand()%24;
+    return -4;
 }
 
 void DanmakuLauncher::paintDanmaku(QPainter *painter)
@@ -142,7 +144,7 @@ void DanmakuLauncher::clearDanmakuQueue()
 {
     QMutexLocker lock(&mutex);
     danmakuQueue.clear();
-    danmakuShowFlag = false;
+//    danmakuShowFlag = false;
 }
 
 void DanmakuLauncher::setDanmakuShowFlag(bool flag)

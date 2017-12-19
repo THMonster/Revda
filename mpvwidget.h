@@ -83,6 +83,7 @@ protected:
 
 signals:
     void closeDanmaku();
+    void refreshStream();
 
 private:
     QString namedPipe;

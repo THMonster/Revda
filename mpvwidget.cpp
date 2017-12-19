@@ -224,13 +224,13 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
         checkVideoResolutionTimer->start(500);
         connect(checkVideoResolutionTimer, &QTimer::timeout, this, &DanmakuPlayer::checkVideoResolution);
     }
-    QProcess::execute("xset s off -dpms");
+//    QProcess::execute("xset s off -dpms");
 //    qDebug() << QString("my dmk thread id:") << QThread::currentThreadId();
 }
 
 DanmakuPlayer::~DanmakuPlayer()
 {
-    QProcess::execute("xset s on +dpms");
+//    QProcess::execute("xset s on +dpms");
     danmakuThread->quit();
     danmakuLauncher->deleteLater();
 
@@ -284,8 +284,10 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
     case Qt::Key_D:
         danmakuShowFlag = !danmakuShowFlag;
         if(danmakuShowFlag == false) {
+            danmakuLauncher->setDanmakuShowFlag(false);
             danmakuLauncher->clearDanmakuQueue();
         }else {
+            danmakuLauncher->clearDanmakuQueue();
             danmakuLauncher->setDanmakuShowFlag(true);
         }
         break;
@@ -329,9 +331,7 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
     }
     case Qt::Key_R:
     {
-        qDebug() << getProperty("display-fps");
-//        setProperty("display-fps", 60);
-//        command(QStringList() << "loadfile" << namedPipe);
+        emit refreshStream();
     }
     default:
         break;

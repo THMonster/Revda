@@ -12,7 +12,7 @@ MainWindow::MainWindow(QStringList args,QWidget *parent) : QWidget(parent)
 {
     this->args = args;
     startStreamlinkProcess();
-    qDebug() << args;
+//    qDebug() << args;
     danmakuPlayer = new DanmakuPlayer(args, this, 0);
 
     QVBoxLayout *vl = new QVBoxLayout(this);
@@ -21,6 +21,8 @@ MainWindow::MainWindow(QStringList args,QWidget *parent) : QWidget(parent)
 
     setLayout(vl);
     danmakuPlayer->command(QStringList() << "loadfile" << namedPipe);
+
+    connect(danmakuPlayer, &DanmakuPlayer::refreshStream, this, &MainWindow::refreshDanmakuPlayer);
 
 //    qDebug() << QString("main thread id:") << QThread::currentThreadId();
 }
@@ -44,6 +46,24 @@ void MainWindow::startStreamlinkProcess()
         streamLinkProcess->start("bash -c \"streamlink " + args.at(0) + " " + args.at(1) + " -O | tee " + args.at(2) + " > " + namedPipe + "\"");
     if(!streamLinkProcess->waitForStarted())
         QApplication::exit(1);
+}
+
+void MainWindow::refreshDanmakuPlayer()
+{
+    danmakuPlayer->command(QStringList() << "stop");
+    streamLinkProcess->terminate();
+    streamLinkProcess->waitForFinished(3000);
+    delete streamLinkProcess;
+    QProcess::execute("rm " + namedPipe);
+    QProcess::execute("mkfifo " + namedPipe);
+    streamLinkProcess = new QProcess(this);
+    if(args.at(2) == QString("false")) {
+        streamLinkProcess->start("bash -c \"streamlink " + args.at(0) + " " + args.at(1) + " -O > " + namedPipe + "\"");
+    } else
+        streamLinkProcess->start("bash -c \"streamlink " + args.at(0) + " " + args.at(1) + " -O | tee " + args.at(2) + " > " + namedPipe + "\"");
+    if(!streamLinkProcess->waitForStarted())
+        QApplication::exit(1);
+    danmakuPlayer->command(QStringList() << "loadfile" << namedPipe);
 }
 
 void MainWindow::openMedia()

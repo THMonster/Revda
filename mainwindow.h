@@ -22,6 +22,7 @@ public:
     explicit MainWindow(QStringList args, QWidget *parent = 0);
     ~MainWindow();
     void startStreamlinkProcess();
+    void refreshDanmakuPlayer();
 
 public Q_SLOTS:
     void openMedia();
