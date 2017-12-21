@@ -4,14 +4,14 @@
 #include "mpvwidget.h"
 #include <QtGui>
 class QObject;
-class CLIRecorder : public QObject
+class CLIClient : public QObject
 {
     Q_OBJECT
 public:
-    CLIRecorder(QStringList args);
-    ~CLIRecorder();
+    CLIClient(QStringList args);
+    ~CLIClient();
     void readDanmaku();
-    void checkVideoResolution();
+    void checkStreamReady();
     int getAvailDanmakuChannel();
     void startStreamlinkProcess();
     void onStreamlinkFinished(int exitCode, QProcess::ExitStatus exitStatus);
@@ -19,20 +19,17 @@ public:
 public slots:
     void onStreamlinkStderrReady();
 private:
+    QThread* danmakuLauncherThread;
     QStringList args;
     QString namedPipe = "";
     bool streamAvailable = false;
     bool streamReady = false;
-    int pausedTime = 0;
     QTime time;
     QTimer* checkStreamReadyTimer;
-    QProcess* dmcPyProcess;
+    QTimer* paintTimer;
     QProcess* streamlinkProcess;
     QProcess* checkProcess;
-    MpvWidget* mpvWidget;
-    DanmakuRecorder* danmakuRecorder;
-    int danmakuTimeNodeSeq[24] = {0};
-    int danmakuTimeLengthSeq[24]= {0};
+    DanmakuLauncher* danmakuLauncher;
     int videoPart = 1;
 };
 

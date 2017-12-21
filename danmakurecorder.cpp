@@ -65,7 +65,7 @@ void DanmakuRecorder::addASS(QString assSpeaker, QString assText, int durationMs
     file.close();
 }
 
-void DanmakuRecorder::danmaku2ASS(QString assSpeaker, QString assText, int duration, int channelNum, int channel)
+void DanmakuRecorder::danmaku2ASS(QString assSpeaker, QString assText, int duration, double length, int channelNum, int channel)
 {
 //    qDebug() << QString().number(channel);
     int x1, y1, x2, y2;
@@ -73,7 +73,7 @@ void DanmakuRecorder::danmaku2ASS(QString assSpeaker, QString assText, int durat
 //    qDebug() << y1;
     y2 = y1;
     x1 = videoWidth;
-    x2 = -500;
+    x2 = -length;
     addASS(assSpeaker, assText, duration, x1, y1, x2, y2);
 }
 

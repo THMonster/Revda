@@ -13,7 +13,7 @@ public:
     DanmakuRecorder(int width, int height, QString fileName);
     void initDRecorder();
     void addASS(QString assSpeaker, QString assText, int durationMs, int x1, int y1, int x2, int y2);
-    void danmaku2ASS(QString assSpeaker, QString assText, int duration, int channelNum, int channel);
+    void danmaku2ASS(QString assSpeaker, QString assText, int duration, double length, int channelNum, int channel);
     void pause();
     void resume();
 private:

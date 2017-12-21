@@ -57,6 +57,7 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
         mpv::qt::set_option_variant(mpv, "hwdec", "no");
         mpv::qt::set_option_variant(mpv, "display-fps", "60");
         mpv::qt::set_option_variant(mpv, "video-sync", "display-resample");
+//        mpv::qt::set_option_variant(mpv, "vf", "lavfi=\"fps=fps=60:round=near\"");
 
 
         mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
@@ -219,11 +220,11 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
 //    danmakuGLWidget = new DanmakuGLWidget(args, this);
 //    vl->addWidget(danmakuGLWidget);
 //    danmakuGLWidget->show();
-    if(args.at(3) != "false")
-    {
-        checkVideoResolutionTimer->start(500);
-        connect(checkVideoResolutionTimer, &QTimer::timeout, this, &DanmakuPlayer::checkVideoResolution);
-    }
+//    if(args.at(3) != "false")
+//    {
+//        checkVideoResolutionTimer->start(500);
+//        connect(checkVideoResolutionTimer, &QTimer::timeout, this, &DanmakuPlayer::checkVideoResolution);
+//    }
 //    QProcess::execute("xset s off -dpms");
 //    qDebug() << QString("my dmk thread id:") << QThread::currentThreadId();
 }
@@ -268,14 +269,14 @@ void DanmakuPlayer::showDanmakuAnimation(QString danmakuText, int durationMs, in
 
 void DanmakuPlayer::checkVideoResolution()
 {
-    if(getProperty("video-params/w").toString() != QString(""))
-    {
-        checkVideoResolutionTimer->stop();
-        delete checkVideoResolutionTimer;
-        checkVideoResolutionTimer = nullptr;
-//            danmakuRecorder = new DanmakuRecorder(getProperty("video-params/w").toInt(), getProperty("video-params/h").toInt(), QCoreApplication::arguments().at(3));
-        danmakuRecorder = new DanmakuRecorder(1280, 720, args.at(3));
-    }
+//    if(getProperty("video-params/w").toString() != QString(""))
+//    {
+//        checkVideoResolutionTimer->stop();
+//        delete checkVideoResolutionTimer;
+//        checkVideoResolutionTimer = nullptr;
+////            danmakuRecorder = new DanmakuRecorder(getProperty("video-params/w").toInt(), getProperty("video-params/h").toInt(), QCoreApplication::arguments().at(3));
+//        danmakuRecorder = new DanmakuRecorder(1280, 720, args.at(3));
+//    }
 }
 
 void DanmakuPlayer::keyPressEvent(QKeyEvent *event)

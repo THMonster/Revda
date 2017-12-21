@@ -5,7 +5,7 @@
 #include <QProcess>
 #include <QStringList>
 #include "mainwindow.h"
-#include "clirecorder.h"
+#include "cliclient.h"
 
 int main(int argc, char *argv[])
 {
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
     if(parser.isSet(withoutGUIOption))
     {
-        CLIRecorder cliRecorder(QStringList() << parser.value(urlOption) << parser.value(streamOption) << parser.value(streamRecordOption) << parser.value(danmakuRecordOption));
+        CLIClient cliClient(QStringList() << parser.value(urlOption) << parser.value(streamOption) << parser.value(streamRecordOption) << parser.value(danmakuRecordOption));
         return a.exec();
     }
 
