@@ -6,7 +6,7 @@ DanmakuRecorder::DanmakuRecorder(int width, int height, QString fileName)
     videoHeight = height;
     videoWidth = width;
     this->fileName = fileName;
-    startTime.start();
+//    startTime.start();
     initDRecorder();
 }
 
@@ -92,5 +92,13 @@ void DanmakuRecorder::resume()
     {
         pausedTimeMs += startTime.elapsed() - pausedStartTimeMs;
         paused = false;
+    }
+}
+
+void DanmakuRecorder::start()
+{
+    if (started != true) {
+        startTime.start();
+        started = true;
     }
 }

@@ -46,7 +46,7 @@ private:
     QWidget* dglw;
     QStringList args;
     QProcess* dmcPyProcess;
-    DanmakuRecorder* danmakuRecorder;
+    DanmakuRecorder* danmakuRecorder = nullptr;
     int danmakuTimeNodeSeq[24] = {0};
     double danmakuWidthSeq[24]= {0};
     double danmakuSpeedSeq[24] = {0};

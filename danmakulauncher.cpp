@@ -83,7 +83,8 @@ void DanmakuLauncher::launchDanmaku()
         int danmakuPos = availDChannel * (resHeight / 24);
         d.posY = danmakuPos;
 
-        if(danmakuRecorder != nullptr && streamReady == true) {
+        if (danmakuRecorder != nullptr && streamReady == true) {
+            danmakuRecorder->start();
             int duration = ((double)resWidth + d.length) / (60.0 * d.step) * 1000.0;
             danmakuRecorder->danmaku2ASS(d.speaker, d.text, duration, d.length, 24, availDChannel);
         }
@@ -170,16 +171,17 @@ void DanmakuLauncher::clearDanmakuQueue()
 {
     QMutexLocker lock(&mutex);
     danmakuQueue.clear();
-//    danmakuShowFlag = false;
 }
 
 void DanmakuLauncher::setDanmakuShowFlag(bool flag)
 {
+    QMutexLocker lock(&mutex);
     danmakuShowFlag = flag;
 }
 
 void DanmakuLauncher::setStreamReadyFlag(bool flag)
 {
+    QMutexLocker lock(&mutex);
     streamReady = flag;
 }
 

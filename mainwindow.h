@@ -33,6 +33,7 @@ public Q_SLOTS:
 private Q_SLOTS:
     void setSliderRange(int duration);
 private:
+    int videoPart = 1;
     QTimer* readDanmakuTimer;
     DanmakuPlayer *danmakuPlayer;
     QSlider *m_slider;

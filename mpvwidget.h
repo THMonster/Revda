@@ -75,7 +75,6 @@ public:
     ~DanmakuPlayer();
 
     bool isDanmakuVisible();
-    void showDanmakuAnimation(QString danmakuText, int durationMs, int y);
     void checkVideoResolution();
 
 protected:
@@ -89,9 +88,6 @@ private:
     QString namedPipe;
     QStringList args;
     QTimer* checkVideoResolutionTimer;
-    DanmakuRecorder* danmakuRecorder;
-//    DanmakuLauncher* danmakuLauncher;
-//    DanmakuGLWidget* danmakuGLWidget;
     QThread* danmakuThread;
     bool danmakuShowFlag = true;
 };

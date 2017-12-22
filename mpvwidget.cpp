@@ -205,26 +205,20 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
 {
     this->args = args;
     setFocusPolicy(Qt::StrongFocus);
-//    checkVideoResolutionTimer = new QTimer(this);
+    checkVideoResolutionTimer = new QTimer(this);
     danmakuThread = new QThread();
     danmakuLauncher = new DanmakuLauncher(args, this);
     danmakuLauncher->moveToThread(danmakuThread);
     connect(danmakuThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
-//    connect(danmakuLauncher, &DanmakuLauncher::sendDanmaku, this, &DanmakuPlayer::showDanmakuAnimation);
     connect(danmakuThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDL);
     danmakuThread->start();
     updateTimer->start(16);
-//    QVBoxLayout *vl = new QVBoxLayout(this);
-//    vl->setContentsMargins(0,0,0,0);
 
-//    danmakuGLWidget = new DanmakuGLWidget(args, this);
-//    vl->addWidget(danmakuGLWidget);
-//    danmakuGLWidget->show();
-//    if(args.at(3) != "false")
-//    {
-//        checkVideoResolutionTimer->start(500);
-//        connect(checkVideoResolutionTimer, &QTimer::timeout, this, &DanmakuPlayer::checkVideoResolution);
-//    }
+    if(args.at(3) != "false")
+    {
+        checkVideoResolutionTimer->start(500);
+        connect(checkVideoResolutionTimer, &QTimer::timeout, this, &DanmakuPlayer::checkVideoResolution);
+    }
 //    QProcess::execute("xset s off -dpms");
 //    qDebug() << QString("my dmk thread id:") << QThread::currentThreadId();
 }
@@ -242,41 +236,15 @@ bool DanmakuPlayer::isDanmakuVisible()
     return danmakuShowFlag;
 }
 
-void DanmakuPlayer::showDanmakuAnimation(QString danmakuText, int durationMs, int y)
-{
-    QLabel* danmaku;
-    danmaku = new QLabel(this);
-    danmaku->setText(danmakuText);
-    danmaku->setStyleSheet("color: #FFFFFF; font-size: 18px; font-weight: bold");
-
-    QGraphicsDropShadowEffect *danmakuTextShadowEffect = new QGraphicsDropShadowEffect(danmaku);
-    danmakuTextShadowEffect->setColor(QColor("#000000"));
-    danmakuTextShadowEffect->setBlurRadius(4);
-    danmakuTextShadowEffect->setOffset(1,1);
-    danmaku->setGraphicsEffect(danmakuTextShadowEffect);
-
-    QPropertyAnimation* mAnimation=new QPropertyAnimation(danmaku, "pos");
-    mAnimation->setStartValue(QPoint(this->width(), y));
-    mAnimation->setEndValue(QPoint(-500, y));
-    mAnimation->setDuration(durationMs);
-    mAnimation->setEasingCurve(QEasingCurve::Linear);
-    danmaku->show();
-    mAnimation->start();
-
-    connect(this, &DanmakuPlayer::closeDanmaku, danmaku, &QLabel::close);
-    connect(mAnimation, &QPropertyAnimation::finished, danmaku, &QLabel::deleteLater);
-}
-
 void DanmakuPlayer::checkVideoResolution()
 {
-//    if(getProperty("video-params/w").toString() != QString(""))
-//    {
-//        checkVideoResolutionTimer->stop();
-//        delete checkVideoResolutionTimer;
-//        checkVideoResolutionTimer = nullptr;
-////            danmakuRecorder = new DanmakuRecorder(getProperty("video-params/w").toInt(), getProperty("video-params/h").toInt(), QCoreApplication::arguments().at(3));
-//        danmakuRecorder = new DanmakuRecorder(1280, 720, args.at(3));
-//    }
+    if(getProperty("video-params/w").toString() != QString(""))
+    {
+        checkVideoResolutionTimer->stop();
+        delete checkVideoResolutionTimer;
+        checkVideoResolutionTimer = nullptr;
+        danmakuLauncher->setStreamReadyFlag(true);
+    }
 }
 
 void DanmakuPlayer::keyPressEvent(QKeyEvent *event)

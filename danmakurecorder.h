@@ -16,6 +16,7 @@ public:
     void danmaku2ASS(QString assSpeaker, QString assText, int duration, double length, int channelNum, int channel);
     void pause();
     void resume();
+    void start();
 private:
     QString fileName;
     QTime startTime;
@@ -24,6 +25,7 @@ private:
     int videoWidth = 0;
     int videoHeight = 0;
     bool paused = false;
+    bool started = false;
     int pausedStartTimeMs = 0;
     int pausedTimeMs = 0;
 };
