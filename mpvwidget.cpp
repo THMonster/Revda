@@ -54,10 +54,10 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
         mpv::qt::set_option_variant(mpv, "vo", "opengl-cb");
 
         // Request hw decoding, just for testing.
-        mpv::qt::set_option_variant(mpv, "hwdec", "no");
-        mpv::qt::set_option_variant(mpv, "display-fps", "60");
-        mpv::qt::set_option_variant(mpv, "video-sync", "display-resample");
-//        mpv::qt::set_option_variant(mpv, "vf", "lavfi=\"fps=fps=60:round=near\"");
+        mpv::qt::set_option_variant(mpv, "hwdec", "auto");
+//        mpv::qt::set_option_variant(mpv, "display-fps", "60");
+//        mpv::qt::set_option_variant(mpv, "video-sync", "display-resample");
+        mpv::qt::set_option_variant(mpv, "vf", "lavfi=\"fps=fps=60:round=down\"");
 
 
         mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);

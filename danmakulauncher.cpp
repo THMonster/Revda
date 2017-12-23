@@ -45,18 +45,22 @@ void DanmakuLauncher::launchDanmaku()
     while(!dmcPyProcess->atEnd())
     {
         mutex.lock();
-        if(!danmakuQueue.isEmpty())
+        if (!danmakuQueue.isEmpty())
         {
             if ((*danmakuQueue.begin()).posX + (*danmakuQueue.begin()).length < 0)
             {
                 danmakuQueue.dequeue();
-                if ((*danmakuQueue.begin()).posX + (*danmakuQueue.begin()).length < 0)
+                if (!danmakuQueue.isEmpty())
                 {
-                    danmakuQueue.dequeue();
+                    if ((*danmakuQueue.begin()).posX + (*danmakuQueue.begin()).length < 0)
+                    {
+                        danmakuQueue.dequeue();
+                    }
                 }
             }
         }
         updateResolution();
+        mutex.unlock();
         mutex.unlock();
         QString newDanmaku(dmcPyProcess->readLine());
         qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
