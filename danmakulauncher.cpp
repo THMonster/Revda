@@ -59,9 +59,10 @@ void DanmakuLauncher::launchDanmaku()
                 }
             }
         }
+//        qDebug() << danmakuQueue.length();
         updateResolution();
         mutex.unlock();
-        mutex.unlock();
+
         QString newDanmaku(dmcPyProcess->readLine());
         qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
 
@@ -134,11 +135,13 @@ void DanmakuLauncher::paintDanmaku(QPainter *painter)
     QQueue<Danmaku_t>::iterator i;
     for (i = danmakuQueue.begin(); i != danmakuQueue.end(); ++i)
     {
-        painter->setPen(borderPen);
-        painter->drawText(QPointF(i->posX, i->posY+20.0), i->text);
-        painter->setPen(textPen);
-        painter->drawText(QPointF(i->posX-1.0, i->posY+19.0), i->text);
-        (*i).posX = (*i).posX - (*i).step;
+        if ((*i).posX > -800.0) {
+            painter->setPen(borderPen);
+            painter->drawText(QPointF(i->posX, i->posY+20.0), i->text);
+            painter->setPen(textPen);
+            painter->drawText(QPointF(i->posX-1.0, i->posY+19.0), i->text);
+            (*i).posX = (*i).posX - (*i).step;
+        }
     }
 }
 
@@ -149,7 +152,9 @@ void DanmakuLauncher::paintDanmakuCLI()
     QQueue<Danmaku_t>::iterator i;
     for (i = danmakuQueue.begin(); i != danmakuQueue.end(); ++i)
     {
-        (*i).posX = (*i).posX - (*i).step;
+        if ((*i).posX > -800.0) {
+            (*i).posX = (*i).posX - (*i).step;
+        }
     }
 }
 
