@@ -3,7 +3,6 @@
 
 #include "danmakurecorder.h"
 #include "danmakulauncher.h"
-#include "danmakuglwidget.h"
 #include <QtWidgets/QOpenGLWidget>
 #include <mpv/client.h>
 #include <mpv/opengl_cb.h>

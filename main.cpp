@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     QApplication::setApplicationVersion("2.0");
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("A cute and useful Live Stream Player with danmaku support.");
+    parser.setApplicationDescription("A cute and useful Live Stream Player with danmaku support.\nProject address: https://github.com/IsoaSFlus/QLivePlayer");
     parser.addHelpOption();
     parser.addVersionOption();
 

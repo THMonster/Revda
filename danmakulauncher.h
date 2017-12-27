@@ -3,7 +3,6 @@
 #include <QtGui>
 #include <QLabel>
 #include "mpvwidget.h"
-#include "danmakuglwidget.h"
 
 struct Danmaku_t
 {
