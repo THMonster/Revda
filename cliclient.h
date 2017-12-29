@@ -10,9 +10,7 @@ class CLIClient : public QObject
 public:
     CLIClient(QStringList args);
     ~CLIClient();
-    void readDanmaku();
     void checkStreamReady();
-    int getAvailDanmakuChannel();
     void startStreamlinkProcess();
     void onStreamlinkFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void checkStreamAvailable();

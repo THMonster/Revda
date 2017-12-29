@@ -3,6 +3,7 @@
 CLIClient::CLIClient(QStringList args)
     : QObject()
 {
+//    qDebug() << "CLIClient::CLIClient";
     this->args = args;
 
     qDebug() << "Waiting for stream...";
@@ -10,20 +11,12 @@ CLIClient::CLIClient(QStringList args)
     checkProcess->start("bash -c \"streamlink " + args.at(0) + "\"");
     connect(checkProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &CLIClient::checkStreamAvailable);
 
-//    mpvWidget = new MpvWidget(0, 0, true);
 
-//    QStringList dmcPy;
-//    dmcPy.append("-c");
-//    dmcPy.append("exec(\"\"\"\\nimport time, sys\\nimport threading\\nfrom danmu import DanMuClient\\ndef pp(msg):\\n    print(msg)\\n    sys.stdout.flush()\\ndmc = DanMuClient(sys.argv[1])\\nif not dmc.isValid(): \\n    print('Url not valid')\\n    sys.exit()\\n@dmc.danmu\\ndef danmu_fn(msg):\\n    pp('[%s] %s' % (msg['NickName'], msg['Content']))\\ndmc.start(blockThread = True)\\n\"\"\")");
-//    dmcPy.append(args.at(0));
-//    dmcPyProcess = new QProcess(this);
-//    connect(dmcPyProcess, &QProcess::readyReadStandardOutput, this, &CLIRecorder::readDanmaku);
-//    dmcPyProcess->start("python3", dmcPy);
     danmakuLauncherThread = new QThread();
-    danmakuLauncher = new DanmakuLauncher(args, 0, 1280, 720);
+    danmakuLauncher = new DanmakuLauncher(args, nullptr, 1280, 720);
     danmakuLauncher->moveToThread(danmakuLauncherThread);
     connect(danmakuLauncherThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
-//    connect(danmakuLauncher, &DanmakuLauncher::sendDanmaku, this, &DanmakuPlayer::showDanmakuAnimation);
+
     connect(danmakuLauncherThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDL);
     danmakuLauncherThread->start();
 
@@ -40,11 +33,8 @@ CLIClient::CLIClient(QStringList args)
 
 CLIClient::~CLIClient()
 {
+//    qDebug() << "CLIClient::~CLIClient";
     QProcess::execute("rm " + namedPipe);
-//    delete danmakuRecorder;
-//    dmcPyProcess->terminate();
-//    dmcPyProcess->waitForFinished(3000);
-//    dmcPyProcess->deleteLater();
     danmakuLauncherThread->quit();
     danmakuLauncher->deleteLater();
     streamlinkProcess->terminate();
@@ -52,56 +42,21 @@ CLIClient::~CLIClient()
     streamlinkProcess->deleteLater();
 }
 
-void CLIClient::readDanmaku()
-{
-//    while(!dmcPyProcess->atEnd())
-//    {
-//        QString newDanmaku(dmcPyProcess->readLine());
-//        qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
-//        QRegExp re("^\\[(.*)\\] ");
-//        re.indexIn(newDanmaku);
-////        qDebug().noquote() << re.cap(1);
-//        if(streamReady == true && (args.at(3) != "false"))
-//        {
-//            int availDChannel = getAvailDanmakuChannel();
-//            danmakuRecorder->danmaku2ASS(re.cap(1), newDanmaku.remove(QRegExp("^\\[.*\\] ")), 13000, 24, availDChannel);
-//            danmakuTimeNodeSeq[availDChannel] = time.elapsed();
-//            danmakuTimeLengthSeq[availDChannel] = (newDanmaku.size() / 0.17)*25;
-//        }
-//    }
-}
 
 void CLIClient::checkStreamReady()
 {
-////    qDebug() << mpvWidget->getProperty("video-params/w").toString();
-////    if(mpvWidget->getProperty("video-params/w").toString() != QString(""))
-//    if (streamReady == true)
-//    {
-//        checkStreamReadyTimer->stop();
-//        if(args.at(3) != "false" && danmakuRecorder == nullptr)
-////            danmakuRecorder = new DanmakuRecorder(getProperty("video-params/w").toInt(), getProperty("video-params/h").toInt(), QCoreApplication::arguments().at(3));
-//            danmakuRecorder = new DanmakuRecorder(1280, 720, args.at(3));
-//        danmakuRecorder->resume();
-//    }
+//    qDebug() << "CLIClient::checkStreamReady";
+
     if (streamReady == true && args.at(3) != "false") {
+        checkStreamReadyTimer->stop();
         danmakuLauncher->setPlayingState(0);
     }
 }
 
-int CLIClient::getAvailDanmakuChannel()
-{
-//    int currentTime = time.elapsed();
-//    int i;
-//    for(i = 0; i < 24; i++)
-//    {
-//        if((currentTime - danmakuTimeNodeSeq[i]) > danmakuTimeLengthSeq[i])
-//            return i;
-//    }
-    return 0;
-}
 
 void CLIClient::startStreamlinkProcess()
 {
+//    qDebug() << "CLIClient::startStreamlinkProcess";
     if(namedPipe == QString(""))
     {
         namedPipe = "/tmp/qlivesplayer-" + QUuid::createUuid().toString();
@@ -115,20 +70,20 @@ void CLIClient::startStreamlinkProcess()
 
         if(args.at(2) == QString("false")) {
             streamlinkProcess->start("bash -c \"streamlink " + args.at(0) + " " + args.at(1) + " -O > " + namedPipe + "\"");
-        } else
-//            streamlinkProcess->start("bash -c \"streamlink " + args.at(0) + " " + args.at(1) + " -O | tee " + args.at(2) + QString(".%1").arg(videoPart++) + " > " + namedPipe + "\"");
+        } else {
             streamlinkProcess->start("bash -c \"streamlink " + args.at(0) + " " + args.at(1) + " -O | tee " + args.at(2) + QString(".%1").arg(videoPart++) + " > " + "/dev/null" + "\"");
+        }
         if(!streamlinkProcess->waitForStarted()) {
 //            QApplication::exit(1);
         }
 
-//        mpvWidget->command(QStringList() << "loadfile" << namedPipe);
     }
 
 }
 
 void CLIClient::onStreamlinkFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
+//    qDebug() << "CLIClient::onStreamlinkFinished";
     Q_UNUSED(exitCode);
     Q_UNUSED(exitStatus);
 
@@ -136,7 +91,6 @@ void CLIClient::onStreamlinkFinished(int exitCode, QProcess::ExitStatus exitStat
     danmakuLauncher->setStreamReadyFlag(false);
     streamReady = false;
     danmakuLauncher->setPlayingState(1);
-//    mpvWidget->command(QStringList() << "stop");
     qDebug().noquote() << "Streamlink quited, now try to restart...";
     checkProcess->start("bash -c \"streamlink " + args.at(0) + "\"");
 
@@ -144,6 +98,7 @@ void CLIClient::onStreamlinkFinished(int exitCode, QProcess::ExitStatus exitStat
 
 void CLIClient::checkStreamAvailable()
 {
+//    qDebug() << "CLIClient::checkStreamAvailable";
     QThread::msleep(500);
     QString stdinfo(checkProcess->readAllStandardOutput());
 //    qDebug() << stdinfo;
@@ -164,6 +119,7 @@ void CLIClient::checkStreamAvailable()
 
 void CLIClient::onStreamlinkStderrReady()
 {
+//    qDebug() << "CLIClient::onStreamlinkStderrReady";
     QString stdinfo(streamlinkProcess->readAllStandardError());
     stdinfo.chop(1);
     if(stdinfo.contains(QRegExp("Opening stream:"))) {
@@ -172,5 +128,4 @@ void CLIClient::onStreamlinkStderrReady()
         danmakuLauncher->setStreamReadyFlag(true);
     }
     qDebug().noquote() << stdinfo;
-
 }

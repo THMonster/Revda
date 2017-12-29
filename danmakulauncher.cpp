@@ -42,6 +42,7 @@ void DanmakuLauncher::initDRecorder()
 
 void DanmakuLauncher::launchDanmaku()
 {
+//    qDebug() << "DanmakuLauncher::launchDanmaku";
     while(!dmcPyProcess->atEnd())
     {
         mutex.lock();
@@ -87,25 +88,26 @@ void DanmakuLauncher::launchDanmaku()
             return;
         int danmakuPos = availDChannel * (resHeight / 24);
         d.posY = danmakuPos;
-
         if (danmakuRecorder != nullptr && streamReady == true) {
             danmakuRecorder->start();
             int duration = ((double)resWidth + d.length) / (60.0 * d.step) * 1000.0;
             danmakuRecorder->danmaku2ASS(d.speaker, d.text, duration, d.length, 24, availDChannel);
         }
-
         mutex.lock();
         danmakuQueue.enqueue(d);
         mutex.unlock();
 
-        danmakuTimeNodeSeq[availDChannel] = time.elapsed();
-        danmakuWidthSeq[availDChannel] = d.length;
-        danmakuSpeedSeq[availDChannel] = d.step;
+        if (availDChannel >= 0) {
+            danmakuTimeNodeSeq[availDChannel] = time.elapsed();
+            danmakuWidthSeq[availDChannel] = d.length;
+            danmakuSpeedSeq[availDChannel] = d.step;
+        }
     }
 }
 
 int DanmakuLauncher::getAvailDanmakuChannel(double currentSpeed)
 {
+//    qDebug() << "DanmakuLauncher::getAvailDanmakuChannel";
     int currentTime = time.elapsed();
     int i;
     for(i = 0; i < 24; i++)
@@ -128,6 +130,7 @@ int DanmakuLauncher::getAvailDanmakuChannel(double currentSpeed)
 
 void DanmakuLauncher::paintDanmaku(QPainter *painter)
 {
+
     QMutexLocker lock(&mutex);
 
     painter->setFont(font);
@@ -147,6 +150,7 @@ void DanmakuLauncher::paintDanmaku(QPainter *painter)
 
 void DanmakuLauncher::paintDanmakuCLI()
 {
+//    qDebug() << "DanmakuLauncher::paintDanmakuCLI";
     QMutexLocker lock(&mutex);
 
     QQueue<Danmaku_t>::iterator i;
