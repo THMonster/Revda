@@ -195,6 +195,9 @@ void DanmakuLauncher::setDanmakuShowFlag(bool flag)
 void DanmakuLauncher::setStreamReadyFlag(bool flag)
 {
     QMutexLocker lock(&mutex);
+    if (flag == true && danmakuRecorder != nullptr) {
+        danmakuRecorder->start();
+    }
     streamReady = flag;
 }
 

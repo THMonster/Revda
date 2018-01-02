@@ -107,7 +107,7 @@ void CLIClient::checkStreamAvailable()
         streamAvailable = true;
         QThread::msleep(500);
         startStreamlinkProcess();
-        checkStreamReadyTimer->start(100);    
+        checkStreamReadyTimer->start(100);
 
     }
     else
