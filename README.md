@@ -20,7 +20,7 @@ Linux平台下的弹幕直播播放器。
 * 由于ass是根据视频的每一帧来渲染的，所以为了追求最好的动画效果，推荐把录制的视频帧率上采样至60fps来配合ass文件，这里提供一个基于mpv的使用ffmpeg内建滤波器的方法 :
 `mpv  --vf 'lavfi="fps=fps=60:round=down"' <your-video-file>`
 ## Screenshots
-[![Screenshot_20171117_221638.png](https://i.loli.net/2017/12/27/5a43914548a17.png)](https://i.loli.net/2017/12/27/5a43914548a17.png)
+[![Screenshot.png](https://raw.githubusercontent.com/IsoaSFlus/QLivePlayer/master/screenshot.png)](https://raw.githubusercontent.com/IsoaSFlus/QLivePlayer/master/screenshot.png)
 
 
 
