@@ -14,6 +14,7 @@ public:
     void startStreamlinkProcess();
     void onStreamlinkFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void checkStreamAvailable();
+    void startDanmakuLauncher();
 public slots:
     void onStreamlinkStderrReady();
 private:
@@ -22,6 +23,7 @@ private:
     QString namedPipe = "";
     bool streamAvailable = false;
     bool streamReady = false;
+    bool boardcastStarted = false;
     QTime time;
     QTimer* checkStreamReadyTimer;
     QTimer* paintTimer;

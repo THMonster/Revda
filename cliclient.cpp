@@ -11,14 +11,8 @@ CLIClient::CLIClient(QStringList args)
     checkProcess->start("bash -c \"streamlink " + args.at(0) + "\"");
     connect(checkProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &CLIClient::checkStreamAvailable);
 
-
     danmakuLauncherThread = new QThread();
     danmakuLauncher = new DanmakuLauncher(args, nullptr, 1280, 720);
-    danmakuLauncher->moveToThread(danmakuLauncherThread);
-    connect(danmakuLauncherThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
-
-    connect(danmakuLauncherThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDL);
-    danmakuLauncherThread->start();
 
 
     checkStreamReadyTimer = new QTimer(this);
@@ -67,7 +61,6 @@ void CLIClient::startStreamlinkProcess()
     }
     if(streamAvailable)
     {
-
         if(args.at(2) == QString("false")) {
             streamlinkProcess->start("bash -c \"streamlink " + args.at(0) + " " + args.at(1) + " -O > " + namedPipe + "\"");
         } else {
@@ -77,8 +70,11 @@ void CLIClient::startStreamlinkProcess()
 //            QApplication::exit(1);
         }
 
+        if (boardcastStarted == false) {
+            boardcastStarted = true;
+            startDanmakuLauncher();
+        }
     }
-
 }
 
 void CLIClient::onStreamlinkFinished(int exitCode, QProcess::ExitStatus exitStatus)
@@ -115,6 +111,15 @@ void CLIClient::checkStreamAvailable()
         streamAvailable = false;
         checkProcess->start("bash -c \"streamlink " + args.at(0) + "\"");
     }
+}
+
+void CLIClient::startDanmakuLauncher()
+{
+    danmakuLauncher->moveToThread(danmakuLauncherThread);
+    connect(danmakuLauncherThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
+
+    connect(danmakuLauncherThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDL);
+    danmakuLauncherThread->start();
 }
 
 void CLIClient::onStreamlinkStderrReady()
