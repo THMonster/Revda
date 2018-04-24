@@ -8,14 +8,16 @@
 #include <QApplication>
 #include <QStringList>
 #include <QRegExp>
-#include "mpvwidget.h"
+#include "danmakuplayer.h"
+#include "danmakuglwidget.h"
+#include "mpvemwidget.h"
 #include <QTimer>
 #include <QThread>
 
 class MpvWidget;
 class QSlider;
 class QPushButton;
-class MainWindow : public QWidget
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
@@ -23,19 +25,22 @@ public:
     ~MainWindow();
     void startStreamlinkProcess();
     void refreshDanmakuPlayer();
+    QSize sizeHint() const { return QSize(1280, 720);}
 
-public Q_SLOTS:
+public slots:
     void openMedia();
     void seek(int pos);
     void pauseResume();
 
-
-private Q_SLOTS:
+private slots:
     void setSliderRange(int duration);
+
 private:
     int videoPart = 1;
     QTimer* readDanmakuTimer;
     DanmakuPlayer *danmakuPlayer;
+    DanmakuGLWidget *danmakuGLWidget;
+    MpvEmWidget *mpvEmWidget;
     QSlider *m_slider;
     QPushButton *m_openBtn;
     QPushButton *m_playBtn;

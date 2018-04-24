@@ -1,4 +1,4 @@
-#include "mpvwidget.h"
+#include "danmakuplayer.h"
 #include <stdexcept>
 #include <QtGui/QOpenGLContext>
 #include <QtCore/QMetaObject>
@@ -201,18 +201,24 @@ void MpvWidget::on_update(void *ctx)
 /*************************DanmakuPlayer BEGIN*************************/
 
 
-DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags f) : MpvWidget(parent, f)
+DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags f)
+    : MpvEmWidget(parent, f)
 {
     this->args = args;
     setFocusPolicy(Qt::StrongFocus);
     checkVideoResolutionTimer = new QTimer(this);
-    danmakuThread = new QThread();
-    danmakuLauncher = new DanmakuLauncher(args, this);
-    danmakuLauncher->moveToThread(danmakuThread);
-    connect(danmakuThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
-    connect(danmakuThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDL);
-    danmakuThread->start();
-    updateTimer->start(16);
+//    danmakuThread = new QThread();
+//    danmakuLauncher = new DanmakuLauncher(args, this);
+//    danmakuLauncher->moveToThread(danmakuThread);
+//    connect(danmakuThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
+//    connect(danmakuThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDL);
+//    danmakuThread->start();
+
+//    danmakuGLWidget = new DanmakuGLWidget(args, this);
+//    QVBoxLayout *vl = new QVBoxLayout(this);
+//    vl->setContentsMargins(0,0,0,0);
+//    vl->addWidget(danmakuGLWidget);
+//    setLayout(vl);
 
     if(args.at(3) != "false")
     {
@@ -226,8 +232,8 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
 DanmakuPlayer::~DanmakuPlayer()
 {
 //    QProcess::execute("xset s on +dpms");
-    danmakuThread->quit();
-    danmakuLauncher->deleteLater();
+//    danmakuThread->quit();
+//    danmakuLauncher->deleteLater();
 
 }
 
@@ -243,68 +249,68 @@ void DanmakuPlayer::checkVideoResolution()
         checkVideoResolutionTimer->stop();
         delete checkVideoResolutionTimer;
         checkVideoResolutionTimer = nullptr;
-        danmakuLauncher->setStreamReadyFlag(true);
+        danmakuGLWidget->setStreamReadyFlag(true);
     }
 }
 
 void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
 {
     switch (event->key()) {
-    case Qt::Key_D:
-        danmakuShowFlag = !danmakuShowFlag;
-        if(danmakuShowFlag == false) {
-            danmakuLauncher->setDanmakuShowFlag(false);
-            danmakuLauncher->clearDanmakuQueue();
-        }else {
-            danmakuLauncher->clearDanmakuQueue();
-            danmakuLauncher->setDanmakuShowFlag(true);
-        }
-        break;
-    case Qt::Key_F:
-        if(!QApplication::activeWindow()->isFullScreen()) {
-            QApplication::activeWindow()->showFullScreen();
-        }else {
-            QApplication::activeWindow()->showNormal();
-        }
-        break;
+//    case Qt::Key_D:
+//        danmakuShowFlag = !danmakuShowFlag;
+//        if(danmakuShowFlag == false) {
+//            danmakuLauncher->setDanmakuShowFlag(false);
+//            danmakuLauncher->clearDanmakuQueue();
+//        }else {
+//            danmakuLauncher->clearDanmakuQueue();
+//            danmakuLauncher->setDanmakuShowFlag(true);
+//        }
+//        break;
+//    case Qt::Key_F:
+//        if(!QApplication::activeWindow()->isFullScreen()) {
+//            QApplication::activeWindow()->showFullScreen();
+//        }else {
+//            QApplication::activeWindow()->showNormal();
+//        }
+//        break;
     case Qt::Key_Q:
         QApplication::exit();
         break;
-    case Qt::Key_Space:
-    {
-        const bool paused = getProperty("pause").toBool();
-        setProperty("pause", !paused);
-        break;
+//    case Qt::Key_Space:
+//    {
+//        const bool paused = getProperty("pause").toBool();
+//        setProperty("pause", !paused);
+//        break;
+//    }
+//    case Qt::Key_M:
+//    {
+//        const bool muted = getProperty("ao-mute").toBool();
+//        setProperty("ao-mute", !muted);
+//        break;
+//    }
+//    case Qt::Key_Minus:
+//    {
+//        int volume = getProperty("ao-volume").toInt();
+//        if(volume > 0)
+//            volume -= 5;
+//        setProperty("ao-volume", QString::number(volume));
+//        break;
+//    }
+//    case Qt::Key_Equal:
+//    {
+//        int volume = getProperty("ao-volume").toInt();
+//        if(volume < 100)
+//            volume += 5;
+//        setProperty("ao-volume", QString::number(volume));
+//        break;
+//    }
+//    case Qt::Key_R:
+//    {
+//        emit refreshStream();
+//    }
+//    default:
+//        break;
     }
-    case Qt::Key_M:
-    {
-        const bool muted = getProperty("ao-mute").toBool();
-        setProperty("ao-mute", !muted);
-        break;
-    }
-    case Qt::Key_Minus:
-    {
-        int volume = getProperty("ao-volume").toInt();
-        if(volume > 0)
-            volume -= 5;
-        setProperty("ao-volume", QString::number(volume));
-        break;
-    }
-    case Qt::Key_Equal:
-    {
-        int volume = getProperty("ao-volume").toInt();
-        if(volume < 100)
-            volume += 5;
-        setProperty("ao-volume", QString::number(volume));
-        break;
-    }
-    case Qt::Key_R:
-    {
-        emit refreshStream();
-    }
-    default:
-        break;
-    }
-    MpvWidget::keyPressEvent(event);
+    MpvEmWidget::keyPressEvent(event);
 }
 

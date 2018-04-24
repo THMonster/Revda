@@ -3,6 +3,8 @@
 
 #include "danmakurecorder.h"
 #include "danmakulauncher.h"
+#include "danmakuglwidget.h"
+#include "mpvemwidget.h"
 #include <QtWidgets/QOpenGLWidget>
 #include <mpv/client.h>
 #include <mpv/opengl_cb.h>
@@ -31,6 +33,7 @@
 #include <QApplication>
 #include <QtGui>
 #include <QElapsedTimer>
+#include <QVBoxLayout>
 class DanmakuGLWidget;
 class DanmakuLauncher;
 class MpvWidget : public QOpenGLWidget
@@ -42,7 +45,7 @@ public:
     void command(const QVariant& params);
     void setProperty(const QString& name, const QVariant& value);
     QVariant getProperty(const QString& name) const;
-    QSize sizeHint() const { return QSize(1280, 720);}
+//    QSize sizeHint() const { return QSize(1280, 720);}
 
 Q_SIGNALS:
     void durationChanged(int value);
@@ -66,12 +69,13 @@ private:
 
 };
 
-class DanmakuPlayer : public MpvWidget
+class DanmakuPlayer : public MpvEmWidget
 {
     Q_OBJECT
 public:
     DanmakuPlayer(QStringList args, QWidget *parent = 0, Qt::WindowFlags f = 0);
     ~DanmakuPlayer();
+    QSize sizeHint() const { return QSize(1280, 720);}
 
     bool isDanmakuVisible();
     void checkVideoResolution();
@@ -89,6 +93,8 @@ private:
     QTimer* checkVideoResolutionTimer;
     QThread* danmakuThread;
     bool danmakuShowFlag = true;
+    DanmakuLauncher *danmakuLauncher = nullptr;
+    DanmakuGLWidget *danmakuGLWidget = nullptr;
 };
 
 

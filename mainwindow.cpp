@@ -1,5 +1,5 @@
 #include "mainwindow.h"
-#include "mpvwidget.h"
+#include "danmakuplayer.h"
 #include <QPushButton>
 #include <QSlider>
 #include <QLayout>
@@ -8,22 +8,39 @@
 #include <QFile>
 #include <QUuid>
 
-MainWindow::MainWindow(QStringList args,QWidget *parent) : QWidget(parent)
+MainWindow::MainWindow(QStringList args,QWidget *parent) : QMainWindow(parent)
 {
     this->args = args;
     startStreamlinkProcess();
-//    qDebug() << args;
+
+//    setAttribute(Qt::WA_TranslucentBackground);
+//    setWindowFlags(Qt::FramelessWindowHint);
     danmakuPlayer = new DanmakuPlayer(args, this, 0);
+////    mpvEmWidget = new MpvEmWidget(this);
 
-    QVBoxLayout *vl = new QVBoxLayout(this);
-    vl->setContentsMargins(0,0,0,0);
-    vl->addWidget(danmakuPlayer);
+//    QVBoxLayout *vl = new QVBoxLayout(this);
+    setCentralWidget(danmakuPlayer);
+//    QLabel *ql = new QLabel(this);
+//    ql->setPixmap(QPixmap("/home/midorikawa/Pictures/Screenshots/屏幕截图_1.png"));
+//    vl->setContentsMargins(0,0,0,0);
+//    vl->addWidget(danmakuPlayer);
+//    setLayout(vl);
 
-    setLayout(vl);
+    danmakuGLWidget = new DanmakuGLWidget(args, this);
+//        QVBoxLayout *vl = new QVBoxLayout(this);
+//        vl->setContentsMargins(0,0,0,0);
+//        vl->addWidget(danmakuGLWidget);
+//        setLayout(vl);
+
+    danmakuGLWidget->resize(720, 720);
+    danmakuGLWidget->show();
+//    QPushButton *qpb = new QPushButton(this);
+//    qpb->setAttribute(Qt::WA_AlwaysStackOnTop);
+//    qpb->setAttribute(Qt::WA_TranslucentBackground);
+//    qpb->setStyleSheet("background-color: rgba(111,111,111,0)");
     danmakuPlayer->command(QStringList() << "loadfile" << namedPipe);
 
     connect(danmakuPlayer, &DanmakuPlayer::refreshStream, this, &MainWindow::refreshDanmakuPlayer);
-
 //    qDebug() << QString("main thread id:") << QThread::currentThreadId();
 }
 

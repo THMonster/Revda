@@ -108,7 +108,6 @@ void DanmakuLauncher::launchDanmaku()
 
 int DanmakuLauncher::getAvailDanmakuChannel(double currentSpeed)
 {
-//    qDebug() << "DanmakuLauncher::getAvailDanmakuChannel";
     int currentTime = time.elapsed();
     int i;
     for(i = 0; i < 24; i++)
@@ -125,7 +124,6 @@ int DanmakuLauncher::getAvailDanmakuChannel(double currentSpeed)
             }
         }
     }
-//    i = qrand()%24;
     return -4;
 }
 

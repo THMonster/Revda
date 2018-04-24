@@ -1,7 +1,7 @@
 #ifndef CLIRECORDER_H
 #define CLIRECORDER_H
 #include "danmakurecorder.h"
-#include "mpvwidget.h"
+#include "danmakuplayer.h"
 #include <QtGui>
 class QObject;
 class CLIClient : public QObject

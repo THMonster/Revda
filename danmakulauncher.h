@@ -2,7 +2,7 @@
 #define DANMAKULAUNCHER_H
 #include <QtGui>
 #include <QLabel>
-#include "mpvwidget.h"
+#include "danmakuplayer.h"
 
 struct Danmaku_t
 {
