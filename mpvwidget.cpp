@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <QtGui/QOpenGLContext>
 #include <QtCore/QMetaObject>
+#include <cstdlib>
 
 static void wakeup(void *ctx)
 {
@@ -226,6 +227,9 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
 DanmakuPlayer::~DanmakuPlayer()
 {
 //    QProcess::execute("xset s on +dpms");
+    if (compositorDisableFlag == true) {
+        QProcess::execute("sh -c \"qdbus org.kde.KWin /Compositor resume\"");
+    }
     danmakuThread->quit();
     danmakuLauncher->deleteLater();
 
@@ -263,8 +267,16 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
     case Qt::Key_F:
         if(!QApplication::activeWindow()->isFullScreen()) {
             QApplication::activeWindow()->showFullScreen();
+            if (QString(std::getenv("XDG_CURRENT_DESKTOP")) == "KDE") {
+                QProcess::execute("sh -c \"qdbus org.kde.KWin /Compositor suspend\"");
+                compositorDisableFlag = true;
+            }
         }else {
             QApplication::activeWindow()->showNormal();
+            if (QString(std::getenv("XDG_CURRENT_DESKTOP")) == "KDE") {
+                QProcess::execute("sh -c \"qdbus org.kde.KWin /Compositor resume\"");
+                compositorDisableFlag = false;
+            }
         }
         break;
     case Qt::Key_Q:

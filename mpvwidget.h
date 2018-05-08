@@ -89,6 +89,7 @@ private:
     QTimer* checkVideoResolutionTimer;
     QThread* danmakuThread;
     bool danmakuShowFlag = true;
+    bool compositorDisableFlag = false;
 };
 
 
