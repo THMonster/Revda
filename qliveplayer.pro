@@ -10,13 +10,15 @@ HEADERS = \
     mainwindow.h \
     danmakurecorder.h \
     danmakulauncher.h \
-    cliclient.h
+    cliclient.h \
+    danmakuglwidget.h
 SOURCES = main.cpp \
     mpvwidget.cpp \
     mainwindow.cpp \
     danmakurecorder.cpp \
     danmakulauncher.cpp \
-    cliclient.cpp
+    cliclient.cpp \
+    danmakuglwidget.cpp
 
 RESOURCES += \
     resource.qrc

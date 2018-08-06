@@ -3,6 +3,7 @@
 
 #include "danmakurecorder.h"
 #include "danmakulauncher.h"
+#include "danmakuglwidget.h"
 #include <QtWidgets/QOpenGLWidget>
 #include <mpv/client.h>
 #include <mpv/opengl_cb.h>
@@ -50,8 +51,8 @@ Q_SIGNALS:
 protected:
     void initializeGL() Q_DECL_OVERRIDE;
     void paintGL() Q_DECL_OVERRIDE;
-    DanmakuLauncher* danmakuLauncher = 0;
-    QTimer* updateTimer;
+//    DanmakuLauncher* danmakuLauncher = nullptr;
+//    QTimer* updateTimer;
 private Q_SLOTS:
     void swapped();
     void on_mpv_events();
@@ -88,6 +89,7 @@ private:
     QStringList args;
     QTimer* checkVideoResolutionTimer;
     QThread* danmakuThread;
+    DanmakuGLWidget *danmakuGLWidget = nullptr;
     bool danmakuShowFlag = true;
     bool compositorDisableFlag = false;
 };

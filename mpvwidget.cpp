@@ -1,4 +1,5 @@
 #include "mpvwidget.h"
+#include <QVBoxLayout>
 #include <stdexcept>
 #include <QtGui/QOpenGLContext>
 #include <QtCore/QMetaObject>
@@ -56,16 +57,16 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
 
         // Request hw decoding, just for testing.
         mpv::qt::set_option_variant(mpv, "hwdec", "auto");
-//        mpv::qt::set_option_variant(mpv, "display-fps", "60");
-//        mpv::qt::set_option_variant(mpv, "video-sync", "display-resample");
-        mpv::qt::set_option_variant(mpv, "vf", "lavfi=\"fps=fps=60:round=down\"");
+        mpv::qt::set_option_variant(mpv, "display-fps", "60");
+        mpv::qt::set_option_variant(mpv, "video-sync", "display-resample");
+//        mpv::qt::set_option_variant(mpv, "vf", "lavfi=\"fps=fps=60:round=down\"");
 
 
         mpv_gl = (mpv_opengl_cb_context *)mpv_get_sub_api(mpv, MPV_SUB_API_OPENGL_CB);
         if (!mpv_gl)
             throw std::runtime_error("OpenGL not compiled in");
-//        mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
-//        connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
+        mpv_opengl_cb_set_update_callback(mpv_gl, MpvWidget::on_update, (void *)this);
+        connect(this, SIGNAL(frameSwapped()), SLOT(swapped()));
 
         mpv_observe_property(mpv, 0, "duration", MPV_FORMAT_DOUBLE);
         mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
@@ -73,8 +74,8 @@ MpvWidget::MpvWidget(QWidget *parent, Qt::WindowFlags f, bool cli)
 //        fps.start();
 
     }
-    updateTimer = new QTimer(this);
-    connect(updateTimer, &QTimer::timeout, this, &MpvWidget::maybeUpdate);
+//    updateTimer = new QTimer(this);
+//    connect(updateTimer, &QTimer::timeout, this, &MpvWidget::maybeUpdate);
 //    updateTimer->start(16);
 }
 
@@ -117,20 +118,22 @@ void MpvWidget::initializeGL()
 void MpvWidget::paintGL()
 {
     mpv_opengl_cb_draw(mpv_gl, defaultFramebufferObject(), width(), -height());
-    QOpenGLFramebufferObject::bindDefault();
-    QOpenGLPaintDevice fboPaintDev(width(), height());
-    QPainter painter(&fboPaintDev);
-    painter.setRenderHints(QPainter::Antialiasing);
-    danmakuLauncher->paintDanmaku(&painter);
-//    painter.setCompositionMode(QPainter::CompositionMode_Source);
-//    painter->fillRect(event->rect(), Qt::transparent);
-//    painter.fillRect(0,0,400,400,Qt::white);
 
-//    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
-//    painter.drawText(200, 400, "TEST");
+//    mpv_opengl_cb_draw(mpv_gl, defaultFramebufferObject(), width(), -height());
+//    QOpenGLFramebufferObject::bindDefault();
+//    QOpenGLPaintDevice fboPaintDev(width(), height());
+//    QPainter painter(&fboPaintDev);
+//    painter.setRenderHints(QPainter::Antialiasing);
+//    danmakuLauncher->paintDanmaku(&painter);
+////    painter.setCompositionMode(QPainter::CompositionMode_Source);
+////    painter->fillRect(event->rect(), Qt::transparent);
+////    painter.fillRect(0,0,400,400,Qt::white);
 
-    painter.end();
-//    qDebug() << 1000 / fps.restart();
+////    painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+////    painter.drawText(200, 400, "TEST");
+
+//    painter.end();
+////    qDebug() << 1000 / fps.restart();
 }
 
 void MpvWidget::swapped()
@@ -187,7 +190,7 @@ void MpvWidget::maybeUpdate()
         makeCurrent();
         paintGL();
         context()->swapBuffers(context()->surface());
-//        swapped();
+        swapped();
         doneCurrent();
     } else {
         update();
@@ -207,13 +210,11 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
     this->args = args;
     setFocusPolicy(Qt::StrongFocus);
     checkVideoResolutionTimer = new QTimer(this);
-    danmakuThread = new QThread();
-    danmakuLauncher = new DanmakuLauncher(args, this);
-    danmakuLauncher->moveToThread(danmakuThread);
-    connect(danmakuThread, &QThread::finished, danmakuLauncher, &DanmakuLauncher::deleteLater);
-    connect(danmakuThread, &QThread::started, danmakuLauncher, &DanmakuLauncher::initDL);
-    danmakuThread->start();
-    updateTimer->start(16);
+    QVBoxLayout *vl = new QVBoxLayout(this);
+    danmakuGLWidget = new DanmakuGLWidget(args, this);
+    vl->addWidget(danmakuGLWidget);
+    vl->setContentsMargins(0,0,0,0);
+    setLayout(vl);
 
     if(args.at(3) != "false")
     {
@@ -221,7 +222,6 @@ DanmakuPlayer::DanmakuPlayer(QStringList args, QWidget *parent, Qt::WindowFlags 
         connect(checkVideoResolutionTimer, &QTimer::timeout, this, &DanmakuPlayer::checkVideoResolution);
     }
 //    QProcess::execute("xset s off -dpms");
-//    qDebug() << QString("my dmk thread id:") << QThread::currentThreadId();
 }
 
 DanmakuPlayer::~DanmakuPlayer()
@@ -231,8 +231,7 @@ DanmakuPlayer::~DanmakuPlayer()
         QProcess::execute("sh -c \"qdbus org.kde.KWin /Compositor resume\"");
     }
     danmakuThread->quit();
-    danmakuLauncher->deleteLater();
-
+    danmakuGLWidget->deleteLater();
 }
 
 bool DanmakuPlayer::isDanmakuVisible()
@@ -247,7 +246,7 @@ void DanmakuPlayer::checkVideoResolution()
         checkVideoResolutionTimer->stop();
         delete checkVideoResolutionTimer;
         checkVideoResolutionTimer = nullptr;
-        danmakuLauncher->setStreamReadyFlag(true);
+        danmakuGLWidget->setStreamReadyFlag(true);
     }
 }
 
@@ -257,11 +256,11 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
     case Qt::Key_D:
         danmakuShowFlag = !danmakuShowFlag;
         if(danmakuShowFlag == false) {
-            danmakuLauncher->setDanmakuShowFlag(false);
-            danmakuLauncher->clearDanmakuQueue();
+//            danmakuLauncher->setDanmakuShowFlag(false);
+//            danmakuLauncher->clearDanmakuQueue();
         }else {
-            danmakuLauncher->clearDanmakuQueue();
-            danmakuLauncher->setDanmakuShowFlag(true);
+//            danmakuLauncher->clearDanmakuQueue();
+//            danmakuLauncher->setDanmakuShowFlag(true);
         }
         break;
     case Qt::Key_F:
@@ -313,6 +312,7 @@ void DanmakuPlayer::keyPressEvent(QKeyEvent *event)
     case Qt::Key_R:
     {
         emit refreshStream();
+        break;
     }
     default:
         break;
