@@ -53,14 +53,17 @@ Linux平台下的弹幕直播播放器。
 ## Installation
 ### From source
 ```
-$ cd /path/to/source
-$ qmake
-$ make
+cd /path/to/source
+mkdir build
+cd ./build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+make
+sudo make install
 ```
 
 ## Usage
 ```
-Usage: qlp [options]
+Usage: qliveplayer [options]
 A cute and useful Live Stream Player with danmaku support.
 Project address: https://github.com/IsoaSFlus/QLivePlayer
 
