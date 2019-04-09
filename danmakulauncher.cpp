@@ -26,7 +26,7 @@ void DanmakuLauncher::initDmcPy()
     dmcPy.append(args.at(0));
     dmcPyProcess = new QProcess(this);
     launchDanmakuTimer = new QTimer(this);
-    launchDanmakuTimer->start(200);
+    launchDanmakuTimer->start(500);
     connect(launchDanmakuTimer, &QTimer::timeout, this, &DanmakuLauncher::launchDanmaku);
     dmcPyProcess->start("python3", dmcPy);
     //    qDebug() << QString("my init thread id:") << QThread::currentThreadId();
@@ -43,25 +43,32 @@ void DanmakuLauncher::initDRecorder()
 
 void DanmakuLauncher::launchDanmaku()
 {
-//    qDebug() << "DanmakuLauncher::launchDanmaku";
     while(!dmcPyProcess->atEnd())
     {
         mutex.lock();
-        if (!danmakuQueue.isEmpty())
-        {
-            if ((*danmakuQueue.begin()).posX + (*danmakuQueue.begin()).length < 0)
-            {
+//        if (!danmakuQueue.isEmpty())
+//        {
+//            if ((*danmakuQueue.begin()).posX + (*danmakuQueue.begin()).length < 0)
+//            {
+//                danmakuQueue.dequeue();
+//                if (!danmakuQueue.isEmpty())
+//                {
+//                    if ((*danmakuQueue.begin()).posX + (*danmakuQueue.begin()).length < 0)
+//                    {
+//                        danmakuQueue.dequeue();
+//                    }
+//                }
+//            }
+//        }
+
+        while (!danmakuQueue.isEmpty()) {
+            if ((*danmakuQueue.begin()).posX + (*danmakuQueue.begin()).length < 0) {
                 danmakuQueue.dequeue();
-                if (!danmakuQueue.isEmpty())
-                {
-                    if ((*danmakuQueue.begin()).posX + (*danmakuQueue.begin()).length < 0)
-                    {
-                        danmakuQueue.dequeue();
-                    }
-                }
+            } else {
+                break;
             }
         }
-//        qDebug() << danmakuQueue.length();
+//        qDebug() << danmakuQueue.length() << "\n";
         updateResolution();
         mutex.unlock();
 
@@ -69,7 +76,7 @@ void DanmakuLauncher::launchDanmaku()
         qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
 
         if(!danmakuShowFlag)
-            return;
+            continue;
 
         Danmaku_t d;
 
@@ -77,16 +84,16 @@ void DanmakuLauncher::launchDanmaku()
         re.indexIn(newDanmaku);
         d.speaker = re.cap(1);
         d.text = newDanmaku.remove(QRegExp("^\\[.*\\] "));;
-//        qDebug() << dglw->width();
+        //        qDebug() << dglw->width();
         d.posX = resWidth;
         QFontMetrics fm(font);
         d.length = fm.width(newDanmaku);
         d.step = 2.0 * sqrt(sqrt(d.length/250.0)) + 0.5;
-//        qDebug() << d.step;
+        //        qDebug() << d.step;
 
         int availDChannel = getAvailDanmakuChannel(d.step);
         if (availDChannel < 0 && danmakuRecorder == nullptr)
-            return;
+            continue;
         int danmakuPos = availDChannel * (resHeight / 24);
         d.posY = danmakuPos;
         if (danmakuRecorder != nullptr && streamReady == true) {
@@ -103,6 +110,8 @@ void DanmakuLauncher::launchDanmaku()
             danmakuWidthSeq[availDChannel] = d.length;
             danmakuSpeedSeq[availDChannel] = d.step;
         }
+
+
     }
 }
 

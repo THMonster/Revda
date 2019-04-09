@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
     {
         qDebug().noquote() << "Error: You should at least specify one argument.";
         parser.showHelp();
-        exit(1);
     }
 
     // Qt sets the locale in the QApplication constructor, but libmpv requires

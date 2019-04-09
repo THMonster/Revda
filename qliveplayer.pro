@@ -1,8 +1,8 @@
 CONFIG -= app_bundle
-QT += widgets
+QT += dbus widgets
 
 QT_CONFIG -= no-pkg-config
-CONFIG += link_pkgconfig debug
+CONFIG += release link_pkgconfig
 PKGCONFIG += mpv
 
 HEADERS = \

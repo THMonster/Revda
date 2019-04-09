@@ -11,9 +11,10 @@
 MainWindow::MainWindow(QStringList args,QWidget *parent) : QWidget(parent)
 {
     this->args = args;
+    suspendPM();
     startStreamlinkProcess();
 //    qDebug() << args;
-    danmakuPlayer = new DanmakuPlayer(args, this, 0);
+    danmakuPlayer = new DanmakuPlayer(args, this, nullptr);
 
     QVBoxLayout *vl = new QVBoxLayout(this);
     vl->setContentsMargins(0,0,0,0);
@@ -29,6 +30,7 @@ MainWindow::MainWindow(QStringList args,QWidget *parent) : QWidget(parent)
 
 MainWindow::~MainWindow()
 {
+    resumePM();
     QProcess::execute("rm " + namedPipe);
     streamLinkProcess->terminate();
     streamLinkProcess->waitForFinished(3000);
@@ -89,4 +91,36 @@ void MainWindow::pauseResume()
 void MainWindow::setSliderRange(int duration)
 {
     m_slider->setRange(0, duration);
+}
+
+void MainWindow::suspendPM()
+{
+    if (QString(std::getenv("XDG_CURRENT_DESKTOP")) == "KDE") {
+        QDBusInterface kpm("org.kde.Solid.PowerManagement.PolicyAgent", "/org/kde/Solid/PowerManagement/PolicyAgent", "org.kde.Solid.PowerManagement.PolicyAgent");
+        QDBusReply<uint> r = kpm.call("AddInhibition", static_cast<uint>(4), "QLivePlayer", "Playing stream");
+        if (r.isValid()) {
+            pm_reply = r.value();
+        } else {
+            qDebug() << "Bad DBus call!";
+        }
+    } else {
+        QDBusInterface pm("org.freedesktop.PowerManagement.Inhibit", "/org/freedesktop/PowerManagement/Inhibit", "org.freedesktop.PowerManagement.Inhibit");
+        QDBusReply<uint> r = pm.call("Inhibit", "QLivePlayer", "Playing stream");
+        if (r.isValid()) {
+            pm_reply = r.value();
+        } else {
+            qDebug() << "Bad DBus call!";
+        }
+    }
+}
+
+void MainWindow::resumePM()
+{
+    if (QString(std::getenv("XDG_CURRENT_DESKTOP")) == "KDE") {
+        QDBusInterface kpm("org.kde.Solid.PowerManagement.PolicyAgent", "/org/kde/Solid/PowerManagement/PolicyAgent", "org.kde.Solid.PowerManagement.PolicyAgent");
+        kpm.call("ReleaseInhibition", pm_reply);
+    } else {
+        QDBusInterface pm("org.freedesktop.PowerManagement.Inhibit", "/org/freedesktop/PowerManagement/Inhibit", "org.freedesktop.PowerManagement.Inhibit");
+        pm.call("UnInhibit", pm_reply);
+    }
 }

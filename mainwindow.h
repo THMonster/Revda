@@ -11,6 +11,10 @@
 #include "mpvwidget.h"
 #include <QTimer>
 #include <QThread>
+#include <QtDBus/QDBusMessage>
+#include <QtDBus/QDBusConnection>
+#include <QtDBus/QDBusInterface>
+#include <QtDBus/QDBusReply>
 
 class MpvWidget;
 class QSlider;
@@ -43,6 +47,10 @@ private:
     QProcess* streamLinkProcess;
     QStringList args;
     QString namedPipe;
+    uint pm_reply = 0;
+
+    void suspendPM();
+    void resumePM();
 };
 
 #endif // MainWindow_H
