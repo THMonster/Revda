@@ -47,7 +47,7 @@ Linux平台下的弹幕直播播放器。
 * [streamlink](https://github.com/streamlink/streamlink)
 * [danmu](https://github.com/littlecodersh/danmu)
 * Qt5(>=5.4)
-* qmake
+* cmake
 * Python3
 
 ## Installation
