@@ -73,23 +73,21 @@ void DanmakuLauncher::launchDanmaku()
         mutex.unlock();
 
         QString newDanmaku(dmcPyProcess->readLine());
-        qDebug().noquote() << newDanmaku.remove(QRegExp("\n$")).leftJustified(62, ' ');
+        newDanmaku.chop(1);
+        qDebug().noquote() << newDanmaku.leftJustified(85, ' ');
 
         if(!danmakuShowFlag)
             continue;
 
         Danmaku_t d;
 
-        QRegExp re("^\\[(.*)\\] ");
-        re.indexIn(newDanmaku);
-        d.speaker = re.cap(1);
-        d.text = newDanmaku.remove(QRegExp("^\\[.*\\] "));;
-        //        qDebug() << dglw->width();
+        newDanmaku.remove(0, 1);
+        d.speaker = newDanmaku.section(QChar(']'), 0, 0);
+        d.text = newDanmaku.section(QChar(']'), 1, -1);
         d.posX = resWidth;
         QFontMetrics fm(font);
-        d.length = fm.width(newDanmaku);
+        d.length = fm.horizontalAdvance(d.text);
         d.step = 2.0 * sqrt(sqrt(d.length/250.0)) + 0.5;
-        //        qDebug() << d.step;
 
         int availDChannel = getAvailDanmakuChannel(d.step);
         if (availDChannel < 0 && danmakuRecorder == nullptr)
