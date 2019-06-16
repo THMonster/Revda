@@ -26,6 +26,7 @@ public:
     explicit MainWindow(QStringList args, QWidget *parent = 0);
     ~MainWindow();
     void startStreamlinkProcess();
+    void getStreamUrl();
     void refreshDanmakuPlayer();
 
 public Q_SLOTS:
@@ -44,9 +45,10 @@ private:
     QPushButton *m_openBtn;
     QPushButton *m_playBtn;
     QProcess* dmcPyProcess;
-    QProcess* streamLinkProcess;
+//    QProcess* streamLinkProcess;
     QStringList args;
-    QString namedPipe;
+//    QString namedPipe;
+    QString stream_url;
     uint pm_reply = 0;
 
     void suspendPM();
