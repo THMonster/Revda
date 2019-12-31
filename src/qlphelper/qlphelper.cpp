@@ -21,15 +21,8 @@ int main(int argc, char *argv[])
 
     QCommandLineOption urlOption(QStringList() << "u" << "url", "The Live Stream url to open.", "url", "https://www.douyu.com/2550505");
     parser.addOption(urlOption);
-//    QCommandLineOption streamOption(QStringList() << "s" << "stream", "The stream to open, default is \"best\".", "stream", "best");
-//    parser.addOption(streamOption);
-//    QCommandLineOption streamRecordOption(QStringList() << "record-stream", "File to save recorded stream", "filepath", "false");
-//    parser.addOption(streamRecordOption);
-//    QCommandLineOption danmakuRecordOption(QStringList() << "record-danmaku", "File to save recorded danmaku", "filepath", "false");
-//    parser.addOption(danmakuRecordOption);
-    QCommandLineOption fifoOption(QStringList() << "p" << "named-pipe", "Named pipe.");
-    fifoOption.setFlags(QCommandLineOption::HiddenFromHelp);
-    parser.addOption(fifoOption);
+    QCommandLineOption recordOption(QStringList() << "r" << "record", "Record stream to local file", "file", "null");
+    parser.addOption(recordOption);
 
     parser.process(a);
 
@@ -43,6 +36,7 @@ int main(int argc, char *argv[])
 
     QStringList args;
     args << parser.value(urlOption);
+    args << parser.value(recordOption);
     DanmakuLauncher dl(args);
     return a.exec();
 }

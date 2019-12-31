@@ -22,6 +22,7 @@ public:
     void launchDanmaku();
     void launchVoidDanmaku();
     int getAvailDanmakuChannel(double speed);
+    void printPlayerProcess();
     QString getStreamUrl(QString url);
 
 private:
@@ -32,6 +33,7 @@ private:
     QDataStream *out = nullptr;
     QTimer *launch_timer = nullptr;
     QString url;
+    QString record_file;
     QString stream_url;
     QString fifo;
     QElapsedTimer timer;
