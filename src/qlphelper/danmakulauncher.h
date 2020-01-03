@@ -17,6 +17,7 @@ public:
     ~DanmakuLauncher();
     void initDmcPy();
     void initPlayer();
+    QString getPlayerCMD(QString url);
     int getDankamuDisplayLength(QString dm, int fontsize);
     void loadDanmaku();
     void launchDanmaku();
@@ -35,6 +36,7 @@ private:
     QString url;
     QString record_file;
     QString stream_url;
+    QString title;
     QString fifo;
     QElapsedTimer timer;
     qint64 pts = 0;

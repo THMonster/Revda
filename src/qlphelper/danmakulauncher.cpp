@@ -1,7 +1,9 @@
 #include <QtCore>
 #include <QProcess>
+#include <cstdlib>
 #include "danmakulauncher.h"
 #include "mkv_header.h"
+#include "dmc_py.h"
 
 #define __PICK(n, i)   (((n)>>(8*i))&0xFF)
 
@@ -11,6 +13,10 @@ DanmakuLauncher::DanmakuLauncher(QStringList args)
     url = args.at(0);
     record_file = args.at(1);
     stream_url = getStreamUrl(url);
+    if (stream_url == "null") {
+        exit(1);
+        return;
+    }
     launch_timer = new QTimer(this);
     launch_timer->setInterval(200);
     launch_timer->start();
@@ -33,6 +39,7 @@ DanmakuLauncher::DanmakuLauncher(QStringList args)
 
     initDmcPy();
     connect(launch_timer, &QTimer::timeout, this, &DanmakuLauncher::launchDanmaku);
+
 }
 
 DanmakuLauncher::~DanmakuLauncher()
@@ -58,30 +65,59 @@ void DanmakuLauncher::initDmcPy()
     timer.start();
     QStringList dmcPy;
     dmcPy.append("-c");
-    dmcPy.append("exec(\"\"\"\\nimport time, sys\\nfrom danmu import DanMuClient\\ndef pp(msg):\\n    print(msg.encode(sys.stdin.encoding, 'ignore').\\n        decode(sys.stdin.encoding))\\n    sys.stdout.flush()\\ndmc = DanMuClient(sys.argv[1])\\nif not dmc.isValid(): \\n    print('Unsupported danmu server')\\n    sys.exit()\\n@dmc.danmu\\ndef danmu_fn(msg):\\n    pp('[%s] %s' % (msg['NickName'], msg['Content']))\\ndmc.start(blockThread = True)\\n\"\"\")");
+//    dmcPy.append("exec(\"\"\"\\nimport time, sys\\nfrom danmu import DanMuClient\\ndef pp(msg):\\n    print(msg.encode(sys.stdin.encoding, 'ignore').\\n        decode(sys.stdin.encoding))\\n    sys.stdout.flush()\\ndmc = DanMuClient(sys.argv[1])\\nif not dmc.isValid(): \\n    print('Unsupported danmu server')\\n    sys.exit()\\n@dmc.danmu\\ndef danmu_fn(msg):\\n    pp('[%s] %s' % (msg['NickName'], msg['Content']))\\ndmc.start(blockThread = True)\\n\"\"\")");
+    dmcPy.append("exec(\"\"\"\\nimport asyncio, sys\\nimport danmaku\\n\\ndef cb(m):\\n    if m['msg_type'] == 'danmaku':\\n        print(f'[{m[\"name\"]}] {m[\"content\"]}'.encode(sys.stdin.encoding, 'ignore').\\n              decode(sys.stdin.encoding))\\n        sys.stdout.flush()\\n\\n\\nasync def main():\\n    dmc = danmaku.DanmakuClient(sys.argv[1], cb)\\n    await dmc.start()\\n\\nasyncio.run(main())\\n\"\"\")");
     dmcPy.append(url);
     dmcPyProcess = new QProcess(this);
     connect(dmcPyProcess, &QProcess::readyRead, this, &DanmakuLauncher::loadDanmaku);
     dmcPyProcess->start("python3", dmcPy);
+    qCritical() << "Danmaku process initialized!";
 }
 
 void DanmakuLauncher::initPlayer()
 {
     QStringList player_args;
-    QString extra_args;
-    extra_args = record_file.compare("null") != 0 ? QString("--stream-record '%1'").arg(record_file) : " ";
+
     player_args.append("-c");
-    player_args.append(QString("curl '%1' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36' 2>/tmp/qlpculog| "
-                               "ffmpeg -i - -i '%2' -c copy -f matroska -  2>/tmp/qlpfflog | "
-                               "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' - 1>/dev/null 2>&1").arg(stream_url).arg(fifo).arg(extra_args));
+    player_args.append(getPlayerCMD(url));
     player = new QProcess(this);
     connect(player, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
         [=](int exitCode, QProcess::ExitStatus exitStatus){
         Q_UNUSED(exitStatus);
         QCoreApplication::exit(exitCode);
     });
-    player->start("sh", player_args);
     connect(player, &QProcess::readyRead, this, &DanmakuLauncher::printPlayerProcess);
+    player->start("sh", player_args);
+    qCritical() << "Player process initialized!";
+}
+
+QString DanmakuLauncher::getPlayerCMD(QString url)
+{
+    QString ret;
+    QString extra_args;
+    extra_args = record_file.compare("null") != 0 ? QString("--stream-record '%1'").arg(record_file) : " ";
+    if (url.contains("huya.com")) {
+//        stream_url.remove(0, 4);
+//        if (stream_url.at(0) == 's') {
+//            stream_url.remove(0, 1);
+//        }
+        stream_url = "hls://" + stream_url;
+//        qCritical() << stream_url;
+        ret = QString("streamlink '%1' best -O 2>/tmp/qlpculog| "
+                      "ffmpeg -i - -c copy -f flv - 2>/tmp/qlpfflog2 | "
+                      "ffmpeg -i - -i '%2' -map 0:v -map 0:a -map 1:0 -c copy -f matroska -metadata title='%4' - 2>/tmp/qlpfflog| "
+                      "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' - 1>/dev/null 2>&1").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
+    } else {
+        ret = QString("wget '%1' -q -O - 2>/tmp/qlpculog| "
+                      "ffmpeg -nocopyts -i - -i '%2' -map 0:v -map 0:a -map 1:0 -c copy -f matroska -metadata title='%4' -  2>/tmp/qlpfflog | "
+                      "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' - 1>/dev/null 2>&1").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
+//        stream_url = "httpstream://" + stream_url;
+//        ret = QString("streamlink '%1' best -O 2>/tmp/qlpculog| "
+//                      "ffmpeg -i - -i '%2' -c copy -f matroska -  2>/tmp/qlpfflog | "
+//                      "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' - 1>/dev/null 2>&1").arg(stream_url).arg(fifo).arg(extra_args);
+
+    }
+    return ret;
 }
 
 int DanmakuLauncher::getDankamuDisplayLength(QString dm, int fontsize)
@@ -96,7 +132,7 @@ int DanmakuLauncher::getDankamuDisplayLength(QString dm, int fontsize)
         ++data;
         --dm_size;
     }
-    return (fontsize * 0.75 * dm.size()) - (fontsize / 2 * ascii_num);
+    return (fontsize * 0.75 * dm.size()) - (fontsize * 0.25 * ascii_num);
 }
 
 
@@ -124,7 +160,7 @@ void DanmakuLauncher::launchDanmaku()
     while (!danmaku_queue.isEmpty()) {
         dm = danmaku_queue.dequeue();
         dm.chop(1);
-//        qCritical().noquote() << dm.leftJustified(85, ' ');
+        qCritical().noquote() << dm;
         dm.remove(0, 1);
         dm = dm.section(QChar(']'), 1, -1);
         dm.remove(0, 1);
@@ -290,14 +326,19 @@ QString DanmakuLauncher::getStreamUrl(QString url)
     p.waitForStarted();
     p.waitForFinished();
     QRegularExpression re("^(http.+)$");
+    QRegularExpression re_title("^title: +([^\n]+)$");
     while(!p.atEnd()) {
-        QRegularExpressionMatch match = re.match(p.readLine());
+        QString line(p.readLine());
+        QRegularExpressionMatch match = re_title.match(line);
+        if (match.hasMatch()) {
+             this->title = match.captured(1);
+        }
+        match = re.match(line);
         if (match.hasMatch()) {
              return match.captured(1);
         }
     }
     qCritical() << "Stream url not found!";
-    QCoreApplication::exit(1);
     return "null";
 }
 
