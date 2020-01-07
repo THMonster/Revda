@@ -31,7 +31,7 @@ Options:
 为了最好的效率，这个版本不再使用libmpv，而是直接调用mpv本身，所以在播放时会吃你自己对mpv的设置，播放时的控制也和原生的mpv一样，参考[interactive-control](https://mpv.io/manual/stable/#interactive-control)
 
 ## Tips
-* 由于ass是根据视频的每一帧来渲染的，所以为了追求最好的动画效果，推荐把录制的视频帧率上采样至60fps播放，这里提供一个基于mpv的使用ffmpeg内建滤波器的方法 :
+* 由于ass是根据视频的每一帧来渲染的，所以在播放录制下来的视频文件时为了追求最好的动画效果，推荐把视频帧率上采样至60fps播放，这里提供一个基于mpv的使用ffmpeg内建滤波器的方法 :
 `mpv  --vf 'lavfi="fps=fps=60:round=down"' <your-video-file>`
 
 ## Screenshots
