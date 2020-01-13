@@ -1,5 +1,23 @@
 <RCC>
-    <qresource prefix="/ass">
-        <file>ass_template</file>
+    <qresource prefix="/">
+        <file>qml/main.qml</file>
+        <file>qml/MHeader.qml</file>
+        <file>qml/RoomDelegate.qml</file>
+        <file>qml/RoomView.qml</file>
+        <file>qml/MTabBar.qml</file>
+        <file>qml/MIconTabButton.qml</file>
+        <file>qml/SavedPage.qml</file>
+        <file>artworks/default_room.svg</file>
+        <file>artworks/history_selected.svg</file>
+        <file>artworks/history.svg</file>
+        <file>artworks/open.svg</file>
+        <file>artworks/refresh.svg</file>
+        <file>artworks/saved_selected.svg</file>
+        <file>artworks/saved.svg</file>
+        <file>qml/IconButton.qml</file>
+        <file>qml/HistoryPage.qml</file>
+        <file>artworks/like_selected.svg</file>
+        <file>artworks/like.svg</file>
+        <file>artworks/enter.svg</file>
     </qresource>
 </RCC>

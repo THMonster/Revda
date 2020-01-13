@@ -1,11 +1,25 @@
 #include <QtCore>
 #include <QProcess>
 #include <cstdlib>
+#include <csignal>
 #include "danmakulauncher.h"
 #include "mkv_header.h"
 #include "dmc_py.h"
 
 #define __PICK(n, i)   (((n)>>(8*i))&0xFF)
+
+void stopSubProcesses(qint64 parentProcessId) {
+    qDebug() << "stop subprocess for parent id:" << parentProcessId;
+    QProcess get_childs;
+    QStringList get_childs_cmd;
+    get_childs_cmd << "--ppid" << QString::number(parentProcessId) << "-o" << "pid" << "--no-heading";
+    get_childs.start("ps", get_childs_cmd);
+    get_childs.waitForFinished();
+    QString childIds(get_childs.readAllStandardOutput());
+    childIds.replace('\n', ' ');
+
+    QProcess::execute("kill " + childIds);
+}
 
 DanmakuLauncher::DanmakuLauncher(QStringList args)
 {
@@ -24,6 +38,14 @@ DanmakuLauncher::DanmakuLauncher(QStringList args)
     QProcess::execute(QString("mkfifo %1").arg(fifo));
     fifo_file = new QFile(fifo);
     initPlayer();
+//    if (!player->waitForStarted()) {
+//        qCritical() << "Error occurred! Please retry.";
+//        exit(1);
+//    }
+//    if (player->waitForFinished(3000)) {
+//        qCritical() << "Error occurred! Please retry.";
+//        exit(1);
+//    }
     if (!fifo_file->open(QIODevice::WriteOnly)) {
         qCritical() << "Cannot open fifo!";
         exit(1);
@@ -40,7 +62,7 @@ DanmakuLauncher::DanmakuLauncher(QStringList args)
     initDmcPy();
     live_checker = new QProcess(this);
     connect(launch_timer, &QTimer::timeout, this, &DanmakuLauncher::launchDanmaku);
-    connect(live_checker, &QProcess::readyRead, this, &DanmakuLauncher::getLiveStatus);
+//    connect(live_checker, &QProcess::readyRead, this, &DanmakuLauncher::getLiveStatus);
 
 }
 
@@ -55,6 +77,9 @@ DanmakuLauncher::~DanmakuLauncher()
     live_checker->disconnect();
     player->disconnect();
     dmcPyProcess->disconnect();
+    if (player->processId() != 0) {
+        stopSubProcesses(player->processId());
+    }
     live_checker->terminate();
     live_checker->waitForFinished(3000);
     live_checker->deleteLater();
@@ -93,7 +118,7 @@ void DanmakuLauncher::initPlayer()
         Q_UNUSED(exitStatus);
         QCoreApplication::exit(exitCode);
     });
-    connect(player, &QProcess::readyReadStandardError, this, &DanmakuLauncher::printPlayerProcess);
+//    connect(player, &QProcess::readyReadStandardError, this, &DanmakuLauncher::printPlayerProcess);
     player->start("sh", player_args);
     qDebug() << "Player process initialized!";
 }
@@ -106,11 +131,11 @@ QString DanmakuLauncher::getPlayerCMD(QString url)
     extra_args = record_file.compare("null") != 0 ? QString("--stream-record '%1'").arg(record_file) : " ";
     if (url.contains("huya.com")) {
         ret = QString("ffmpeg -headers 'User-Agent: Wget/1.20.3 (linux-gnu)' -i '%1' -c copy -f flv - | "
-                      "ffmpeg -i - -i '%2' -map 0:v -map 0:a -map 1:0 -c copy -f matroska -metadata title='%4' - 2>/dev/null| "
+                      "ffmpeg -i '%2' -i - -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - 2>/dev/null| "
                       "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' - 1>/dev/null 2>&1").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
     } else {
-        ret = QString("ffmpeg -nocopyts -headers 'User-Agent: Wget/1.20.3 (linux-gnu)' -i '%1' -i '%2' -map 0:v -map 0:a -map 1:0 -c copy -f matroska -metadata title='%4' - | "
-                      "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' - 1>/dev/null 2>&1").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
+        ret = QString("ffmpeg -i '%2' -nocopyts -headers 'User-Agent: Wget/1.20.3 (linux-gnu)' -i '%1' -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
+                      "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}' - ").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
     }
     return ret;
 }
@@ -119,6 +144,9 @@ int DanmakuLauncher::getDankamuDisplayLength(QString dm, int fontsize)
 {
     int ascii_num = 0;
     int dm_size = dm.size();
+    if (dm_size <= 0) {
+        return fontsize * 0.75 * 10;
+    }
     const QChar *data = dm.constData();
     while (dm_size > 0) {
         if (data->unicode() < 128) {
@@ -140,8 +168,8 @@ void DanmakuLauncher::loadDanmaku()
 
 void DanmakuLauncher::launchDanmaku()
 {
-    if (check_counter % 25 == 24) {
-        launchLiveChecker();
+    if (check_counter % 50 == 49) {
+        getLiveStatus();
         check_counter = 0;
     } else {
         ++check_counter;
@@ -167,6 +195,7 @@ void DanmakuLauncher::launchDanmaku()
         speaker = dm.section(QChar(']'), 0, 0);
         dm = dm.section(QChar(']'), 1, -1);
         dm.remove(0, 1);
+        dm.replace(QRegularExpression("[\\x{1F300}-\\x{1F5FF}|\\x{1F1E6}-\\x{1F1FF}|\\x{2700}-\\x{27BF}|\\x{1F900}-\\x{1F9FF}|\\x{1F600}-\\x{1F64F}|\\x{1F680}-\\x{1F6FF}|\\x{2600}-\\x{26FF}]"), "[em]"); // remove emoji
         display_length = getDankamuDisplayLength(dm, font_size);
         speed = 60.0 * 4.0 * sqrt(sqrt(display_length/250.0)) + 0.5;
         avail_dc = getAvailDanmakuChannel(speed);
@@ -317,8 +346,8 @@ int DanmakuLauncher::getAvailDanmakuChannel(double speed)
 
 void DanmakuLauncher::printPlayerProcess()
 {
-    while (player->canReadLine()) {
-        QString err = player->readLine();
+    while (!player->atEnd()) {
+        QString err = player->readAll();
         qDebug() << err;
         if (err.contains("The specified session has been invalidated for some reason")) {
             qCritical() << "Stream invalid!";
@@ -329,23 +358,29 @@ void DanmakuLauncher::printPlayerProcess()
 
 void DanmakuLauncher::getLiveStatus()
 {
-    bool online = false;
-    while(live_checker->canReadLine()) {
-        QString r = player->readAll();
-        QRegularExpression re("^(http.+)$");
-        QString line(live_checker->readLine());
-        QRegularExpressionMatch match = re.match(line);
-        if (match.hasMatch()) {
-            online = true;
-        }
+    QString err;
+    if (!player->atEnd()) {
+        err = player->readAll();
+        qDebug() << err;
     }
-    if (online) {
-        qDebug() << "Stream online.";
-    } else {
-        qCritical() << "Stream offline, closing...";
-        QCoreApplication::exit(1);
+    if (err.isEmpty()) {
+        if (on_buffering == true) {
+            qCritical() << "Network error! Closing...";
+            QCoreApplication::exit(1);
+        }
+        return;
     }
 
+    QStringList sl = err.split(';', QString::SkipEmptyParts);
+
+    for (auto s : sl) {
+        qDebug() << s;
+        if (s.contains("buffering")) {
+            on_buffering = true;
+        } else if (s.contains("playing")) {
+            on_buffering = false;
+        }
+    }
 }
 
 void DanmakuLauncher::launchLiveChecker()
@@ -362,8 +397,8 @@ QString DanmakuLauncher::getStreamUrl(QString url)
 {
     QProcess p;
     p.start("ykdl", QStringList() << "-i" << url);
-    p.waitForStarted();
-    p.waitForFinished();
+    p.waitForStarted(5000);
+    p.waitForFinished(5000);
     QRegularExpression re("^(http.+)$");
     QRegularExpression re_title("^title: +([^\n]+)$");
     while(!p.atEnd()) {

@@ -29,6 +29,7 @@ public:
     QString getStreamUrl(QString url);
 
 private:
+    bool on_buffering = true;
     int channel_num = 20;
     int font_size = 40;
     double speed_factor = 1.0;

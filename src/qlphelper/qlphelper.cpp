@@ -42,12 +42,12 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(myMessageOutput);
     QCoreApplication a(argc, argv);
     // QApplication::setApplicationName("QLivePlayer");
-    // QApplication::setApplicationVersion(PROJECT_VERSION);
+     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
 
     QCommandLineParser parser;
 //    parser.setApplicationDescription("A cute and useful Live Stream Player with danmaku support.\nProject address: https://github.com/IsoaSFlus/QLivePlayer");
     parser.addHelpOption();
-//    parser.addVersionOption();
+    parser.addVersionOption();
 
     QCommandLineOption urlOption(QStringList() << "u" << "url", "The Live Stream url to open", "url", "https://www.douyu.com/2550505");
     parser.addOption(urlOption);
