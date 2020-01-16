@@ -20,11 +20,11 @@ Linux平台下的弹幕直播播放器。
 [![Screenshot.png](https://raw.githubusercontent.com/IsoaSFlus/QLivePlayer/master/pictures/s1.png)](https://raw.githubusercontent.com/IsoaSFlus/QLivePlayer/master/pictures/s1.png)
 [![Screenshot.png](https://raw.githubusercontent.com/IsoaSFlus/QLivePlayer/master/pictures/s2.png)](https://raw.githubusercontent.com/IsoaSFlus/QLivePlayer/master/pictures/s2.png)
 
+编译安装之后在终端启动`qliveplayer`可以打开gui。
+
 当想要加入一个直播房间时，在左上角输入房间代码，房间代码的格式为`<prefix>-<roomid>`prefix的规则为直播网站域名的前两个字母，如：`do`、`hu`、`bi`。举个例子，如果你想进斗鱼的9999号房间，那么房间代码就是`do-9999`。输入完成后按回车会旁边的键头就会打开mpv进行播放（会缓冲几秒，不要暴躁狂点，否则会弹出一堆mpv的窗口）。侧边栏的第二个按钮是历史记录页面，会记录下你的播放历史，点爱心图标便可收藏，不过需要注意，为了防止手滑，收藏/取消收藏的操作只有在点击右上的刷新按钮（按f5也能刷新，取决于你的DE）之后才会真正应用。点击爱心旁边的锁链图标可以快捷打开该直播间进行播放，同样需要注意，不要狂点，mpv会缓冲一段时间，点多了就会弹一堆mpv出来。如果你等了很久都没有出来播放窗口，建议用下面的cli程序手动输入链接看看能不能成功播放，有没有输出有用的信息。
 
-
-
-
+cli程序用法如下：
 
 ```
 qlphelper -h
