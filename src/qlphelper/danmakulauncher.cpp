@@ -4,7 +4,6 @@
 #include <csignal>
 #include "danmakulauncher.h"
 #include "mkv_header.h"
-#include "dmc_py.h"
 
 #define __PICK(n, i)   (((n)>>(8*i))&0xFF)
 
@@ -38,14 +37,7 @@ DanmakuLauncher::DanmakuLauncher(QStringList args)
     QProcess::execute(QString("mkfifo %1").arg(fifo));
     fifo_file = new QFile(fifo);
     initPlayer();
-//    if (!player->waitForStarted()) {
-//        qCritical() << "Error occurred! Please retry.";
-//        exit(1);
-//    }
-//    if (player->waitForFinished(3000)) {
-//        qCritical() << "Error occurred! Please retry.";
-//        exit(1);
-//    }
+
     if (!fifo_file->open(QIODevice::WriteOnly)) {
         qCritical() << "Cannot open fifo!";
         exit(1);
@@ -95,9 +87,9 @@ void DanmakuLauncher::initDmcPy()
 {
     timer.start();
     QStringList dmcPy;
-    dmcPy.append("-c");
+    dmcPy.append(QStandardPaths::locate(QStandardPaths::DataLocation, "dmc.pyz"));
 //    dmcPy.append("exec(\"\"\"\\nimport time, sys\\nfrom danmu import DanMuClient\\ndef pp(msg):\\n    print(msg.encode(sys.stdin.encoding, 'ignore').\\n        decode(sys.stdin.encoding))\\n    sys.stdout.flush()\\ndmc = DanMuClient(sys.argv[1])\\nif not dmc.isValid(): \\n    print('Unsupported danmu server')\\n    sys.exit()\\n@dmc.danmu\\ndef danmu_fn(msg):\\n    pp('[%s] %s' % (msg['NickName'], msg['Content']))\\ndmc.start(blockThread = True)\\n\"\"\")");
-    dmcPy.append("exec(\"\"\"\\nimport asyncio, sys\\nimport danmaku\\n\\ndef cb(m):\\n    if m['msg_type'] == 'danmaku':\\n        print(f'[{m[\"name\"]}] {m[\"content\"]}'.encode(sys.stdin.encoding, 'ignore').\\n              decode(sys.stdin.encoding))\\n        sys.stdout.flush()\\n\\n\\nasync def main():\\n    dmc = danmaku.DanmakuClient(sys.argv[1], cb)\\n    await dmc.start()\\n\\nasyncio.run(main())\\n\"\"\")");
+//    dmcPy.append("exec(\"\"\"\\nimport asyncio, sys\\nimport danmaku\\n\\ndef cb(m):\\n    if m['msg_type'] == 'danmaku':\\n        print(f'[{m[\"name\"]}] {m[\"content\"]}'.encode(sys.stdin.encoding, 'ignore').\\n              decode(sys.stdin.encoding))\\n        sys.stdout.flush()\\n\\n\\nasync def main():\\n    dmc = danmaku.DanmakuClient(sys.argv[1], cb)\\n    await dmc.start()\\n\\nasyncio.run(main())\\n\"\"\")");
     dmcPy.append(url);
     dmcPyProcess = new QProcess(this);
     connect(dmcPyProcess, &QProcess::readyRead, this, &DanmakuLauncher::loadDanmaku);
@@ -130,11 +122,11 @@ QString DanmakuLauncher::getPlayerCMD(QString url)
 //    QString headers("user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36");
     extra_args = record_file.compare("null") != 0 ? QString("--stream-record '%1'").arg(record_file) : " ";
     if (url.contains("huya.com")) {
-        ret = QString("ffmpeg -headers 'User-Agent: Wget/1.20.3 (linux-gnu)' -i '%1' -c copy -f flv - | "
+        ret = QString("ffmpeg -headers 'User-Agent: mpv 0.31.0\\r\\n' -i '%1' -c copy -f flv - | "
                       "ffmpeg -i '%2' -i - -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - 2>/dev/null| "
                       "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' - 1>/dev/null 2>&1").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
     } else {
-        ret = QString("ffmpeg -i '%2' -nocopyts -headers 'User-Agent: Wget/1.20.3 (linux-gnu)' -i '%1' -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
+        ret = QString("ffmpeg -i '%2' -nocopyts -headers 'User-Agent: mpv 0.31.0\\r\\n' -i '%1' -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
                       "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}' - ").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
     }
     return ret;
