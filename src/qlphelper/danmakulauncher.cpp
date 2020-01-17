@@ -122,11 +122,11 @@ QString DanmakuLauncher::getPlayerCMD(QString url)
 //    QString headers("user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36");
     extra_args = record_file.compare("null") != 0 ? QString("--stream-record '%1'").arg(record_file) : " ";
     if (url.contains("huya.com")) {
-        ret = QString("ffmpeg -headers 'User-Agent: mpv 0.31.0\\r\\n' -i '%1' -c copy -f flv - | "
+        ret = QString("ffmpeg -headers 'User-Agent: Wget/1.20.3 (linux-gnu)' -i '%1' -c copy -f flv - | "
                       "ffmpeg -i '%2' -i - -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - 2>/dev/null| "
                       "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' - 1>/dev/null 2>&1").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
     } else {
-        ret = QString("ffmpeg -i '%2' -nocopyts -headers 'User-Agent: mpv 0.31.0\\r\\n' -i '%1' -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
+        ret = QString("ffmpeg -i '%2' -headers 'User-Agent: Wget/1.20.3 (linux-gnu)' -i '%1' -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
                       "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}' - ").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
     }
     return ret;
@@ -224,7 +224,7 @@ void DanmakuLauncher::launchDanmaku()
             tmp.prepend(0xa0);
             bin_out.append(tmp);
         } else {
-            return;
+            continue;
         }
     }
     buf = (pts + timer.elapsed());

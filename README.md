@@ -50,17 +50,18 @@ Options:
 
 ## Requirements
 * [mpv](https://github.com/mpv-player/mpv)
-* [danmaku](https://github.com/IsoaSFlus/danmaku)
 * [ykdl](https://github.com/zhangn1985/ykdl)
 * ffmpeg
 * Qt5(>=5.4)
 * cmake
+* python-aiohttp
 * python3(>=3.7)
 
 ## Installation
 ### From source
 ```
-cd /path/to/project
+git clone https://github.com/IsoaSFlus/QLivePlayer.git
+cd QLivePlayer
 mkdir build
 cd ./build
 cmake -DCMAKE_BUILD_TYPE=Release ..
