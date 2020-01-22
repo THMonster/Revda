@@ -1,0 +1,44 @@
+#!/bin/bash
+
+function print_help()
+{
+    echo "Basic options:
+ -u <url>            url of room
+ -t <time-interval>  default is 5 seconds
+ -f <file-prefix>    prefix of record file
+" >&2
+}
+room_url=''
+time_interval='5'
+file_prefix='record'
+
+while getopts "u:t:f:" opt; do
+    case $opt in
+        u)
+            room_url="$OPTARG"
+            ;;
+        t)
+            time_interval="$OPTARG"
+            ;;
+        f)
+            file_prefix="$OPTARG"
+            ;;
+        \?)
+            print_help
+            exit 1
+            ;;
+    esac
+done
+
+if [[ "${room_url}" == "" ]]
+then
+    echo "room url cannot be empty!!!" >&2
+    print_help
+    exit 1
+fi
+
+while [[ 1 == 1 ]]
+do
+    qlphelper -u "${room_url}" -r "${file_prefix}-$(date +%H-%M-%S).mkv" --no-window
+    sleep ${time_interval}
+done

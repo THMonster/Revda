@@ -18,5 +18,7 @@ target_link_libraries(qliveplayer
 
 
 
+file(GLOB qlprecorder tools/qlprecorder)
+install(PROGRAMS ${qlprecorder} DESTINATION bin)
 install(TARGETS qliveplayer DESTINATION bin)
 add_subdirectory(qlphelper)

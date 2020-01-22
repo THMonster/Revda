@@ -38,6 +38,7 @@ private:
     QTimer *launch_timer = nullptr;
     QString url;
     QString record_file;
+    bool no_window = false;
     QString stream_url;
     QString title;
     QString fifo;

@@ -25,11 +25,15 @@ DanmakuLauncher::DanmakuLauncher(QStringList args)
     fifo = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
     url = args.at(0);
     record_file = args.at(1);
+    if (args.at(2) == "true") {
+        no_window = true;
+    }
     stream_url = getStreamUrl(url);
     if (stream_url == "null") {
         exit(1);
         return;
     }
+
     launch_timer = new QTimer(this);
     launch_timer->setInterval(200);
     launch_timer->start();
@@ -118,16 +122,18 @@ void DanmakuLauncher::initPlayer()
 QString DanmakuLauncher::getPlayerCMD(QString url)
 {
     QString ret;
-    QString extra_args;
-//    QString headers("user-agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36");
-    extra_args = record_file.compare("null") != 0 ? QString("--stream-record '%1'").arg(record_file) : " ";
+    QString mpv_extra_args;
+    QString record_args;
+    QString ua("User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36");
+    record_args = record_file.compare("null") != 0 ? QString("tee '%1' | ").arg(record_file) : " ";
+    mpv_extra_args = (no_window ? " --no-video --mute=yes " : " ");
     if (url.contains("huya.com")) {
-        ret = QString("ffmpeg -headers 'User-Agent: Wget/1.20.3 (linux-gnu)' -i '%1' -c copy -f flv - | "
-                      "ffmpeg -i '%2' -i - -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - 2>/dev/null| "
-                      "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' - 1>/dev/null 2>&1").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
+        ret = QString("ffmpeg -user_agent '%6' -i '%1' -loglevel quiet -c copy -f flv - | "
+                      "ffmpeg -i '%2' -i - -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
+                      "%5 mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}' -").arg(stream_url).arg(fifo).arg(mpv_extra_args).arg(title).arg(record_args).arg(ua);
     } else {
-        ret = QString("ffmpeg -i '%2' -headers 'User-Agent: Wget/1.20.3 (linux-gnu)' -i '%1' -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
-                      "mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}' - ").arg(stream_url).arg(fifo).arg(extra_args).arg(title);
+        ret = QString("ffmpeg -i '%2' -user_agent '%6' -i '%1' -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
+                      "%5 mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}' -").arg(stream_url).arg(fifo).arg(mpv_extra_args).arg(title).arg(record_args).arg(ua);
     }
     return ret;
 }

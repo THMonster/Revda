@@ -31,10 +31,12 @@ qlphelper -h
 Usage: qlphelper [options]
 
 Options:
-  -h, --help           Displays help on commandline options
-  --help-all           Displays help including Qt specific options
+  -h, --help           Displays help on commandline options.
+  --help-all           Displays help including Qt specific options.
+  -v, --version        Displays version information.
   -u, --url <url>      The Live Stream url to open
   -r, --record <file>  Record stream to local file
+  --no-window          No window if specified, useful for recording
   -d, --debug          Show debug info
 
 ```
@@ -46,6 +48,12 @@ Options:
 `mpv  --vf 'lavfi="fps=fps=60:round=down"' <your-video-file>`
 
 * 同时播放的直播并没有数量限制，你可以同时打开多个直播间，且每个播放进程和gui前端进程是分离的，退出gui前端不会关闭正在播放的直播。
+
+### Record stream
+
+在`qlphelper`中使用`-r`参数可以录制直播流到指定的文件。录制下来的文件使用matroska容器封装，包含三轨，分别是视频、音频和字幕轨，弹幕包含在字幕轨中。当只使用`-r`参数进行录制，会同时进行播放，如果你只想录制不想同时播放，那么可以在使用`-r`参数的同时加上`--no-window`参数，便不会同时播放。如果在加了`--no-window`之后又想边录边看了怎么办？有两种方法，第一种是直接再开个`qlphelper`看，这样做自然会占用两带宽；第二种是直接用mpv播放录制文件，这样不会占用额外的带宽也不会影响录制。
+
+另外我还提供了一个简单的脚本`qlprecorder`方便进行无人值守的录制，启动后它会按时轮循自动重试。这个脚本会一并安装，不需要额外下载，具体使用方法可以自己看一看，就不多说了。
 
 
 ## Requirements

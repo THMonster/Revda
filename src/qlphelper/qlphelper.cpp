@@ -6,10 +6,40 @@
 #include <QProcess>
 #include <QStringList>
 #include <iostream>
+#include <initializer_list>
+#include <signal.h>
+#include <unistd.h>
 
 #include "danmakulauncher.h"
 
 bool debug_flag = false;
+
+void ignoreUnixSignals(std::initializer_list<int> ignoreSignals) {
+    // all these signals will be ignored.
+    for (int sig : ignoreSignals)
+        signal(sig, SIG_IGN);
+}
+
+void catchUnixSignals(std::initializer_list<int> quitSignals) {
+    auto handler = [](int sig) -> void {
+        // blocking and not aysnc-signal-safe func are valid
+//        printf("\nquit the application by signal(%d).\n", sig);
+        QCoreApplication::quit();
+    };
+
+    sigset_t blocking_mask;
+    sigemptyset(&blocking_mask);
+    for (auto sig : quitSignals)
+        sigaddset(&blocking_mask, sig);
+
+    struct sigaction sa;
+    sa.sa_handler = handler;
+    sa.sa_mask    = blocking_mask;
+    sa.sa_flags   = 0;
+
+    for (auto sig : quitSignals)
+        sigaction(sig, &sa, nullptr);
+}
 
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
@@ -41,6 +71,7 @@ int main(int argc, char *argv[])
 {
     qInstallMessageHandler(myMessageOutput);
     QCoreApplication a(argc, argv);
+    catchUnixSignals({SIGQUIT, SIGINT, SIGTERM, SIGHUP});
     QCoreApplication::setApplicationName("QLivePlayer");
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
 
@@ -53,6 +84,8 @@ int main(int argc, char *argv[])
     parser.addOption(urlOption);
     QCommandLineOption recordOption(QStringList() << "r" << "record", "Record stream to local file", "file", "null");
     parser.addOption(recordOption);
+    QCommandLineOption nowindowOption(QStringList() << "no-window", "No window if specified, useful for recording");
+    parser.addOption(nowindowOption);
     QCommandLineOption debugOption(QStringList() << "d" << "debug", "Show debug info");
     parser.addOption(debugOption);
 
@@ -72,6 +105,7 @@ int main(int argc, char *argv[])
     QStringList args;
     args << parser.value(urlOption);
     args << parser.value(recordOption);
+    args << (parser.isSet(nowindowOption) ? "true" : "false");
     DanmakuLauncher dl(args);
     return a.exec();
 }
