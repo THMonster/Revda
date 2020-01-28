@@ -130,10 +130,10 @@ QString DanmakuLauncher::getPlayerCMD(QString url)
     if (url.contains("huya.com")) {
         ret = QString("ffmpeg -user_agent '%6' -i '%1' -loglevel quiet -c copy -f flv - | "
                       "ffmpeg -i '%2' -i - -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
-                      "%5 mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}' -").arg(stream_url).arg(fifo).arg(mpv_extra_args).arg(title).arg(record_args).arg(ua);
+                      "%5 mpv %3 --vf='lavfi=\"fps=fps=60:round=down\"' --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}' -").arg(stream_url).arg(fifo).arg(mpv_extra_args).arg(title).arg(record_args).arg(ua);
     } else {
         ret = QString("ffmpeg -i '%2' -user_agent '%6' -i '%1' -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
-                      "%5 mpv %3 --vf 'lavfi=\"fps=fps=60:round=down\"' --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}' -").arg(stream_url).arg(fifo).arg(mpv_extra_args).arg(title).arg(record_args).arg(ua);
+                      "%5 mpv %3 --vf='lavfi=\"fps=fps=60:round=down\"' --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}' -").arg(stream_url).arg(fifo).arg(mpv_extra_args).arg(title).arg(record_args).arg(ua);
     }
     return ret;
 }
