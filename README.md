@@ -66,6 +66,21 @@ Options:
 * python3(>=3.7)
 
 ## Installation
+
+### Archlinux
+
+Thanks for [@MarvelousBlack](https://github.com/MarvelousBlack)'s maintenance.
+
+#### [ArchlinuxCN](https://wiki.archlinux.org/index.php/Unofficial_user_repositories#archlinuxcn) repo
+
+```
+sudo pacman -S kcm-colorful-git
+```
+#### AUR
+```
+yay -S kcm-colorful-git # or any other aur helper
+```
+
 ### From source
 ```
 git clone https://github.com/IsoaSFlus/QLivePlayer.git
