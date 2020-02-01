@@ -154,7 +154,10 @@ void RoomModel::refreshHistory()
 void RoomModel::openUrl(QString url)
 {
     QStringList sl;
-    sl = url.split('-');
+    sl = url.split('-', QString::SkipEmptyParts);
+    if (sl.size() != 2) {
+        return;
+    }
     if (sl[0] == "do") {
         openRoom("https://www.douyu.com/" + sl[1]);
     } else if (sl[0] == "bi") {
