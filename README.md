@@ -74,11 +74,11 @@ Thanks for [@MarvelousBlack](https://github.com/MarvelousBlack)'s maintenance.
 #### [ArchlinuxCN](https://wiki.archlinux.org/index.php/Unofficial_user_repositories#archlinuxcn) repo
 
 ```
-sudo pacman -S kcm-colorful-git
+sudo pacman -S qliveplayer-git
 ```
 #### AUR
 ```
-yay -S kcm-colorful-git # or any other aur helper
+yay -S qliveplayer-git # or any other aur helper
 ```
 
 ### From source
