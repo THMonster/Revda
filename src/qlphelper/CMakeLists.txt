@@ -1,6 +1,7 @@
 set(qlphelper_file_SRCS
     qlphelper.cpp
     danmakulauncher.cpp
+    fudujikiller.cpp
 )
 
 add_executable(qlphelper ${qlphelper_file_SRCS})

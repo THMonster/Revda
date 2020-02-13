@@ -51,6 +51,7 @@ Rectangle {
                 id: title
                 horizontalAlignment: Text.AlignRight
                 maximumLineCount: 1
+                color: "#232627"
                 text: model.display.title
                 wrapMode: Text.WordWrap
                 elide: Text.ElideRight
@@ -62,6 +63,7 @@ Rectangle {
                 maximumLineCount: 1
                 horizontalAlignment: Text.AlignRight
                 text: model.display.owner
+                color: "#232627"
                 wrapMode: Text.WordWrap
                 elide: Text.ElideRight
             }

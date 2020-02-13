@@ -106,6 +106,7 @@ int main(int argc, char *argv[])
     args << parser.value(urlOption);
     args << parser.value(recordOption);
     args << (parser.isSet(nowindowOption) ? "true" : "false");
+    args << (parser.isSet(debugOption) ? "true" : "false");
     DanmakuLauncher dl(args);
     return a.exec();
 }

@@ -1,5 +1,6 @@
 #include "room_model.h"
 #include "sites.h"
+#include "bilibili.h"
 
 RoomModel::RoomModel(QObject *parent) : QObject(parent)
 {
@@ -164,6 +165,15 @@ void RoomModel::openUrl(QString url)
         openRoom("https://live.bilibili.com/" + sl[1]);
     } else if (sl[0] == "hu") {
         openRoom("https://www.huya.com/" + sl[1]);
+    } else if (sl[0] == "av") {
+        if (bi == nullptr)
+            bi = new Bilibili(this);
+        auto psl = sl[1].split(':', QString::SkipEmptyParts);
+        bi->run("av" + sl[1], psl.size() == 2 ? psl[1] : "");
+    } else if (sl[0] == "ep") {
+        if (bi == nullptr)
+            bi = new Bilibili(this);
+        bi->run("ep" + sl[1]);
     }
 }
 
