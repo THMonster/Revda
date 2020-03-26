@@ -20,150 +20,53 @@ void stopSubProcesses(qint64 parentProcessId) {
     QProcess::execute("kill " + childIds);
 }
 
-DanmakuLauncher::DanmakuLauncher(QStringList args)
+DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket)
 {
     fk = new FudujiKiller();
-    fifo = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
-    url = args.at(0);
-    record_file = args.at(1);
-    if (args.at(2) == "true") {
-        no_window = true;
-    }
-    if (args.at(3) == "true") {
-        is_debug = true;
-    }
-    stream_url = getStreamUrl(url);
-    if (stream_url == "null") {
-        exit(1);
-        return;
-    }
+    this->danmaku_socket_path = danmaku_socket;
+    this->room_url = room_url;
 
     launch_timer = new QTimer(this);
     launch_timer->setInterval(200);
-    launch_timer->start();
 
-    QProcess::execute(QString("mkfifo %1").arg(fifo));
-    fifo_file = new QFile(fifo);
-    initPlayer();
-
-    if (!fifo_file->open(QIODevice::WriteOnly)) {
-        qCritical() << "Cannot open fifo!";
-        exit(1);
-    }
-    fifo_file->write(reinterpret_cast<const char*>(mkv_header), mkv_header_len);
-    fifo_file->flush();
+    socket_server = new QLocalServer(this);
+    connect(socket_server, &QLocalServer::newConnection, this, &DanmakuLauncher::setSocket);
+    socket_server->listen(danmaku_socket);
 
     for (int i = 0; i < 30; i++) {
         danmaku_channel[i].length = 1;
         danmaku_channel[i].begin_pts = -10000;
     }
 
-    initDmcPy();
-    live_checker = new QProcess(this);
+    dmcPyProcess = new QProcess();
+    connect(dmcPyProcess, &QProcess::readyRead, this, &DanmakuLauncher::loadDanmaku);
     connect(launch_timer, &QTimer::timeout, this, &DanmakuLauncher::launchDanmaku);
-//    connect(live_checker, &QProcess::readyRead, this, &DanmakuLauncher::getLiveStatus);
-
 }
 
 DanmakuLauncher::~DanmakuLauncher()
 {
-    qCritical() << "Bye!";
-    delete fk;
     launch_timer->stop();
-    launch_timer->deleteLater();
-    fifo_file->close();
-    fifo_file->remove();
-    fifo_file->deleteLater();
-    live_checker->disconnect();
-    player->disconnect();
-    dmcPyProcess->disconnect();
-    if (player->processId() != 0) {
-        stopSubProcesses(player->processId());
-    }
-    live_checker->terminate();
-    live_checker->waitForFinished(3000);
-    live_checker->deleteLater();
+    delete fk;
     dmcPyProcess->terminate();
     dmcPyProcess->waitForFinished(3000);
-    dmcPyProcess->deleteLater();
-    player->terminate();
-    player->waitForFinished(3000);
-    player->deleteLater();
+    delete dmcPyProcess;
 }
 
-void DanmakuLauncher::initDmcPy()
+void DanmakuLauncher::startDmcPy()
 {
-    timer.start();
+    dmcPyProcess->terminate();
+    dmcPyProcess->waitForFinished();
     QStringList dmcPy;
     dmcPy.append(QStandardPaths::locate(QStandardPaths::DataLocation, "dmc.pyz"));
-    dmcPy.append(url);
-    dmcPyProcess = new QProcess(this);
-    connect(dmcPyProcess, &QProcess::readyRead, this, &DanmakuLauncher::loadDanmaku);
+    dmcPy.append(room_url);
     dmcPyProcess->start("python3", dmcPy);
-    qDebug() << "Danmaku process initialized!";
+    qDebug() << "Danmaku process started!";
 }
 
-void DanmakuLauncher::initPlayer()
+void DanmakuLauncher::setScale(int w, int h)
 {
-    QStringList player_args;
-
-    player_args.append("-c");
-    player_args.append(getPlayerCMD(url));
-    player = new QProcess(this);
-    player->setReadChannel(QProcess::StandardError);
-    connect(player, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-        [=](int exitCode, QProcess::ExitStatus exitStatus){
-        Q_UNUSED(exitStatus);
-        QCoreApplication::exit(exitCode);
-    });
-    setScale();
-//    connect(player, &QProcess::readyReadStandardError, this, &DanmakuLauncher::printPlayerProcess);
-    player->start("sh", player_args);
-    qDebug() << "Player process initialized!";
-}
-
-void DanmakuLauncher::setScale()
-{
-    QString ua("User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36");
-    auto p = new QProcess(this);
-    p->start("ffmpeg", QStringList() << "-user_agent" << ua << "-i" << stream_url);
-    p->setReadChannel(QProcess::StandardError);
-    connect(p, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-        [=](int exitCode, QProcess::ExitStatus exitStatus){
-        Q_UNUSED(exitStatus);
-        Q_UNUSED(exitCode);
-        QRegularExpression re(" ([0-9]+)x([0-9]+),");
-        QRegularExpressionMatch match = re.match(p->readAllStandardError());
-        if (match.hasMatch()) {
-             scale = 16.0 * match.captured(2).toDouble() / match.captured(1).toDouble() / 9.0;
-             qDebug() << match.captured(1) << match.captured(2) << scale;
-        }
-    });
-}
-
-QString DanmakuLauncher::getPlayerCMD(QString url)
-{
-    QString ret;
-    QString mpv_extra_args;
-    QString record_args;
-    QString ua("User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.88 Safari/537.36");
-    record_args = record_file.compare("null") != 0 ? QString("tee '%1' | ").arg(record_file) : " ";
-    mpv_extra_args = (no_window ?
-                          " --no-video --mute=yes --player-operation-mode=cplayer --term-status-msg='${?paused-for-cache==yes:buffering;}${?paused-for-cache==no:playing;}'" :
-                          " --player-operation-mode=pseudo-gui ");
-    if (url.contains("huya.com")) {
-        ret = QString("ffmpeg -loglevel %8 -user_agent '%6' -i '%1' -c copy -f flv - %7| "
-                      "ffmpeg -i '%2' -i - -loglevel quiet -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - | "
-                      "%5 mpv %3 --vf='lavfi=\"fps=fps=60:round=down\"' -")
-                .arg(stream_url).arg(fifo).arg(mpv_extra_args).arg(title).arg(record_args).arg(ua)
-                .arg(is_debug ? "2>/tmp/fflog" : " ").arg(is_debug ? "debug" : "quiet");
-    } else {
-        ret = QString("ffmpeg -loglevel %8 -i '%2' -user_agent '%6' -i '%1' -map 1:v -map 1:a -map 0:0 -c copy -f matroska -metadata title='%4' - %7| "
-                      "%5 mpv %3 --vf='lavfi=\"fps=fps=60:round=down\"' -")
-                .arg(stream_url).arg(fifo).arg(mpv_extra_args).arg(title).arg(record_args).arg(ua)
-                .arg(is_debug ? "2>/tmp/fflog" : " ").arg(is_debug ? "debug" : "quiet");
-    }
-    return ret;
+    scale = 16.0 * h / w / 9.0;
+    qDebug() << w << h << scale;
 }
 
 int DanmakuLauncher::getDankamuDisplayLength(QString dm, int fontsize)
@@ -196,12 +99,6 @@ void DanmakuLauncher::launchDanmaku()
 {
     fk->addTime();
     fk->ebb();
-    if (check_counter % 50 == 49) {
-        getLiveStatus();
-        check_counter = 0;
-    } else {
-        ++check_counter;
-    }
     launchVoidDanmaku();
     if (danmaku_queue.isEmpty()) {
         return;
@@ -330,8 +227,7 @@ void DanmakuLauncher::launchDanmaku()
     bin_out.prepend(__PICK(buf, 1));
     bin_out.prepend(__PICK(buf, 2));
     bin_out.prepend(__PICK(buf, 3));
-    fifo_file->write(bin_out);
-    fifo_file->flush();
+    socket->write(bin_out);
 }
 
 void DanmakuLauncher::launchVoidDanmaku()
@@ -392,8 +288,7 @@ void DanmakuLauncher::launchVoidDanmaku()
     bin_out.prepend(__PICK(buf, 1));
     bin_out.prepend(__PICK(buf, 2));
     bin_out.prepend(__PICK(buf, 3));
-    fifo_file->write(bin_out);
-    fifo_file->flush();
+    socket->write(bin_out);
 }
 
 int DanmakuLauncher::getAvailDanmakuChannel(int len)
@@ -417,79 +312,45 @@ int DanmakuLauncher::getAvailDanmakuChannel(int len)
     return -4;
 }
 
-void DanmakuLauncher::printPlayerProcess()
+void DanmakuLauncher::start()
 {
-    while (!player->atEnd()) {
-        QString err = player->readAll();
-        qDebug() << err;
-        if (err.contains("The specified session has been invalidated for some reason")) {
-            qCritical() << "Stream invalid!";
-            QCoreApplication::exit(1);
-        }
+
+}
+
+void DanmakuLauncher::restart()
+{
+    launch_timer->stop();
+    if (socket != nullptr) {
+        socket->abort();
+        socket->deleteLater();
+        socket = nullptr;
+    }
+    for (int i = 0; i < 30; i++) {
+        danmaku_channel[i].length = 1;
+        danmaku_channel[i].begin_pts = -10000;
     }
 }
 
-void DanmakuLauncher::getLiveStatus()
+void DanmakuLauncher::stop()
 {
-    if (!no_window) {
-        return;
-    }
-    QString err;
-    if (!player->atEnd()) {
-        err = player->readAll();
-        qDebug() << err;
-    }
-    if (err.isEmpty()) {
-        if (on_buffering == true) {
-            qCritical() << "Network error! Closing...";
-            QCoreApplication::exit(1);
-        }
-        return;
-    }
 
-    QStringList sl = err.split(';', QString::SkipEmptyParts);
-
-    for (auto s : sl) {
-        qDebug() << s;
-        if (s.contains("buffering")) {
-            on_buffering = true;
-        } else if (s.contains("playing")) {
-            on_buffering = false;
-        }
-    }
 }
 
-void DanmakuLauncher::launchLiveChecker()
+void DanmakuLauncher::onStreamStart()
 {
-//    qDebug() << live_checker->state();
-    if (live_checker->state() == QProcess::NotRunning) {
-        if (!live_checker->canReadLine()) {
-            live_checker->start("ykdl", QStringList() << "-i" << url);
-        }
-    }
+
 }
 
-QString DanmakuLauncher::getStreamUrl(QString url)
+void DanmakuLauncher::setSocket()
 {
-    QProcess p;
-    p.start("ykdl", QStringList() << "-i" << url);
-    p.waitForStarted(5000);
-    p.waitForFinished(5000);
-    QRegularExpression re("^(http.+)$");
-    QRegularExpression re_title("^title: +([^\n]+)$");
-    while(!p.atEnd()) {
-        QString line(p.readLine());
-        QRegularExpressionMatch match = re_title.match(line);
-        if (match.hasMatch()) {
-             this->title = match.captured(1);
-        }
-        match = re.match(line);
-        if (match.hasMatch()) {
-             return match.captured(1);
-        }
+    if (socket != nullptr) {
+        socket->abort();
+        socket->deleteLater();
+        socket = nullptr;
     }
-    qCritical() << "Stream url not found!";
-    return "null";
+    socket = socket_server->nextPendingConnection();
+    startDmcPy();
+    timer.restart();
+    launch_timer->start(200);
+    socket->write(QByteArray(reinterpret_cast<const char*>(mkv_header), mkv_header_len));
 }
-
-

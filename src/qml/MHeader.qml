@@ -4,7 +4,6 @@ import QtQuick.Controls 2.12
 import QtQuick.Controls.Styles 1.4
 import QtGraphicalEffects 1.12
 
-
 Rectangle {
     id: root
     objectName: "header"

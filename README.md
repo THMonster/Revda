@@ -60,7 +60,7 @@ Options:
 * [mpv](https://github.com/mpv-player/mpv)
 * [ykdl](https://github.com/zhangn1985/ykdl)
 * ffmpeg
-* Qt5(>=5.4)
+* Qt5(>=5.12)
 * cmake
 * python-aiohttp
 * python3(>=3.7)

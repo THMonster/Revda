@@ -31,7 +31,7 @@ private:
     double speed = 8.0; // duration of single danmaku in second
     int res_x = 1920;
     int res_y = 1080;
-    QString real_url;
+    QStringList real_url;
     QString title;
     QFile *ass_file = nullptr;
     QMap<double, QPair<QString, int>> danmaku_map;

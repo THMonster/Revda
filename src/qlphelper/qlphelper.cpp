@@ -1,112 +1,76 @@
-#include <QCoreApplication>
-#include <QtCore>
-#include <QCommandLineParser>
-#include <QCommandLineOption>
-#include <QCoreApplication>
-#include <QProcess>
-#include <QStringList>
-#include <iostream>
-#include <initializer_list>
-#include <signal.h>
-#include <unistd.h>
+#include "qlphelper.h"
 
-#include "danmakulauncher.h"
-
-bool debug_flag = false;
-
-void ignoreUnixSignals(std::initializer_list<int> ignoreSignals) {
-    // all these signals will be ignored.
-    for (int sig : ignoreSignals)
-        signal(sig, SIG_IGN);
-}
-
-void catchUnixSignals(std::initializer_list<int> quitSignals) {
-    auto handler = [](int sig) -> void {
-        // blocking and not aysnc-signal-safe func are valid
-//        printf("\nquit the application by signal(%d).\n", sig);
-        QCoreApplication::quit();
-    };
-
-    sigset_t blocking_mask;
-    sigemptyset(&blocking_mask);
-    for (auto sig : quitSignals)
-        sigaddset(&blocking_mask, sig);
-
-    struct sigaction sa;
-    sa.sa_handler = handler;
-    sa.sa_mask    = blocking_mask;
-    sa.sa_flags   = 0;
-
-    for (auto sig : quitSignals)
-        sigaction(sig, &sa, nullptr);
-}
-
-void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
 {
-    QByteArray localMsg = msg.toLocal8Bit();
-    const char *file = context.file ? context.file : "";
-    const char *function = context.function ? context.function : "";
-    switch (type) {
-    case QtDebugMsg:
-        if (debug_flag != false) {
-            fprintf(stderr, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), file, context.line, function);
-        }
-        break;
-    case QtInfoMsg:
-        std::cerr << msg.toStdString() << std::endl;
-        break;
-    case QtWarningMsg:
-        std::cerr << msg.toStdString() << std::endl;
-        break;
-    case QtCriticalMsg:
-        std::cerr << msg.toStdString() << std::endl;
-        break;
-    case QtFatalMsg:
-        std::cerr << msg.toStdString() << std::endl;
-        break;
+    room_url = args.at(0);
+    record_file = args.at(1).compare("null") == 0 ? "" : args.at(1);
+    if (args.at(2) == "true") {
+        is_debug = true;
     }
+
+    stream_socket = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
+    danmaku_socket = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
+    auto f = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
+    QProcess::execute(QString("mkfifo %1").arg(f));
+    ff2mpv_fifo = new QFile(f, this);
+
+
+    ffmpeg_control = new FfmpegControl(stream_socket, danmaku_socket, ff2mpv_fifo, is_debug, room_url.contains("huya"));
+    mpv_control = new MpvControl(ff2mpv_fifo, record_file);
+    streamer = new Streamer(room_url, stream_socket);
+    danmaku_launcher = new DanmakuLauncher(room_url, danmaku_socket);
+
+    connect(streamer, &Streamer::streamError, this, &QLPHelper::restart);
+    connect(streamer, &Streamer::streamStart, danmaku_launcher, &DanmakuLauncher::onStreamStart);
+    connect(mpv_control, &MpvControl::requestReload, this, &QLPHelper::restart);
+    connect(mpv_control, &MpvControl::resFetched, danmaku_launcher, &DanmakuLauncher::setScale);
+    connect(streamer, &Streamer::titleMatched, mpv_control, &MpvControl::setTitle);
 }
 
-int main(int argc, char *argv[])
+QLPHelper::~QLPHelper()
 {
-    qInstallMessageHandler(myMessageOutput);
-    QCoreApplication a(argc, argv);
-    catchUnixSignals({SIGQUIT, SIGINT, SIGTERM, SIGHUP});
-    QCoreApplication::setApplicationName("QLivePlayer");
-    QCoreApplication::setApplicationVersion(PROJECT_VERSION);
+    qCritical() << "Bye!";
+    danmaku_launcher->stop();
+    streamer->stop();
+    delete streamer;
+    delete danmaku_launcher;
+    delete ffmpeg_control;
+    delete mpv_control;
 
-    QCommandLineParser parser;
-//    parser.setApplicationDescription("A cute and useful Live Stream Player with danmaku support.\nProject address: https://github.com/IsoaSFlus/QLivePlayer");
-    parser.addHelpOption();
-    parser.addVersionOption();
+    ff2mpv_fifo->close();
+    ff2mpv_fifo->remove();
 
-    QCommandLineOption urlOption(QStringList() << "u" << "url", "The Live Stream url to open", "url", "https://www.douyu.com/2550505");
-    parser.addOption(urlOption);
-    QCommandLineOption recordOption(QStringList() << "r" << "record", "Record stream to local file", "file", "null");
-    parser.addOption(recordOption);
-    QCommandLineOption nowindowOption(QStringList() << "no-window", "No window if specified, useful for recording");
-    parser.addOption(nowindowOption);
-    QCommandLineOption debugOption(QStringList() << "d" << "debug", "Show debug info");
-    parser.addOption(debugOption);
+}
 
-    parser.process(a);
+void QLPHelper::start()
+{
+    streamer->start();
+    qDebug() << "streamer started";
+    danmaku_launcher->start();
+    qDebug() << "danmaku launcher started";
+    ffmpeg_control->start();
+    qDebug() << "ffmpeg started";
+    mpv_control->start();
+    qDebug() << "mpv started";
+}
 
+void QLPHelper::restart()
+{
+    // Be careful of the order of restart, due to ffmpeg's IO policy.
+    // If the last input of ffmpeg is stucked, the whole ffmpeg will be blocked.
+    danmaku_launcher->restart();
+    qDebug() << "danmaku launcher started";
+    streamer->restart();
+    qDebug() << "streamer started";
 
-    if(QCoreApplication::arguments().size() <= 1)
-    {
-        qDebug() << "Error: You should at least specify one argument.";
-        parser.showHelp();
-    }
+    ffmpeg_control->restart();
+    qDebug() << "ffmpeg started";
+    mpv_control->restart();
+    qDebug() << "mpv started";
+}
 
-    if (parser.isSet(debugOption)) {
-        debug_flag = true;
-    }
-
-    QStringList args;
-    args << parser.value(urlOption);
-    args << parser.value(recordOption);
-    args << (parser.isSet(nowindowOption) ? "true" : "false");
-    args << (parser.isSet(debugOption) ? "true" : "false");
-    DanmakuLauncher dl(args);
-    return a.exec();
+void QLPHelper::restarted()
+{
+    reloading = false;
+    streaming = true;
 }

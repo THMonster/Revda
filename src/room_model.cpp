@@ -156,25 +156,50 @@ void RoomModel::openUrl(QString url)
 {
     QStringList sl;
     sl = url.split('-', QString::SkipEmptyParts);
-    if (sl.size() != 2) {
-        return;
+    if (sl.size() == 2) {
+        if (sl[0] == "do") {
+            openRoom("https://www.douyu.com/" + sl[1]);
+        } else if (sl[0] == "bi") {
+            openRoom("https://live.bilibili.com/" + sl[1]);
+        } else if (sl[0] == "hu") {
+            openRoom("https://www.huya.com/" + sl[1]);
+        }
+    } else if (sl.size() == 1) {
+        if (sl[0].left(2) == "av") {
+            if (bi == nullptr)
+                bi = new Bilibili(this);
+            auto psl = sl[0].split(':', QString::SkipEmptyParts);
+            bi->run(sl[0], psl.size() == 2 ? psl[1] : "");
+        } else if (sl[0].left(2) == "ep") {
+            if (bi == nullptr)
+                bi = new Bilibili(this);
+            bi->run(sl[0]);
+        } else if (sl[0].left(2) == "BV") {
+            if (bi == nullptr)
+                bi = new Bilibili(this);
+            auto psl = sl[0].split(':', QString::SkipEmptyParts);
+            bi->run(sl[0], psl.size() == 2 ? psl[1] : "");
+        } else if (sl[0].left(4) == "http") {
+            if (!sl[0].contains("bilibili")) {
+                return;
+            }
+            QUrl url(sl[0]);
+            QString bi_code, part;
+            bi_code = url.fileName();
+            if (bi_code.left(2) != "av" && bi_code.left(2) != "ep" && bi_code.left(2) != "BV") {
+                return;
+            }
+            if (url.hasQuery()) {
+                QUrlQuery all_query(url.query());
+                part = all_query.queryItemValue("p");
+            }
+            if (bi == nullptr)
+                bi = new Bilibili(this);
+
+            bi->run(bi_code, part);
+        }
     }
-    if (sl[0] == "do") {
-        openRoom("https://www.douyu.com/" + sl[1]);
-    } else if (sl[0] == "bi") {
-        openRoom("https://live.bilibili.com/" + sl[1]);
-    } else if (sl[0] == "hu") {
-        openRoom("https://www.huya.com/" + sl[1]);
-    } else if (sl[0] == "av") {
-        if (bi == nullptr)
-            bi = new Bilibili(this);
-        auto psl = sl[1].split(':', QString::SkipEmptyParts);
-        bi->run("av" + sl[1], psl.size() == 2 ? psl[1] : "");
-    } else if (sl[0] == "ep") {
-        if (bi == nullptr)
-            bi = new Bilibili(this);
-        bi->run("ep" + sl[1]);
-    }
+
 }
 
 void RoomModel::toggleLike(int like, QString url)

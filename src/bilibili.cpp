@@ -21,6 +21,8 @@ void Bilibili::run(QString av_num, QString part)
         url = "https://www.bilibili.com/video/" + av_num + "?p=" + (part.isEmpty() ? "1" : part);
     } else if (av_num[0] == 'e'){
         url = "https://www.bilibili.com/bangumi/play/" + av_num;
+    } else if (av_num[0] == 'B'){
+        url = "https://www.bilibili.com/video/" + av_num + "?p=" + (part.isEmpty() ? "1" : part);
     } else {
         return;
     }
@@ -30,23 +32,30 @@ void Bilibili::run(QString av_num, QString part)
     p.waitForFinished(5000);
     QRegularExpression re("^(http.+)$");
     QRegularExpression re_title("^title: +([^\n]+)$");
+    bool real_url_flag = false;
     while(!p.atEnd()) {
         QString line(p.readLine());
+        if (line.contains("Real urls")) {
+            if (real_url_flag == false) {
+                real_url_flag = true;
+            } else {
+                break;
+            }
+        }
         QRegularExpressionMatch match = re_title.match(line);
         if (match.hasMatch()) {
              this->title = match.captured(1);
         }
         match = re.match(line);
         if (match.hasMatch()) {
-             real_url = match.captured(1);
-             break;
+             real_url.append(match.captured(1));
         }
     }
     if (real_url.isEmpty()) {
         return;
     }
     setRes();
-    auto sl = real_url.split('/', QString::SkipEmptyParts);
+    auto sl = real_url[0].split('/', QString::SkipEmptyParts);
     auto cid = sl.at(sl.length() - 2);
 //    qDebug() << cid;
     QNetworkRequest qnr("https://comment.bilibili.com/" + cid + ".xml");
@@ -115,14 +124,14 @@ void Bilibili::genAss()
         ++iter;
     }
     ass_file->close();
-    QProcess::startDetached("mpv", QStringList() << "--player-operation-mode=pseudo-gui" << "--title=" + title << "--vf=lavfi=\"fps=fps=60:round=down\"" << "--sub-file=/tmp/qlpbilibili.ass" << real_url);
+    QProcess::startDetached("mpv", QStringList() << "--player-operation-mode=pseudo-gui" << "--force-media-title=" + title << "--vf=lavfi=\"fps=60\"" << "--sub-file=/tmp/qlpbilibili.ass" << "--merge-files" << real_url);
     real_url.clear();
 }
 
 void Bilibili::setRes()
 {
     QProcess p;
-    p.start("ffmpeg", QStringList() << "-user_agent" << "aaa" << "-i" << real_url);
+    p.start("ffmpeg", QStringList() << "-user_agent" << "aaa" << "-i" << real_url[0]);
     p.waitForStarted(5000);
     p.waitForFinished(5000);
     QRegularExpression re(" ([0-9]+)x([0-9]+)");
