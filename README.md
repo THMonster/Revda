@@ -51,7 +51,7 @@ Options:
 
 * 同时播放的直播并没有数量限制，你可以同时打开多个直播间，且每个播放进程和gui前端进程是分离的，退出gui前端不会关闭正在播放的直播。
 
-* 遇到网络波动导致直播断开会自动重连，不需要重启整个程序。同时也支持手动刷新，在mpv中按调出控制台，输入`script-message qlpreload`便可以进行手动刷新。
+* 遇到网络波动导致直播断开会自动重连，不需要重启整个程序。同时也支持手动刷新，在mpv中打开控制台（如何打开[见此](https://mpv.io/manual/master/#keyboard-control))，输入`script-message qlpreload`便可以进行手动刷新。
 
 ### Record stream
 
