@@ -169,6 +169,8 @@ void Streamer::stop()
         socket->deleteLater();
         socket = nullptr;
     }
+    on_streaming = false;
+    real_url = "";
 }
 
 void Streamer::setSocket()

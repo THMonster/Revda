@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
     parser.addOption(urlOption);
     QCommandLineOption recordOption(QStringList() << "r" << "record", "Record stream to local file", "file", "null");
     parser.addOption(recordOption);
-//    QCommandLineOption nowindowOption(QStringList() << "no-window", "No window if specified, useful for recording");
-//    parser.addOption(nowindowOption);
+    QCommandLineOption strictStreamOption(QStringList() << "strict-stream", "Useful for preventing non-monotonous DTS problem");
+    parser.addOption(strictStreamOption);
     QCommandLineOption debugOption(QStringList() << "d" << "debug", "Show debug info");
     parser.addOption(debugOption);
 
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     QStringList args;
     args << parser.value(urlOption);
     args << parser.value(recordOption);
-//    args << (parser.isSet(nowindowOption) ? "true" : "false");
+    args << (parser.isSet(strictStreamOption) ? "true" : "false");
     args << (parser.isSet(debugOption) ? "true" : "false");
     QLPHelper qlphelper(args);
     qlphelper.start();

@@ -5,6 +5,9 @@ QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
     room_url = args.at(0);
     record_file = args.at(1).compare("null") == 0 ? "" : args.at(1);
     if (args.at(2) == "true") {
+        strict_stream = true;
+    }
+    if (args.at(3) == "true") {
         is_debug = true;
     }
 
@@ -15,7 +18,7 @@ QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
     ff2mpv_fifo = new QFile(f, this);
 
 
-    ffmpeg_control = new FfmpegControl(stream_socket, danmaku_socket, ff2mpv_fifo, is_debug, room_url.contains("huya"));
+    ffmpeg_control = new FFmpegControl(stream_socket, danmaku_socket, ff2mpv_fifo, is_debug, strict_stream);
     mpv_control = new MpvControl(ff2mpv_fifo, record_file);
     streamer = new Streamer(room_url, stream_socket);
     danmaku_launcher = new DanmakuLauncher(room_url, danmaku_socket);

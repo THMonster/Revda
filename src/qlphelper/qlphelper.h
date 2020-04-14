@@ -23,7 +23,7 @@ signals:
 
 private:
     MpvControl* mpv_control = nullptr;
-    FfmpegControl* ffmpeg_control = nullptr;
+    FFmpegControl* ffmpeg_control = nullptr;
     Streamer* streamer = nullptr;
     DanmakuLauncher* danmaku_launcher = nullptr;
     bool reloading = false;
@@ -34,6 +34,7 @@ private:
     QString room_url;
     QString record_file;
     bool is_debug = false;
+    bool strict_stream = false;
 };
 
 #endif // QLPHELPER_H

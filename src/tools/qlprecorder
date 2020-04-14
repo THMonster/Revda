@@ -39,6 +39,6 @@ fi
 
 while [[ 1 == 1 ]]
 do
-    qlphelper -u "${room_url}" -r "${file_prefix}-$(date +%Y-%m-%d-%H-%M-%S).mkv"
+    qlphelper -u "${room_url}" -r "${file_prefix}-$(date +%Y-%m-%d-%H-%M-%S).mkv" --strict-stream
     sleep ${time_interval}
 done
