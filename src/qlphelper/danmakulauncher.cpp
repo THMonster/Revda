@@ -166,7 +166,7 @@ void DanmakuLauncher::launchDanmaku()
             avail_dc = getAvailDanmakuChannel(display_length);
             if (avail_dc >= 0) {
                 QByteArray tmp;
-                ass_event = QString("%4,0,Default,%5,0,0,0,,{\\1c&02D3FF&\\move(1920,%1,%2,%1)}%3").arg(QString().number(avail_dc*(font_size))).arg(QString().number(0-display_length)).arg((*iter).second).arg(QString().number(read_order)).arg((*iter).first);
+                ass_event = QString("%4,0,Default,%5,0,0,0,,{\\move(1920,%1,%2,%1)}%3").arg(QString().number(avail_dc*(font_size))).arg(QString().number(0-display_length)).arg((*iter).second).arg(QString().number(read_order)).arg((*iter).first);
                 ++read_order;
                 tmp = ass_event.toLocal8Bit();
                 tmp.prepend((char)0x00);
@@ -333,7 +333,12 @@ void DanmakuLauncher::restart()
 
 void DanmakuLauncher::stop()
 {
-
+    launch_timer->stop();
+    if (socket != nullptr) {
+        socket->abort();
+        socket->deleteLater();
+        socket = nullptr;
+    }
 }
 
 void DanmakuLauncher::onStreamStart()

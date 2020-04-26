@@ -18,7 +18,7 @@ QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
     ff2mpv_fifo = new QFile(f, this);
 
 
-    ffmpeg_control = new FFmpegControl(stream_socket, danmaku_socket, ff2mpv_fifo, is_debug, strict_stream);
+    ffmpeg_control = new FFmpegControl(stream_socket, danmaku_socket, ff2mpv_fifo, record_file, is_debug, strict_stream);
     mpv_control = new MpvControl(ff2mpv_fifo, record_file);
     streamer = new Streamer(room_url, stream_socket);
     danmaku_launcher = new DanmakuLauncher(room_url, danmaku_socket);
@@ -35,6 +35,7 @@ QLPHelper::~QLPHelper()
     qCritical() << "Bye!";
     danmaku_launcher->stop();
     streamer->stop();
+    ffmpeg_control->stop();
     delete streamer;
     delete danmaku_launcher;
     delete ffmpeg_control;
