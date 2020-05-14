@@ -60,10 +60,10 @@ QStringList FFmpegControl::getFFmpegCmdline()
         ret.append("-xerror");
     }
     ret << "-y" << "-i" << "unix://" + stream_socket_path << "-i"
-        << "unix://" + danmaku_socket_path << "-map" << "0:v"
-        << "-map" << "0:a" << "-map" << "1:0" << "-c" << "copy"
+        << "unix://" + danmaku_socket_path << "-map" << "0:v:0"
+        << "-map" << "0:a:0" << "-map" << "1:s:0" << "-c" << "copy"
         << "-f" << "matroska";
-    if (record_file.isEmpty()) {
+    if (record_file.isEmpty() || true) {
         ret.append(ff2mpv_fifo->fileName());
     } else {
         ret.append(genRecordFileName());

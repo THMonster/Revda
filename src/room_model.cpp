@@ -1,6 +1,5 @@
 #include "room_model.h"
 #include "sites.h"
-#include "bilibili.h"
 
 RoomModel::RoomModel(QObject *parent) : QObject(parent)
 {
@@ -80,8 +79,12 @@ void RoomModel::openRoom(QString url)
         QString rid = url.split('/', QString::SkipEmptyParts).last();
         history.prepend("do-" + rid);
     } else if (url.contains("bilibili")) {
-        QString rid = url.split('/', QString::SkipEmptyParts).last();
-        history.prepend("bi-" + rid);
+        if (url.contains("/video") || url.contains("/bangumi")) {
+
+        } else {
+            QString rid = url.split('/', QString::SkipEmptyParts).last();
+            history.prepend("bi-" + rid);
+        }
     } else if (url.contains("huya")) {
         QString rid = url.split('/', QString::SkipEmptyParts).last();
         history.prepend("hu-" + rid);
@@ -166,19 +169,13 @@ void RoomModel::openUrl(QString url)
         }
     } else if (sl.size() == 1) {
         if (sl[0].left(2) == "av") {
-            if (bi == nullptr)
-                bi = new Bilibili(this);
             auto psl = sl[0].split(':', QString::SkipEmptyParts);
-            bi->run(sl[0], psl.size() == 2 ? psl[1] : "");
+            openRoom("https://www.bilibili.com/video/" + psl[0] + "?p=" + (psl.size() == 2 ? psl[1] : "1"));
         } else if (sl[0].left(2) == "ep") {
-            if (bi == nullptr)
-                bi = new Bilibili(this);
-            bi->run(sl[0]);
+            openRoom("https://www.bilibili.com/bangumi/play/" + sl[0]);
         } else if (sl[0].left(2) == "BV") {
-            if (bi == nullptr)
-                bi = new Bilibili(this);
             auto psl = sl[0].split(':', QString::SkipEmptyParts);
-            bi->run(sl[0], psl.size() == 2 ? psl[1] : "");
+            openRoom("https://www.bilibili.com/video/" + psl[0] + "?p=" + (psl.size() == 2 ? psl[1] : "1"));
         } else if (sl[0].left(4) == "http") {
             if (!sl[0].contains("bilibili")) {
                 return;
@@ -189,17 +186,9 @@ void RoomModel::openUrl(QString url)
             if (bi_code.left(2) != "av" && bi_code.left(2) != "ep" && bi_code.left(2) != "BV") {
                 return;
             }
-            if (url.hasQuery()) {
-                QUrlQuery all_query(url.query());
-                part = all_query.queryItemValue("p");
-            }
-            if (bi == nullptr)
-                bi = new Bilibili(this);
-
-            bi->run(bi_code, part);
+            openRoom(sl[0]);
         }
     }
-
 }
 
 void RoomModel::toggleLike(int like, QString url)

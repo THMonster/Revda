@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include "qlphelper.h"
+#include "bilivideo.h"
 
 bool debug_flag = false;
 
@@ -76,7 +77,7 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationVersion(PROJECT_VERSION);
 
     QCommandLineParser parser;
-//    parser.setApplicationDescription("A cute and useful Live Stream Player with danmaku support.\nProject address: https://github.com/IsoaSFlus/QLivePlayer");
+    parser.setApplicationDescription("A cute and useful Live Stream Player with danmaku support.\nProject address: https://github.com/IsoaSFlus/QLivePlayer");
     parser.addHelpOption();
     parser.addVersionOption();
 
@@ -102,12 +103,17 @@ int main(int argc, char *argv[])
         debug_flag = true;
     }
 
-    QStringList args;
-    args << parser.value(urlOption);
-    args << parser.value(recordOption);
-    args << (parser.isSet(strictStreamOption) ? "true" : "false");
-    args << (parser.isSet(debugOption) ? "true" : "false");
-    QLPHelper qlphelper(args);
-    qlphelper.start();
+    if (parser.value(urlOption).contains("bilibili.com/video") || parser.value(urlOption).contains("bilibili.com/bangumi")) {
+        auto bv = new BiliVideo(&a);
+        bv->run(parser.value(urlOption));
+    } else {
+        QStringList args;
+        args << parser.value(urlOption);
+        args << parser.value(recordOption);
+        args << (parser.isSet(strictStreamOption) ? "true" : "false");
+        args << (parser.isSet(debugOption) ? "true" : "false");
+        auto qlphelper = new QLPHelper(args, &a);
+        qlphelper->start();
+    }
     return a.exec();
 }

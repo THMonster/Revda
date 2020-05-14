@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QtGui>
 #include "sites.h"
-#include "bilibili.h"
 
 class Room
 {
@@ -87,7 +86,6 @@ public slots:
 private:
     QStandardItemModel* m_saved_model = nullptr;
     QStandardItemModel* m_history_model = nullptr;
-    Bilibili* bi = nullptr;
     QStringList saved;
     QStringList history;
     QSettings* settings;

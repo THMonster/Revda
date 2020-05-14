@@ -40,7 +40,7 @@ void MpvControl::start()
         });
         t->start(1000);
     } else {
-//        mpv_proc->start("cp", QStringList() << ff2mpv_fifo->fileName() << genRecordFileName());
+        mpv_proc->start("cp", QStringList() << ff2mpv_fifo->fileName() << genRecordFileName());
     }
 }
 
@@ -52,7 +52,7 @@ void MpvControl::restart()
     } else {
         mpv_proc->terminate();
         mpv_proc->waitForFinished();
-//        mpv_proc->start("cp", QStringList() << ff2mpv_fifo->fileName() << genRecordFileName());
+        mpv_proc->start("cp", QStringList() << ff2mpv_fifo->fileName() << genRecordFileName());
     }
 }
 

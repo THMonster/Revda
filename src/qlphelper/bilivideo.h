@@ -1,26 +1,26 @@
-#ifndef BILIBILI_H
-#define BILIBILI_H
+#ifndef BILIVIDEO_H
+#define BILIVIDEO_H
 
 #include <QtCore>
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
 
-struct DanmakuChannel
+struct DanmakuChannelB
 {
 //    double duration;
     int length;
     double begin_pts;
 };
 
-class Bilibili : public QObject
+class BiliVideo : public QObject
 {
     Q_OBJECT
 public:
-    explicit Bilibili(QObject *parent = nullptr);
-    ~Bilibili();
+    explicit BiliVideo(QObject *parent = nullptr);
+    ~BiliVideo();
 
-    void run(QString av_num, QString part = "");
+    void run(QString url, QString part = "");
     void genAss();
     void setRes();
     int getDankamuDisplayLength(QString dm, int fontsize);
@@ -33,10 +33,12 @@ private:
     int res_y = 1080;
     QStringList real_url;
     QString title;
+    QString cookie;
     QFile *ass_file = nullptr;
     QMap<double, QPair<QString, int>> danmaku_map;
-    DanmakuChannel danmaku_channel[30];
+    DanmakuChannelB danmaku_channel[30];
     QNetworkAccessManager *nam = nullptr;
+    QProcess *mpv_proc = nullptr;
 };
 
-#endif // BILIBILI_H
+#endif // BILIVIDEO_H
