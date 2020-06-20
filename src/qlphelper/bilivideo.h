@@ -26,12 +26,15 @@ public:
     int getDankamuDisplayLength(QString dm, int fontsize);
     int getAvailDMChannel(double time_start, int len);
     void httpFinished(QNetworkReply *reply);
+    void genEDLUrl();
 
 private:
     double speed = 8.0; // duration of single danmaku in second
     int res_x = 1920;
     int res_y = 1080;
+    bool hevc = false;
     QStringList real_url;
+    QString edl_url;
     QString title;
     QString cookie;
     QFile *ass_file = nullptr;

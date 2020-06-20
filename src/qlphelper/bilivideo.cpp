@@ -10,6 +10,7 @@ BiliVideo::BiliVideo(QObject *parent)
 
     QSettings s("QLivePlayer", "QLivePlayer", this);
     cookie = s.value("bcookie", QString("")).toString();
+    hevc = s.value("bhevc", false).toBool();
 
     mpv_proc = new QProcess(this);
     connect(mpv_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
@@ -57,6 +58,8 @@ void BiliVideo::run(QString url, QString part)
     }
 
     setRes();
+
+    genEDLUrl();
 
     auto sl = real_url[0].split('/', QString::SkipEmptyParts);
     auto cid = sl.at(sl.length() - 2);
@@ -131,7 +134,7 @@ void BiliVideo::genAss()
     args.append("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36");
     args.append("--http-header-fields-add=Referer: https://www.bilibili.com/");
     mpv_proc->start("mpv", args << "--player-operation-mode=pseudo-gui" << "--force-media-title=" + title
-                            << "--vf=lavfi=\"fps=60\"" << "--sub-file=" + ass_file->fileName() << "--merge-files" << real_url);
+                            << "--vf=lavfi=\"fps=60\"" << "--sub-file=" + ass_file->fileName() << edl_url);
 }
 
 void BiliVideo::setRes()
@@ -212,4 +215,22 @@ void BiliVideo::httpFinished(QNetworkReply *reply)
     genAss();
 
     reply->deleteLater();
+}
+
+inline void BiliVideo::genEDLUrl()
+{
+    if (real_url[0].contains(".m4s")) {
+        if (real_url.length() == 3 && hevc == true) {
+            edl_url = QString("edl://!no_clip;!no_chapters;\%%1\%%3;!new_stream;!no_clip;!no_chapters;\%%2\%%4")
+                    .arg(real_url[2].length()).arg(real_url[1].length()).arg(real_url[2]).arg(real_url[1]);
+        } else {
+            edl_url = QString("edl://!no_clip;!no_chapters;\%%1\%%3;!new_stream;!no_clip;!no_chapters;\%%2\%%4")
+                    .arg(real_url[0].length()).arg(real_url[1].length()).arg(real_url[0]).arg(real_url[1]);
+        }
+    } else {
+        edl_url = QString("edl://");
+        for (const auto& u : real_url) {
+            edl_url.append(QString("\%%1\%%2;").arg(u.length()).arg(u));
+        }
+    }
 }

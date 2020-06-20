@@ -84,5 +84,8 @@ void MpvControl::setTitle(QString title)
 
 QString MpvControl::genRecordFileName()
 {
-    return record_file + "." + QString::number(record_cnt++);
+    if(record_file.right(4) == ".mkv" || record_file.right(4) == ".mp4" || record_file.right(4) == ".flv" ) {
+        record_file.chop(4);
+    }
+    return record_file + "-" + QString::number(record_cnt++) + ".mkv";
 }
