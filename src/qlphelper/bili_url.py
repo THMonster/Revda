@@ -5,13 +5,8 @@ from xml.dom.minidom import parseString
 import asyncio, aiohttp
 from urllib.parse import urlencode
 
-APPKEY = 'iVGUTjsxvpLeuDCf'
-SECRETKEY = 'aHRmhWMLkdeMuILqORnYZocwMBpMEOdt'
-APPKEY1 = '84956560bc028eb7' # Bangumi
-SECRETKEY1 = '94aba54af9065f71de72f5508f1cd42e'
-api_url = 'https://interface.bilibili.com/v2/playurl'
-api_url1 = 'https://bangumi.bilibili.com/player/web_api/v2/playurl'
-token_url = "https://api.bilibili.com/x/player/playurl/token"
+api_url = 'https://api.bilibili.com/x/player/playurl'
+api_url_ep = 'https://api.bilibili.com/pgc/player/web/playurl'
 
 # test_url = 'https://www.bilibili.com/video/BV1Gt4y117MH'
 test_url = 'https://www.bilibili.com/video/BV1xs411R7qf'
@@ -49,7 +44,7 @@ async def get_page_info(url):
     async with aiohttp.ClientSession() as session:
         async with session.request('get', url, headers=headers) as r:
             data = json.loads(match1(await r.text(), '__INITIAL_STATE__=({.+?});'))['videoData']
-    aid = data['aid']
+    bvid = data['bvid']
     title = data['title']
     artist = data['owner']['name']
     pages = data['pages']
@@ -64,64 +59,21 @@ async def get_page_info(url):
                 title = u'{} - {}'.format(title, subtitle)
             break
 
-    return aid, cid, title, artist
+    return bvid, cid, title, artist
 
-async def get_page_info1(url):
+async def get_page_info_ep(url):
     async with aiohttp.ClientSession() as session:
         async with session.request('get', url, headers=headers) as r:
             data = json.loads(match1(await r.text(), '__INITIAL_STATE__=({.+?});'))
     title = data.get('h1Title') or match1(html, '<title>(.+?)_番剧_bilibili_哔哩哔哩<')
     cid = data['epInfo']['cid']
-    aid = data['epInfo']['aid']
+    bvid = data['epInfo']['bvid']
     mediaInfo = data['mediaInfo']
     season_type = mediaInfo.get('season_type') or mediaInfo.get('ssType')
     upInfo = mediaInfo.get('upInfo')
     artist = upInfo and upInfo.get('name')
 
-    return aid, cid, title, artist, season_type
-
-def sign_api_url(api_url, params_str, skey):
-    chksum = hashlib.md5(bytes(params_str + skey, 'utf8')).hexdigest()
-    return '{}?{}&sign={}'.format(api_url, params_str, chksum)
-
-def get_api_url(cid, qn=200):
-    params_str = urlencode([
-        ('appkey', APPKEY),
-        ('cid', cid),
-        ('otype', 'json'),
-        ('platform', 'html5'),
-        ('player', 0),
-        ('qn', qn)
-    ])
-    return sign_api_url(api_url, params_str, SECRETKEY)
-
-def get_api_url1(cid, season_type, qn=116):
-    params_str = urlencode([
-        ('appkey', APPKEY),
-        ('cid', cid),
-        ('module', 'bangumi'),
-        ('otype', 'json'),
-        ('qn', qn),
-        ('quality', qn),
-        ('season_type', season_type),
-        ('type', '')
-    ])
-    return sign_api_url(api_url1, params_str, SECRETKEY)
-
-async def get_utoken(aid, cid):
-    utoken = ''
-    params = {
-        'aid': aid,
-        'cid': cid
-    }
-    async with aiohttp.ClientSession() as session:
-        async with session.request('get', token_url, headers=headers, params=params) as r:
-            try:
-                j = await r.json()
-                utoken = j['data'].get('token', '')
-            except:
-                pass
-    return utoken
+    return bvid, cid, title, artist, season_type
 
 async def main():
     if len(sys.argv) > 2:
@@ -138,65 +90,77 @@ async def main():
     title = ''
     artist = ''
     if 'bilibili.com/bangumi' in bili_url:
-        aid, cid, title, artist, season_type = await get_page_info1(bili_url)
-    else:
-        aid, cid, title, artist = await get_page_info(bili_url)
-
-    if headers['Cookie'] != '':
+        bvid, cid, title, artist, season_type = await get_page_info_ep(bili_url)
+        params = {
+            'cid': cid,
+            'bvid': bvid,
+            'qn': 120,
+            'otype': 'json',
+            'fourk': 1,
+            'fnver': 0,
+            'fnval': 16
+        }
         async with aiohttp.ClientSession() as session:
-            async with session.request('get', bili_url, headers=headers) as r:
-                try:
-                    j = json.loads(match1(await r.text(), r'window\.__playinfo__=({[^<]+})'))
-                    # print(j)
-                    if "dash" in j["data"]:
-                        dash_id = j['data']['dash']['video'][0]['id']
+            async with session.request('get', api_url_ep, params=params, headers=headers) as r:
+                j = await r.json()
+                print(j)
+                if "dash" in j["result"]:
+                    dash_id = j['result']['dash']['video'][0]['id']
+                    if len(j['result']['dash']['video']) > 1 and  dash_id == j['result']['dash']['video'][1]['id']:
+                        # 12 = hevc 7 = avc
+                        if j['result']['dash']['video'][0]['codecid'] != 12:
+                            dash_urls.append(j['result']['dash']['video'][0]['base_url'])
+                            dash_urls.append(j['result']['dash']['audio'][0]['base_url'])
+                            dash_urls.append(j['result']['dash']['video'][1]['base_url'])
+                        else:
+                            dash_urls.append(j['result']['dash']['video'][1]['base_url'])
+                            dash_urls.append(j['result']['dash']['audio'][0]['base_url'])
+                            dash_urls.append(j['result']['dash']['video'][0]['base_url'])
+                    else:
+                        dash_urls.append(j['result']['dash']['video'][0]['base_url'])
+                        dash_urls.append(j['result']['dash']['audio'][0]['base_url'])
+                elif 'durl' in j['result']:
+                    for u in j['result']['durl']:
+                        dash_urls.append(u['url'])
+    else:
+        bvid, cid, title, artist = await get_page_info(bili_url)
+        params = {
+            'cid': cid,
+            'bvid': bvid,
+            'qn': 120,
+            'otype': 'json',
+            'fourk': 1,
+            'fnver': 0,
+            'fnval': 16
+        }
+        async with aiohttp.ClientSession() as session:
+            async with session.request('get', api_url, params=params, headers=headers) as r:
+                j = await r.json()
+                print(j)
+                if "dash" in j["data"]:
+                    dash_id = j['data']['dash']['video'][0]['id']
+                    if len(j['data']['dash']['video']) > 1 and dash_id == j['data']['dash']['video'][1]['id']:
+                        # 12 = hevc 7 = avc
+                        if j['data']['dash']['video'][0]['codecid'] != 12:
+                            dash_urls.append(j['data']['dash']['video'][0]['base_url'])
+                            dash_urls.append(j['data']['dash']['audio'][0]['base_url'])
+                            dash_urls.append(j['data']['dash']['video'][1]['base_url'])
+                        else:
+                            dash_urls.append(j['data']['dash']['video'][1]['base_url'])
+                            dash_urls.append(j['data']['dash']['audio'][0]['base_url'])
+                            dash_urls.append(j['data']['dash']['video'][0]['base_url'])
+                    else:
                         dash_urls.append(j['data']['dash']['video'][0]['base_url'])
                         dash_urls.append(j['data']['dash']['audio'][0]['base_url'])
-                        if j['data']['dash']['video'][0]['id'] == j['data']['dash']['video'][1]['id']:
-                            dash_urls.append(j['data']['dash']['video'][1]['base_url'])
-                except:
-                    pass
+                elif 'durl' in j['data']:
+                    for u in j['data']['durl']:
+                        dash_urls.append(u['url'])
 
-    if True:
-        if 'bilibili.com/bangumi' in bili_url:
-            qn = 0
-            url = get_api_url1(cid, season_type, qn)
-            async with aiohttp.ClientSession() as session:
-                async with session.request('get', url, headers=headers) as r:
-                    j = await r.json()
-                    qn = j['accept_quality'][0]
-            url = get_api_url1(cid, season_type, qn)
-            async with aiohttp.ClientSession() as session:
-                async with session.request('get', url, headers=headers) as r:
-                    j = await r.json()
-                    print(j)
-                    durl_id = j['quality']
-                    for u in j['durl']:
-                        durl_urls.append(u['url'])
-        else:
-            if headers['Cookie'] != '':
-                utoken = await get_utoken(aid, cid)
-            # print(utoken)
-            url = get_api_url(cid)
-            if headers['Cookie'] != '':
-                url = url + f'&utoken={utoken}'
-            async with aiohttp.ClientSession() as session:
-                async with session.request('get', url, headers=headers) as r:
-                    j = await r.json()
-                    print(j)
-                    durl_id = j['quality']
-                    for u in j['durl']:
-                        durl_urls.append(u['url'])
+
 
 
     print("title:" + title)
-    if dash_id >= durl_id:
-        for u in dash_urls:
-            print(u)
-    else:
-        for u in durl_urls:
-            print(u)
-
-
+    for u in dash_urls:
+        print(u)
 
 asyncio.run(main())

@@ -5,9 +5,9 @@ Streamer::Streamer(QString room_url, QString stream_socket, QObject *parent)
 {
     this->stream_socket_path = stream_socket;
     this->room_url = room_url;
-    if (room_url.contains("huya.com")) {
-        is_hls = true;
-    }
+//    if (room_url.contains("huya.com")) {
+//        is_hls = true;
+//    }
 
     nam = new QNetworkAccessManager(this);
     nam->setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
