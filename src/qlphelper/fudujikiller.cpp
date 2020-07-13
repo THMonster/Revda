@@ -16,7 +16,7 @@ bool FudujiKiller::checkDanmaku(const QString &d)
     QHash<QString, int>::iterator i = danmaku_stats.find(d);
     if (i != danmaku_stats.end()) {
         i.value() = i.value() + 1;
-        if (i.value() > 40) {
+        if (i.value() > 20) {
             if (rand() % 20 != 0) {
                 ret = false;
             }

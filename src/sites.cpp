@@ -81,47 +81,34 @@ void Sites::httpFinished(QNetworkReply *reply)
     return;
 }
 
-QStringList Sites::decodeDouyu(const QString &s)
+QStringList Sites::decodeDouyu(const QByteArray &s)
 {
-    QRegularExpression re_rid("\"rid\" *: *([0-9]+)");
-    QRegularExpression re_title("\"roomName\" *: *\"([^\"]+)\"");
-    QRegularExpression re_owner("\"nickname\" *: *\"([^\"]+)\"");
-    QRegularExpression re_cover("\"roomSrc\" *: *\"([^\"]+)\"");
-    QRegularExpression re_status("\"isLive\" *: *([0-9]+)");
-
     QStringList ret;
-    QRegularExpressionMatch match;
-    match = re_rid.match(s);
-    if (match.hasMatch()) {
-        ret.append(match.captured(1));
-    } else {
-        ret.append("");
+    QJsonDocument jd(QJsonDocument::fromJson(s));
+    QJsonObject tmp;
+    tmp = jd.object();
+    if (!tmp.isEmpty()) {
+        tmp = tmp.value("room").toObject();
+        if (!tmp.isEmpty()) {
+            if (tmp.value("room_id").toInt() != 0) {
+                ret.append(QString::number(tmp.value("room_id").toInt()));
+            } else {
+                ret.append("");
+            }
+            ret.append(tmp.value("room_name").toString(""));
+            ret.append(tmp.value("nickname").toString(""));
+            ret.append(tmp.value("room_pic").toString(""));
+            (tmp.value("show_status").toInt(2) == 1 && tmp.value("videoLoop").toInt(1) == 0) ?
+                        ret.append("1") :
+                        ret.append("");
+        }
     }
-    match = re_title.match(s);
-    if (match.hasMatch()) {
-        ret.append(match.captured(1));
+//    qDebug() << ret;
+    if (ret.length() != 5) {
+        return QStringList() << "" << "" << "" << "" << "";
     } else {
-        ret.append("");
+        return ret;
     }
-    match = re_owner.match(s);
-    if (match.hasMatch()) {
-        ret.append(match.captured(1));
-    } else {
-        ret.append("");
-    }
-    match = re_cover.match(s);
-    if (match.hasMatch()) {
-        ret.append(match.captured(1));
-    } else {
-        ret.append("");
-    }
-    match = re_status.match(s);
-    if (match.hasMatch()) {
-        ret.append(match.captured(1));
-    } else {
-        ret.append("");
-    }
-    return ret;
 }
 
 QStringList Sites::decodeBilibili(const QString &s)

@@ -55,7 +55,7 @@ void RoomModel::addRoomToModel(int cata, QString url, QString title, QString own
 void RoomModel::save()
 {
     settings->setValue("saved", saved);
-    settings->setValue("history", QStringList(history.mid(0, 10)));
+    settings->setValue("history", QStringList(history.mid(0, 12)));
 }
 
 QString RoomModel::urlToCode(QString url)
@@ -100,7 +100,7 @@ void RoomModel::refresh()
     for (auto& s : saved) {
         sl = s.split('-');
         if (sl[0] == "do") {
-            sites.checkUrl("https://m.douyu.com/" + sl[1], 0);
+            sites.checkUrl("https://www.douyu.com/betard/" + sl[1], 0);
         } else if (sl[0] == "bi") {
             sites.checkUrl("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], 0);
         } else if (sl[0] == "hu") {
@@ -111,13 +111,13 @@ void RoomModel::refresh()
     for (auto& s : history) {
         sl = s.split('-');
         if (sl[0] == "do") {
-            sites.checkUrl("https://m.douyu.com/" + sl[1], 1, i);
+            sites.checkUrl("https://www.douyu.com/betard/" + sl[1], 1, i);
         } else if (sl[0] == "bi") {
             sites.checkUrl("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], 1, i);
         } else if (sl[0] == "hu") {
             sites.checkUrl("https://m.huya.com/" + sl[1], 1, i);
         }
-        if (i >= 10) {
+        if (i >= 12) {
             break;
         } else {
             ++i;
@@ -138,13 +138,13 @@ void RoomModel::refreshHistory()
     for (auto& s : history) {
         sl = s.split('-');
         if (sl[0] == "do") {
-            sites.checkUrl("https://m.douyu.com/" + sl[1], 1, i);
+            sites.checkUrl("https://www.douyu.com/betard/" + sl[1], 1, i);
         } else if (sl[0] == "bi") {
             sites.checkUrl("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], 1, i);
         } else if (sl[0] == "hu") {
             sites.checkUrl("https://m.huya.com/" + sl[1], 1, i);
         }
-        if (i >= 10) {
+        if (i >= 12) {
             break;
         } else {
             ++i;

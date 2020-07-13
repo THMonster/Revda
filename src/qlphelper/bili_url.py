@@ -161,6 +161,6 @@ async def main():
 
     print("title:" + title)
     for u in dash_urls:
-        print(u)
+        print(u, flush=True)
 
 asyncio.run(main())

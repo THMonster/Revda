@@ -14,7 +14,7 @@ public:
     void checkUrl(QString url, int cata, int num = 0);
     void httpFinished(QNetworkReply *reply);
 
-    QStringList decodeDouyu(const QString &s);
+    QStringList decodeDouyu(const QByteArray &s);
     QStringList decodeBilibili(const QString &s);
     QStringList decodeHuya(const QString &s);
 

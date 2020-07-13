@@ -53,6 +53,7 @@ private:
     int offline_counter = 0;
     bool is_hls = false;
     bool terminate_ffmpeg = false;
+    bool manual_restart_flag = false;
 
 };
 

@@ -105,6 +105,9 @@ int main(int argc, char *argv[])
 
     if (parser.value(urlOption).contains("bilibili.com/video") || parser.value(urlOption).contains("bilibili.com/bangumi")) {
         auto bv = new BiliVideo(&a);
+        if (parser.value(recordOption) != "null") {
+            bv->setSavedFilePath(parser.value(recordOption));
+        }
         bv->run(parser.value(urlOption));
     } else {
         QStringList args;

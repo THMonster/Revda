@@ -106,6 +106,7 @@ void DanmakuLauncher::launchDanmaku()
     int display_length = 0;
     int avail_dc = -1;
     QString dm;
+    QString color;
     QString speaker;
     QString ass_event;
     QByteArray bin_out;
@@ -113,6 +114,8 @@ void DanmakuLauncher::launchDanmaku()
     while (!danmaku_queue.isEmpty()) {
         dm = danmaku_queue.dequeue();
         dm.chop(1);
+        color = dm.mid(0, 6);
+        dm.remove(0, 6);
         qInfo().noquote() << dm;
         dm.remove(0, 1);
         speaker = dm.section(QChar(']'), 0, 0);
@@ -126,7 +129,10 @@ void DanmakuLauncher::launchDanmaku()
         avail_dc = getAvailDanmakuChannel(display_length);
         if (avail_dc >= 0) {
             QByteArray tmp;
-            ass_event = QString("%4,0,Default,%5,0,0,0,,{\\move(1920,%1,%2,%1)}%3").arg(QString().number(avail_dc*(font_size))).arg(QString().number(0-display_length)).arg(dm).arg(QString().number(read_order)).arg(speaker);
+            ass_event = QString("%4,0,Default,%5,0,0,0,,{\\1c&%6&\\move(1920,%1,%2,%1)}%3")
+                    .arg(QString().number(avail_dc*(font_size))).arg(QString().number(0-display_length))
+                    .arg(dm).arg(QString().number(read_order)).arg(speaker)
+                    .arg(color.midRef(4, 2) + color.midRef(2, 2) + color.midRef(0, 2));
             ++read_order;
             tmp = ass_event.toLocal8Bit();
             tmp.prepend((char)0x00);
@@ -154,7 +160,7 @@ void DanmakuLauncher::launchDanmaku()
             tmp.prepend(0xa0);
             bin_out.append(tmp);
         } else {
-            droped_danmaku_list.append(QPair<QString, QString>(speaker, dm));
+            droped_danmaku_list.append(QStringList() << color << speaker << dm);
             continue;
         }
     }
@@ -162,11 +168,14 @@ void DanmakuLauncher::launchDanmaku()
 //        qDebug() << "droped list size: " << droped_danmaku_list.size();
         auto iter = droped_danmaku_list.begin();
         while (iter < droped_danmaku_list.end()) {
-            display_length = getDankamuDisplayLength((*iter).second, font_size);
+            display_length = getDankamuDisplayLength((*iter).at(2), font_size);
             avail_dc = getAvailDanmakuChannel(display_length);
             if (avail_dc >= 0) {
                 QByteArray tmp;
-                ass_event = QString("%4,0,Default,%5,0,0,0,,{\\move(1920,%1,%2,%1)}%3").arg(QString().number(avail_dc*(font_size))).arg(QString().number(0-display_length)).arg((*iter).second).arg(QString().number(read_order)).arg((*iter).first);
+                ass_event = QString("%4,0,Default,%5,0,0,0,,{\\1c&%6&\\move(1920,%1,%2,%1)}%3")
+                        .arg(QString().number(avail_dc*(font_size))).arg(QString().number(0-display_length))
+                        .arg((*iter).at(2)).arg(QString().number(read_order)).arg((*iter).at(1))
+                        .arg((*iter).at(0).midRef(4, 2) + (*iter).at(0).midRef(2, 2) + (*iter).at(0).midRef(0, 2));
                 ++read_order;
                 tmp = ass_event.toLocal8Bit();
                 tmp.prepend((char)0x00);

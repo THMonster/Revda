@@ -46,7 +46,7 @@ private:
     qint64 pts = 0;
     quint64 read_order = 0;
     QQueue<QString> danmaku_queue;
-    QList<QPair<QString, QString>> droped_danmaku_list;
+    QList<QStringList> droped_danmaku_list;
     DanmakuChannel danmaku_channel[30];
     QProcess* dmcPyProcess;
     FudujiKiller *fk = nullptr;

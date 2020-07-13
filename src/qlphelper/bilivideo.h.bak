@@ -30,6 +30,7 @@ public:
     void downloadVideo();
     void setSavedFilePath(QString path);
     void startSegFifoProc();
+    void startHttpServer();
 
 signals:
     void dlFinished();
@@ -51,6 +52,7 @@ private:
     QFile *saved_file = nullptr;
     QFile *merge_file = nullptr;
     QList<QFile*> seg_file_list;
+    int dl_cnt = 0;
 };
 
 #endif // BILIVIDEO_H

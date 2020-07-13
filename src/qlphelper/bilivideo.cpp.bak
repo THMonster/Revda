@@ -153,20 +153,15 @@ void BiliVideo::genAss()
 void BiliVideo::setRes()
 {
     QProcess p;
-    p.start("ffprobe", QStringList()
-            << "-show_streams" << "-loglevel" << "quiet" << "-select_streams" << "v"
-            << "-user_agent" << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
-            << "-headers" << "Referer: https://www.bilibili.com/" << real_url[0]);
+    p.start("ffmpeg", QStringList() << "-user_agent" << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+            << "-headers" << "Referer: https://www.bilibili.com/" << "-i" << real_url[0]);
     p.waitForStarted(5000);
     p.waitForFinished();
-    QRegularExpression reh("\\nheight=([0-9]+)");
-    QRegularExpression rew("\\nwidth=([0-9]+)");
-    auto a = p.readAll();
-    auto matchh = reh.match(a);
-    auto matchw = rew.match(a);
-//    qInfo() << matchw.captured(1).toDouble() << matchh.captured(1).toDouble() << a;
-    if (matchw.hasMatch() && matchh.hasMatch()) {
-         res_x = res_y * matchw.captured(1).toDouble() / matchh.captured(1).toDouble();
+    QRegularExpression re(", ([0-9]+)x([0-9]+)");
+    QRegularExpressionMatch match = re.match(p.readAllStandardError());
+//    qDebug() << match.captured(1).toDouble() << match.captured(2).toDouble();
+    if (match.hasMatch()) {
+         res_x = res_y * match.captured(1).toDouble() / match.captured(2).toDouble();
     }
 }
 
@@ -283,22 +278,26 @@ void BiliVideo::downloadVideo()
                     << "-c" << "copy" << saved_file->fileName());
         }
     } else {
+        connect(this, &BiliVideo::dlFinished, [=]() {
+            this->merge_file = new QFile(QString("/tmp/qlp-%1.txt").arg(QUuid::createUuid().toString()), this);
+            if (!this->merge_file->open(QIODevice::WriteOnly | QIODevice::Text))
+                return;
+            QTextStream out(this->merge_file);
+            for (const auto& f : this->seg_file_list) {
+                out << "file ";
+                out << f->fileName();
+                out << "\n";
+            }
+            this->merge_file->close();
+            p->start("ffmpeg", QStringList()
+    //                 << "-report" << "-fflags" << "+igndts"
+                     << "-f" << "concat" << "-safe" << "0"
+                     << "-i" << this->merge_file->fileName()
+                     << "-i" << this->ass_file->fileName()
+    //                 << "-bsf:a" << "aac_adtstoasc"
+                     << "-c" << "copy" << "-fflags" << "+genpts" << this->saved_file->fileName());
+        });
         startSegFifoProc();
-        this->merge_file = new QFile(QString("/tmp/qlp-%1.txt").arg(QUuid::createUuid().toString()), this);
-        if (!this->merge_file->open(QIODevice::WriteOnly | QIODevice::Text))
-            return;
-        QTextStream out(this->merge_file);
-        for (const auto& f : this->seg_file_list) {
-            out << "file ";
-            out << f->fileName();
-            out << "\n";
-        }
-        this->merge_file->close();
-        p->start("ffmpeg", QStringList()
-                 << "-f" << "concat" << "-safe" << "0"
-                 << "-i" << this->merge_file->fileName()
-                 << "-i" << this->ass_file->fileName()
-                 << "-c" << "copy" << this->saved_file->fileName());
     }
 }
 
@@ -309,15 +308,58 @@ void BiliVideo::setSavedFilePath(QString path)
 
 void BiliVideo::startSegFifoProc()
 {
+
     for (const auto& u : real_url) {
         QProcess *p = new QProcess(this);
-        QFile *f = new QFile(QString("/tmp/qlp-%1.flv").arg(QUuid::createUuid().toString()), this);
+        QFile *f = new QFile(QString("%2/qlp-%1.flv").arg(QUuid::createUuid().toString()).arg(QFileInfo(saved_file->fileName()).absoluteDir().absolutePath()), this);
         seg_file_list.append(f);
-        QProcess::execute("mkfifo", QStringList() << seg_file_list.last()->fileName());
+//        QProcess::execute("mkfifo", QStringList() << seg_fifo_list.last()->fileName());
+//        p->start("ffmpeg", QStringList()
+//                 << "-y" << "-fflags" << "+igndts"
+//                 << "-user_agent" << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+//                 << "-headers" << "Referer: https://www.bilibili.com/"
+//                 << "-i" << u << "-bsf:v" << "h264_mp4toannexb" << "-fflags" << "+genpts"
+//                 << "-c" << "copy" << "-f" << "mpegts" << seg_fifo_list.last()->fileName());
+        connect(p, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+                [=](int exitCode, QProcess::ExitStatus exitStatus){
+            Q_UNUSED(exitStatus);
+            if (exitCode != 0) {
+                qCritical() << "Network error!";
+                QCoreApplication::exit(exitCode);
+            } else {
+                this->dl_cnt++;
+                if (this->dl_cnt == this->real_url.length()) {
+                    emit this->dlFinished();
+                }
+            }
+        });
         p->start("curl", QStringList()
                  << u
                  << "-H" << "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
                  << "-H" << "Referer: https://www.bilibili.com/"
                  << "-o" << seg_file_list.last()->fileName());
+        qInfo() << "Start download...";
     }
+}
+
+void BiliVideo::startHttpServer()
+{
+    QString concat_file = "#EXTM3U\\n#EXT-X-MEDIA-SEQUENCE:0\\n";
+    for (const auto& u : real_url) {
+        concat_file.append("#EXTINF:-1,\\n");
+        concat_file.append(u);
+        concat_file.append("\\n");
+    }
+    QProcess *p = new QProcess(this);
+    p->start("python", QStringList() << "-c" <<
+             "import asyncio, aiohttp\n"
+             "async def handler(request):\n"
+             "    out = '" + concat_file + "'\n"
+             "    return aiohttp.web.Response(text=out)\n"
+             "app = aiohttp.web.Application()\n"
+             "app.add_routes([\n"
+             "  aiohttp.web.get('/a.m3u8', handler)\n"
+             "])\n"
+             "aiohttp.web.run_app(app, host='127.0.0.1', port=7865)\n");
+    p->waitForFinished(3000);
 }

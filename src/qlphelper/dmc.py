@@ -6,9 +6,7 @@ async def printer(q):
     while True:
         m = await q.get()
         if m['msg_type'] == 'danmaku':
-            print(f'[{m["name"]}] {m["content"]}'.encode(sys.stdin.encoding, 'ignore').
-                  decode(sys.stdin.encoding))
-            sys.stdout.flush()
+            print(f'{m.get("color", "ffffff")}[{m["name"]}] {m["content"]}', flush=True)
 
 
 async def main():

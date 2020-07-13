@@ -11,6 +11,7 @@ Streamer::Streamer(QString room_url, QString stream_socket, QObject *parent)
 
     nam = new QNetworkAccessManager(this);
     nam->setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
+    nam->setTransferTimeout(5000);
     ykdl_process = new QProcess(this);
 
     socket_server = new QLocalServer(this);
@@ -106,6 +107,7 @@ void Streamer::onStreamData()
 {
     if (on_streaming == false) {
         on_streaming = true;
+        manual_restart_flag = false;
         emit streamStart();
     }
     socket->write(reply_stream->readAll());
@@ -113,11 +115,16 @@ void Streamer::onStreamData()
 
 void Streamer::onHttpFinished()
 {
-    qDebug() << "finished!!!!" << reply_stream->errorString();
-    if( reply_stream->error() != QNetworkReply::OperationCanceledError) {
+    qDebug() << "http stream finished!!!!" << reply_stream->errorString();
+    if (manual_restart_flag == false) {
         emit streamError();
+    } else {
+        manual_restart_flag = false;
     }
-    reply_stream->deleteLater();
+    if (reply_stream != nullptr) {
+        reply_stream->deleteLater();
+        reply_stream = nullptr;
+    }
 }
 
 
@@ -136,6 +143,7 @@ void Streamer::restart()
         hls_ffmpeg_process->terminate();
     }
     if (reply_stream != nullptr) {
+        manual_restart_flag = true;
         reply_stream->abort();
         reply_stream->deleteLater();
         reply_stream = nullptr;
@@ -201,6 +209,7 @@ void Streamer::requestStream()
     qDebug() << real_url;
     QNetworkRequest qnr(real_url);
     qnr.setMaximumRedirectsAllowed(3);
+    qnr.setTransferTimeout(5000);
     qnr.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
     reply_stream = nam->get(qnr);
     connect(reply_stream, &QNetworkReply::readyRead, this, &Streamer::onStreamData);
