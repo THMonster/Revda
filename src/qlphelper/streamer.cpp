@@ -1,3 +1,5 @@
+#include <QtGlobal>
+
 #include "streamer.h"
 
 Streamer::Streamer(QString room_url, QString stream_socket, QObject *parent)
@@ -11,7 +13,6 @@ Streamer::Streamer(QString room_url, QString stream_socket, QObject *parent)
 
     nam = new QNetworkAccessManager(this);
     nam->setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
-    nam->setTransferTimeout(5000);
     ykdl_process = new QProcess(this);
 
     socket_server = new QLocalServer(this);
@@ -209,7 +210,11 @@ void Streamer::requestStream()
     qDebug() << real_url;
     QNetworkRequest qnr(real_url);
     qnr.setMaximumRedirectsAllowed(3);
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 15, 0))
     qnr.setTransferTimeout(5000);
+#endif
+
     qnr.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
     reply_stream = nam->get(qnr);
     connect(reply_stream, &QNetworkReply::readyRead, this, &Streamer::onStreamData);
