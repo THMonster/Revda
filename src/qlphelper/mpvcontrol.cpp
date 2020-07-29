@@ -64,7 +64,9 @@ void MpvControl::readMpvSocket()
             emit requestReload();
         } else if (tmp.contains("file-loaded")) {
             mpv_socket->write(QString("{ \"command\": [\"set_property\", \"force-media-title\", \"%1\"] }\n").arg(room_title).toUtf8());
-            mpv_socket->write(QString("{ \"command\": [\"get_property\", \"video-params\"] }\n").toUtf8());
+            QTimer::singleShot(1000, [=]() {
+                this->mpv_socket->write(QString("{ \"command\": [\"get_property\", \"video-params\"] }\n").toUtf8());
+            });
             emit reloaded();
         } else if (tmp.contains("pixelformat")) {
             auto jobj = QJsonDocument::fromJson(tmp).object();

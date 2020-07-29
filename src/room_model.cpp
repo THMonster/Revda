@@ -176,6 +176,9 @@ void RoomModel::openUrl(QString url)
         } else if (sl[0].left(2) == "BV") {
             auto psl = sl[0].split(':', QString::SkipEmptyParts);
             openRoom("https://www.bilibili.com/video/" + psl[0] + "?p=" + (psl.size() == 2 ? psl[1] : "1"));
+        } else if (sl[0].left(2) == "ss") {
+            auto psl = sl[0].split(':', QString::SkipEmptyParts);
+            openRoom("https://www.bilibili.com/bangumi/play/" + psl[0] + "?p=" + (psl.size() == 2 ? psl[1] : "1"));
         } else if (sl[0].left(4) == "http") {
             if (!sl[0].contains("bilibili")) {
                 return;

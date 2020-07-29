@@ -1,5 +1,75 @@
 #include <iostream>
 #include "bilivideo.h"
+using namespace BV;
+
+MpvControl::MpvControl(QObject *parent) : QObject(parent)
+{
+    mpv_socket_path = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
+    mpv_proc = new QProcess(this);
+    mpv_socket = new QLocalSocket(this);
+    connect(mpv_socket, &QLocalSocket::readyRead, this, &MpvControl::readMpvSocket);
+    connect(mpv_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            [=](int exitCode, QProcess::ExitStatus exitStatus){
+        Q_UNUSED(exitStatus);
+        QCoreApplication::exit(exitCode);
+    });
+
+}
+
+MpvControl::~MpvControl()
+{
+    mpv_proc->terminate();
+    mpv_proc->waitForFinished(3000);
+    QLocalServer::removeServer(mpv_socket_path);
+}
+
+void MpvControl::start()
+{
+    QStringList args;
+    args.append("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36");
+    args.append("--http-header-fields-add=Referer: https://www.bilibili.com/");
+    mpv_proc->start("mpv", args << "--idle=yes" << "--player-operation-mode=pseudo-gui"
+                    << "--vf=lavfi=\"fps=60\"" << "--input-ipc-server=" + mpv_socket_path);
+    auto t = new QTimer(this);
+    connect(t, &QTimer::timeout, [&, t]() {
+        if (mpv_socket->state() != QLocalSocket::ConnectedState) {
+            mpv_socket->connectToServer(mpv_socket_path);
+        } else {
+            t->stop();
+            t->deleteLater();
+        }
+    });
+    t->start(1000);
+}
+
+void MpvControl::loadVideo(QString edl_url, QString ass_file_path, QString title)
+{
+    ass_path = ass_file_path;
+    // do loadfile
+    mpv_socket->write(QString("{ \"command\": [\"loadfile\", \"%1\"], \"async\": true }\n").arg(edl_url).toUtf8());
+    mpv_socket->write(QString("{ \"command\": [\"set_property\", \"force-media-title\", \"%1\"] }\n").arg(title).toUtf8());
+}
+
+void MpvControl::readMpvSocket()
+{
+    while (mpv_socket->canReadLine()) {
+        auto tmp = mpv_socket->readLine().trimmed();
+        qDebug() << tmp;
+        if (tmp.contains("qlpgo-")) {
+            QRegularExpression re("qlpgo-([0-9]+)");
+            auto m = re.match(tmp);
+            if (m.hasMatch()) {
+                emit jumpReceived(m.captured(1).toInt());
+            }
+        } else if (tmp.contains("end-file")) {
+            emit playFinished();
+        } else if (tmp.contains("file-loaded")) {
+            emit fileLoaded();
+            mpv_socket->write(QString("{ \"command\": [\"sub-add\", \"%1\"], \"async\": true }\n").arg(ass_path).toUtf8());
+        }
+    }
+}
+
 
 BiliVideo::BiliVideo(QObject *parent)
     : QObject(parent)
@@ -7,17 +77,17 @@ BiliVideo::BiliVideo(QObject *parent)
     ass_file = new QFile(QString("/tmp/qlp-%1.ass").arg(QUuid::createUuid().toString()), this);
 
     nam = new QNetworkAccessManager(this);
-    connect(nam, &QNetworkAccessManager::finished, this, &BiliVideo::httpFinished);
+//    nam->setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
 
     QSettings s("QLivePlayer", "QLivePlayer", this);
     cookie = s.value("bcookie", QString("")).toString();
     hevc = s.value("bhevc", false).toBool();
 
-    mpv_proc = new QProcess(this);
-    connect(mpv_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            [=](int exitCode, QProcess::ExitStatus exitStatus){
-        Q_UNUSED(exitStatus);
-        QCoreApplication::exit(exitCode);
+    mpv = new MpvControl(this);
+    connect(mpv, &MpvControl::jumpReceived, this, &BiliVideo::playPage);
+//    connect(mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
+    connect(mpv, &MpvControl::fileLoaded, [=]() {
+        connect(this->mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
     });
 }
 
@@ -32,50 +102,26 @@ BiliVideo::~BiliVideo()
     }
 }
 
-void BiliVideo::run(QString url, QString part)
+void BiliVideo::run(QString url)
 {
-    real_url.clear();
-    title.clear();
-    res_x = 1920;
-    res_y = 1080;
-    QProcess p;
-    QStringList args;
-    args.append(QStandardPaths::locate(QStandardPaths::DataLocation, "bili_url.py"));
-    args.append(url);
-    args.append(cookie);
-    qDebug() << args;
-    p.start("python3", args);
-    p.waitForStarted(5000);
-    p.waitForFinished();
-    QRegularExpression re("^(http.+)$");
-    while(!p.atEnd()) {
-        QString line(p.readLine());
-        qDebug() << line;
-        if (line.left(6) == "title:") {
-            line.remove(0, 6);
-            this->title = line;
-            continue;
-        }
-        QRegularExpressionMatch match = re.match(line);
-        if (match.hasMatch()) {
-             real_url.append(match.captured(1));
+    if (!saved_file) {
+        mpv->start();
+    }
+    QUrl qu(url);
+    QUrlQuery quq(qu);
+    if (quq.hasQueryItem("p")) {
+        current_page = quq.queryItemValue("p").toInt();
+        if (current_page == 0) {
+            current_page = 1;
         }
     }
-    if (real_url.isEmpty()) {
-        qInfo() << "No valid url fetched!";
-        exit(1);
-    }
-
-    setRes();
-
-    genEDLUrl();
-
-    auto sl = real_url[0].split('/', QString::SkipEmptyParts);
-    auto cid = sl.at(sl.length() - 2);
-//    qDebug() << cid;
-    QNetworkRequest qnr("https://comment.bilibili.com/" + cid + ".xml");
-//    qDebug() << real_url;
-    nam->get(qnr);
+    base_url = qu.adjusted(QUrl::RemoveQuery).toString();
+    QNetworkRequest qnr(base_url);
+    qnr.setMaximumRedirectsAllowed(5);
+    qnr.setRawHeader(QByteArray("User-Agent"), QByteArray("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36"));
+    qnr.setRawHeader(QByteArray("Referer"), QByteArray("https://www.bilibili.com/"));
+    reply_info = nam->get(qnr);
+    connect(reply_info, &QNetworkReply::finished, this, &BiliVideo::slotHttpVideoInfo);
 }
 
 void BiliVideo::genAss()
@@ -142,11 +188,7 @@ void BiliVideo::genAss()
     if (saved_file) {
         downloadVideo();
     } else {
-        QStringList args;
-        args.append("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36");
-        args.append("--http-header-fields-add=Referer: https://www.bilibili.com/");
-        mpv_proc->start("mpv", args << "--player-operation-mode=pseudo-gui" << "--force-media-title=" + title
-                        << "--vf=lavfi=\"fps=60\"" << "--sub-file=" + ass_file->fileName() << edl_url);
+        mpv->loadVideo(edl_url, ass_file->fileName(), title);
     }
 }
 
@@ -208,15 +250,15 @@ int BiliVideo::getAvailDMChannel(double time_start, int len)
     return -4;
 }
 
-void BiliVideo::httpFinished(QNetworkReply *reply)
+void BiliVideo::slotHttpDMXml()
 {
-    if (reply->error() != QNetworkReply::NoError) {
-        qDebug() << "Network error: " << reply->error();
-        reply->deleteLater();
+    if (reply_dm->error() != QNetworkReply::NoError) {
+        qDebug() << "Network error: " << reply_dm->error();
+        reply_dm->deleteLater();
         return;
     }
     danmaku_map.clear();
-    QString xml(reply->readAll());
+    QString xml(reply_dm->readAll());
     int cur = -1;
     int i = -1, j = -1;
     while (1) {
@@ -231,8 +273,49 @@ void BiliVideo::httpFinished(QNetworkReply *reply)
     }
 
     genAss();
+}
 
-    reply->deleteLater();
+void BiliVideo::slotHttpVideoInfo()
+{
+    if (reply_info->error() != QNetworkReply::NoError) {
+        qDebug() << "Network error: " << reply_info->error();
+        reply_info->deleteLater();
+        return;
+    }
+    pages.clear();
+//    qInfo() << reply_info->readAll();
+    QRegularExpression re("__INITIAL_STATE__=({.+?});");
+    auto m = re.match(reply_info->readAll());
+    if (m.hasMatch()) {
+//        qInfo() << m.captured(1);
+        auto jobj = QJsonDocument::fromJson(m.captured(1).toUtf8()).object();
+        if (jobj.find("epList") != jobj.end()) {
+            if (current_page == 1) {
+                current_page = jobj.value("epInfo").toObject().value("i").toInt(0) + 1;
+                if (current_page == 0) {
+                    current_page = 1;
+                }
+            }
+            auto arr = jobj.value("epList").toArray();
+            if (!arr.isEmpty()) {
+                for (const auto& p : arr) {
+                    pages.append("ep" + QString::number(p.toObject().value("id").toInt()));
+                }
+            }
+        } else if (jobj.find("videoData") != jobj.end()) {
+            auto videos = jobj.value("videoData").toObject().value("videos").toInt(1);
+            while (videos > 0) {
+                pages.append("");
+                videos--;
+            }
+        } else {
+
+        }
+    }
+    if (!pages.isEmpty()) {
+        playPage(current_page);
+    }
+    qDebug() << pages << current_page;
 }
 
 inline void BiliVideo::genEDLUrl()
@@ -320,4 +403,75 @@ void BiliVideo::startSegFifoProc()
                  << "-H" << "Referer: https://www.bilibili.com/"
                  << "-o" << seg_file_list.last()->fileName());
     }
+}
+
+void BiliVideo::requestRealUrl(QString url)
+{
+    real_url.clear();
+    title.clear();
+    res_x = 1920;
+    res_y = 1080;
+    QProcess p;
+    QStringList args;
+    args.append(QStandardPaths::locate(QStandardPaths::DataLocation, "bili_url.py"));
+    args.append(url);
+    args.append(cookie);
+    qDebug() << args;
+    p.start("python3", args);
+    p.waitForStarted(5000);
+    p.waitForFinished();
+    QRegularExpression re("^(http.+)$");
+    while(!p.atEnd()) {
+        QString line(p.readLine());
+        qDebug() << line;
+        if (line.left(6) == "title:") {
+            line.remove(0, 6);
+            line.chop(1);
+            this->title = line;
+            continue;
+        }
+        QRegularExpressionMatch match = re.match(line);
+        if (match.hasMatch()) {
+            real_url.append(match.captured(1));
+        }
+    }
+    if (real_url.isEmpty()) {
+        qInfo() << "No valid url fetched!";
+        exit(1);
+    }
+
+    setRes();
+
+    genEDLUrl();
+
+    auto sl = real_url[0].split('/', QString::SkipEmptyParts);
+    auto cid = sl.at(sl.length() - 2);
+    //    qDebug() << cid;
+    QNetworkRequest qnr("https://comment.bilibili.com/" + cid + ".xml");
+    //    qDebug() << real_url;
+    reply_dm = nam->get(qnr);
+    connect(reply_dm, &QNetworkReply::finished, this, &BiliVideo::slotHttpDMXml);
+}
+
+void BiliVideo::playPage(int p)
+{
+    if (p < 1 || p > pages.length()) {
+        return;
+    }
+    disconnect(mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
+    QString u;
+    if (pages[p-1] == "") {
+        u = base_url + "?p=" + QString::number(p);
+    } else {
+        u = "https://www.bilibili.com/bangumi/play/" + pages[p-1];
+    }
+    current_page = p;
+    requestRealUrl(u);
+}
+
+void BiliVideo::autoNextPage()
+{
+    QTimer::singleShot(3000, [=]() {
+        playPage(current_page + 1);
+    });
 }

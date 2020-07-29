@@ -117,15 +117,7 @@ void Streamer::onStreamData()
 void Streamer::onHttpFinished()
 {
     qDebug() << "http stream finished!!!!" << reply_stream->errorString();
-    if (manual_restart_flag == false) {
-        emit streamError();
-    } else {
-        manual_restart_flag = false;
-    }
-    if (reply_stream != nullptr) {
-        reply_stream->deleteLater();
-        reply_stream = nullptr;
-    }
+    emit streamError();
 }
 
 
@@ -144,7 +136,7 @@ void Streamer::restart()
         hls_ffmpeg_process->terminate();
     }
     if (reply_stream != nullptr) {
-        manual_restart_flag = true;
+        reply_stream->disconnect(this);
         reply_stream->abort();
         reply_stream->deleteLater();
         reply_stream = nullptr;
@@ -155,6 +147,7 @@ void Streamer::restart()
         socket = nullptr;
     }
     on_streaming = false;
+    manual_restart_flag = true;
     real_url = "";
     requestRealUrl();
 }
@@ -215,6 +208,7 @@ void Streamer::requestStream()
     qnr.setTransferTimeout(5000);
 #endif
 
+
     qnr.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
     reply_stream = nam->get(qnr);
     connect(reply_stream, &QNetworkReply::readyRead, this, &Streamer::onStreamData);
@@ -225,5 +219,11 @@ void Streamer::requestRealUrl()
 {
     qDebug() << "start ykdl!";
     ykdl_process->waitForFinished(10000);
+    auto tid = ++ykdl_id;
     ykdl_process->start("ykdl", QStringList() << "-i" << room_url);
+    QTimer::singleShot(10000, [this, tid]() {
+        if (this->ykdl_process->state() == QProcess::Running && tid == this->ykdl_id) {
+            this->ykdl_process->kill();
+        }
+    });
 }

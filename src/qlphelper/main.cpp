@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
     parser.addHelpOption();
     parser.addVersionOption();
 
-    QCommandLineOption urlOption(QStringList() << "u" << "url", "The Live Stream url to open", "url", "https://www.douyu.com/2550505");
+    QCommandLineOption urlOption(QStringList() << "u" << "url", "The url to open", "url", "null");
     parser.addOption(urlOption);
     QCommandLineOption recordOption(QStringList() << "r" << "record", "Record stream to local file", "file", "null");
     parser.addOption(recordOption);
@@ -99,16 +99,22 @@ int main(int argc, char *argv[])
         parser.showHelp();
     }
 
+    auto url = parser.value(urlOption);
+    if (url.left(14) == "qliveplayer://") {
+        url.remove(0, 11);
+        url = "https" + url;
+    }
+
     if (parser.isSet(debugOption)) {
         debug_flag = true;
     }
 
-    if (parser.value(urlOption).contains("bilibili.com/video") || parser.value(urlOption).contains("bilibili.com/bangumi")) {
-        auto bv = new BiliVideo(&a);
+    if (url.contains("bilibili.com/video") || url.contains("bilibili.com/bangumi")) {
+        auto bv = new BV::BiliVideo(&a);
         if (parser.value(recordOption) != "null") {
             bv->setSavedFilePath(parser.value(recordOption));
         }
-        bv->run(parser.value(urlOption));
+        bv->run(url);
     } else {
         QStringList args;
         args << parser.value(urlOption);

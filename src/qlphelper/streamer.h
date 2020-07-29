@@ -51,9 +51,10 @@ private:
     QProcess* hls_ffmpeg_process = nullptr;
     bool on_streaming = false;
     int offline_counter = 0;
+    int ykdl_id = 0;
     bool is_hls = false;
     bool terminate_ffmpeg = false;
-    bool manual_restart_flag = false;
+    bool manual_restart_flag = true;
 
 };
 

@@ -14,7 +14,7 @@ QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
     stream_socket = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
     danmaku_socket = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
     auto f = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
-    QProcess::execute(QString("mkfifo %1").arg(f));
+    QProcess::execute("mkfifo", QStringList() << f);
     ff2mpv_fifo = new QFile(f, this);
 
 

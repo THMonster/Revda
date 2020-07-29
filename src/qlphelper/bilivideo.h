@@ -2,15 +2,43 @@
 #define BILIVIDEO_H
 
 #include <QtCore>
+#include <QLocalSocket>
+#include <QLocalServer>
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
+namespace BV {
 
 struct DanmakuChannelB
 {
 //    double duration;
     int length;
     double begin_pts;
+};
+
+class MpvControl : public QObject
+{
+    Q_OBJECT
+public:
+    explicit MpvControl(QObject *parent = nullptr);
+    ~MpvControl();
+
+public slots:
+    void start();
+    void loadVideo(QString edl_url, QString ass_file_path, QString title);
+    void readMpvSocket();
+
+signals:
+    void requestReload();
+    void playFinished();
+    void jumpReceived(int n);
+    void fileLoaded();
+
+private:
+    QString ass_path;
+    QString mpv_socket_path;
+    QLocalSocket* mpv_socket = nullptr;
+    QProcess* mpv_proc;
 };
 
 class BiliVideo : public QObject
@@ -20,16 +48,20 @@ public:
     explicit BiliVideo(QObject *parent = nullptr);
     ~BiliVideo();
 
-    void run(QString url, QString part = "");
+    void run(QString url);
     void genAss();
     void setRes();
     int getDankamuDisplayLength(QString dm, int fontsize);
     int getAvailDMChannel(double time_start, int len);
-    void httpFinished(QNetworkReply *reply);
+    void slotHttpDMXml();
+    void slotHttpVideoInfo();
     void genEDLUrl();
     void downloadVideo();
     void setSavedFilePath(QString path);
     void startSegFifoProc();
+    void requestRealUrl(QString url);
+    void playPage(int p);
+    void autoNextPage();
 
 signals:
     void dlFinished();
@@ -39,6 +71,7 @@ private:
     int res_x = 1920;
     int res_y = 1080;
     bool hevc = false;
+    MpvControl *mpv = nullptr;
     QStringList real_url;
     QString edl_url;
     QString title;
@@ -51,6 +84,12 @@ private:
     QFile *saved_file = nullptr;
     QFile *merge_file = nullptr;
     QList<QFile*> seg_file_list;
+    QVector<QString> pages;
+    int current_page = 1;
+    QString base_url;
+    QNetworkReply *reply_dm = nullptr;
+    QNetworkReply *reply_info = nullptr;
 };
 
+}
 #endif // BILIVIDEO_H

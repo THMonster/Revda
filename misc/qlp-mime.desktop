@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=1.0
+Name=QLivePlayer Mime
+NoDisplay=true
+Exec=qlphelper -u %u
+Type=Application
+MimeType=x-scheme-handler/qliveplayer;
