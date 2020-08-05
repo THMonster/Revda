@@ -210,6 +210,7 @@ void Streamer::requestStream()
 
 
     qnr.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
+//    qnr.setRawHeader("User-Agent", "Mozilla/5.0 (Linux; Android 10; hi3660 Build/QQ2A.200405.005; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/84.0.4147.111 Mobile Safari/537.36");
     reply_stream = nam->get(qnr);
     connect(reply_stream, &QNetworkReply::readyRead, this, &Streamer::onStreamData);
     connect(reply_stream, &QNetworkReply::finished, this, &Streamer::onHttpFinished);
