@@ -57,5 +57,5 @@ make
 sudo make install
 ```
 
-# Usage
+## Usage
 见[wiki](https://github.com/IsoaSFlus/QLivePlayer/wiki)
