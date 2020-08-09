@@ -32,6 +32,8 @@ signals:
     void requestReload();
     void playFinished();
     void jumpReceived(int n);
+    void prevReceived();
+    void nextReceived();
     void fileLoaded();
 
 private:
@@ -62,6 +64,8 @@ public:
     void requestRealUrl(QString url);
     void playPage(int p);
     void autoNextPage();
+    void goPrevPage();
+    void goNextPage();
 
 signals:
     void dlFinished();

@@ -34,6 +34,7 @@ void MpvControl::start()
             if (mpv_socket->state() != QLocalSocket::ConnectedState) {
                 mpv_socket->connectToServer(mpv_socket_path);
             } else {
+                mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlpreload\"] }\n").toUtf8());
                 t->stop();
                 t->deleteLater();
             }

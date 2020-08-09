@@ -35,6 +35,9 @@ void MpvControl::start()
         if (mpv_socket->state() != QLocalSocket::ConnectedState) {
             mpv_socket->connectToServer(mpv_socket_path);
         } else {
+            mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlpreload\"] }\n"
+                                      "{ \"command\": [\"keybind\", \"alt+b\", \"script-message qlpprev\"] }\n"
+                                      "{ \"command\": [\"keybind\", \"alt+n\", \"script-message qlpnext\"] }\n").toUtf8());
             t->stop();
             t->deleteLater();
         }
@@ -66,6 +69,12 @@ void MpvControl::readMpvSocket()
         } else if (tmp.contains("file-loaded")) {
             emit fileLoaded();
             mpv_socket->write(QString("{ \"command\": [\"sub-add\", \"%1\"], \"async\": true }\n").arg(ass_path).toUtf8());
+        } else if (tmp.contains("qlpnext")) {
+            emit nextReceived();
+        } else if (tmp.contains("qlpprev")) {
+            emit prevReceived();
+        } else if (tmp.contains("qlpreload")) {
+            emit requestReload();
         }
     }
 }
@@ -85,6 +94,11 @@ BiliVideo::BiliVideo(QObject *parent)
 
     mpv = new MpvControl(this);
     connect(mpv, &MpvControl::jumpReceived, this, &BiliVideo::playPage);
+    connect(mpv, &MpvControl::requestReload, [=]() {
+        this->playPage(this->current_page);
+    });
+    connect(mpv, &MpvControl::prevReceived, this, &BiliVideo::goPrevPage);
+    connect(mpv, &MpvControl::nextReceived, this, &BiliVideo::goNextPage);
 //    connect(mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
     connect(mpv, &MpvControl::fileLoaded, [=]() {
         connect(this->mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
@@ -474,4 +488,14 @@ void BiliVideo::autoNextPage()
     QTimer::singleShot(3000, [=]() {
         playPage(current_page + 1);
     });
+}
+
+void BiliVideo::goPrevPage()
+{
+    playPage(current_page - 1);
+}
+
+void BiliVideo::goNextPage()
+{
+    playPage(current_page + 1);
 }
