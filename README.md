@@ -15,7 +15,7 @@ Linux平台下的弹幕直播播放器。
 * 稳定60帧的弹幕，无需多言。
 * 笔记本风扇不会惨叫（本人i5-7200U，播放时cpu基本工作在最低的700mhz，占用率在10%～20%左右，风扇完全不工作）
 * 直播录制，包括直播流和弹幕，弹幕直接包含在录制下来的视频文件中（字幕轨）。
-* Bilibili视频的播放与下载（都包含弹幕支持）,自动连播以及选集。
+* Bilibili视频的播放与下载（都包含弹幕支持），自动连播以及选集。
 
 ## Screenshot
 [![Screenshot.png](https://raw.githubusercontent.com/IsoaSFlus/QLivePlayer/master/pictures/s1.png)](https://raw.githubusercontent.com/IsoaSFlus/QLivePlayer/master/pictures/s1.png)
