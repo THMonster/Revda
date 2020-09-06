@@ -7,6 +7,7 @@ set(qlphelper_file_SRCS
     mpvcontrol.cpp
     ffmpegcontrol.cpp
     bilivideo.cpp
+    streamfinder.cpp
 )
 
 add_executable(qlphelper ${qlphelper_file_SRCS})
@@ -17,7 +18,7 @@ target_link_libraries(qlphelper
 
 target_compile_definitions(qlphelper PRIVATE -DPROJECT_VERSION="${PROJECT_VERSION}")
 
-file(GLOB dmcpyz dmc.pyz bili_url.py)
+file(GLOB dmcpyz dmc.pyz bili_url.py yt_url.py)
 install(FILES ${dmcpyz} DESTINATION share/QLivePlayer)
 
 install(TARGETS qlphelper DESTINATION bin)

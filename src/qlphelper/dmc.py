@@ -10,8 +10,12 @@ async def printer(q):
 
 
 async def main():
+    ex_data = {}
+    if len(sys.argv) > 2:
+        ex_data['yt_key'] = sys.argv[2]
+
     q = asyncio.Queue()
-    dmc = danmaku.DanmakuClient(sys.argv[1], q)
+    dmc = danmaku.DanmakuClient(sys.argv[1], q, **ex_data)
     asyncio.create_task(printer(q))
     await dmc.start()
 

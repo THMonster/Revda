@@ -5,9 +5,9 @@ Linux平台下的弹幕直播播放器。
 
 整个项目几乎全部重写，软件的工作方式也完全不同了，性能比上一版更好。
 
-由于上一版用来获取直播弹幕的`danmu`已经多年不更新了，虽然我个人fork了进行简单的维护，但感觉这个项目里面的东西已经过时太久了，所以我自己用aiohttp造了一个轮子[danmaku](https://github.com/IsoaSFlus/danmaku)，不过支持的网站可能并不会太多（懒），目前只支持斗鱼、虎牙与B站。因此，本项目完整支持的网站目前只有这三家，也就是说其他的直播网站可能可以播放，但暂时没有弹幕支持。
+由于上一版用来获取直播弹幕的`danmu`已经多年不更新了，虽然我个人fork了进行简单的维护，但感觉这个项目里面的东西已经过时太久了，所以我自己用aiohttp造了一个轮子[danmaku](https://github.com/IsoaSFlus/danmaku)，不过支持的网站可能并不会太多（懒），目前支持斗鱼、虎牙、B站和YouTube Live。
 
-另外，经过一些事情后我认为，靠streamlink来获取直播流并不是太靠谱。这个项目确实非常棒，但并不太适合中国的直播网站。因此在上次斗鱼更新之后，我把获取直播流的组件换成了[ykdl](https://github.com/zhangn1985/ykdl)，这是一个专注国内视频/直播网站的项目，相对来说更可靠。
+另外，经过一些事情后我认为，靠streamlink来获取国内直播平台的流并不是太靠谱。这个项目确实非常棒，但并不太适合中国的直播平台。因此在上次斗鱼更新之后，我把针对获取国内直播流的组件换成了[ykdl](https://github.com/zhangn1985/ykdl)，这是一个专注国内视频/直播网站的项目。streamlink用来获取国外直播平台的流，为可选依赖。
 
 同时，增加了一个管理收藏与历史记录的gui前端，使用起来更友好。
 
@@ -29,6 +29,8 @@ Linux平台下的弹幕直播播放器。
 * cmake
 * python-aiohttp
 * python3(>=3.7)
+* python-protobuf(optional, for YouTube LiveChat support)
+* [streamlink](https://streamlink.github.io/)(optional, for foreign streaming service support)
 
 ## Installation
 
@@ -58,4 +60,4 @@ sudo make install
 ```
 
 ## Usage
-见[wiki](https://github.com/IsoaSFlus/QLivePlayer/wiki)
+见[Github Wiki](https://github.com/IsoaSFlus/QLivePlayer/wiki)

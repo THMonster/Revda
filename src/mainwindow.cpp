@@ -32,7 +32,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     setCentralWidget(root_qml);
 
     QShortcut *sc_refresh = new QShortcut(QKeySequence::Refresh, this);
-    connect(sc_refresh, &QShortcut::activated, room_model, &RoomModel::refresh);
+//    connect(sc_refresh, &QShortcut::activated, room_model, &RoomModel::refresh);
+    connect(sc_refresh, &QShortcut::activated, [this]() {
+        this->room_model->refresh();
+    });
     room_model->load();
     room_model->refresh();
 }

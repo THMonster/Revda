@@ -73,11 +73,13 @@ public:
     void addRoomToModel(int cata, QString url, QString title, QString owner, QString cover, int status, int num);
     void save();
     QString urlToCode(QString url);
+    void addUrlToHistory(QString url);
 
 public slots:
     void openRoom(QString url);
-    void refresh();
-    void refreshHistory();
+    void openUnverifiedRoom(QString url);
+    void refresh(bool history_only = false);
+//    void refreshHistory();
     void openUrl(QString url);
     void toggleLike(int like, QString url);
 

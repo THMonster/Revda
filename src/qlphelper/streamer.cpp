@@ -2,165 +2,33 @@
 
 #include "streamer.h"
 
-Streamer::Streamer(QString room_url, QString stream_socket, QObject *parent)
-    : QObject(parent)
+StreamerFlv::StreamerFlv(QString real_url, QString socket_path, QObject *parent)
+    : Streamer(parent)
 {
-    this->stream_socket_path = stream_socket;
-    this->room_url = room_url;
-//    if (room_url.contains("huya.com")) {
-//        is_hls = true;
-//    }
+    this->real_url = real_url;
+    this->stream_socket_path = socket_path;
 
     nam = new QNetworkAccessManager(this);
     nam->setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
-    ykdl_process = new QProcess(this);
-
-    socket_server = new QLocalServer(this);
-    connect(socket_server, &QLocalServer::newConnection, this, &Streamer::setSocket);
-    socket_server->listen(stream_socket);
-    connect(ykdl_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &Streamer::setRealUrl);
-    if (is_hls == false) {
-
-    } else {
-        hls_ffmpeg_process = new QProcess(this);
-        ffmpeg_server_path = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
-        socket_hls = new QLocalSocket(this);
-        connect(hls_ffmpeg_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-            [&](int exitCode, QProcess::ExitStatus exitStatus){
-            qDebug() << "hls ffmpeg finished!!" << exitCode << exitStatus;
-            if (terminate_ffmpeg == false) {
-                emit streamError();
-            } else {
-                terminate_ffmpeg = false;
-            }
-        });
-        connect(socket_hls, &QLocalSocket::readyRead, this, &Streamer::onStreamDataHLS);
-    }
 }
 
-Streamer::~Streamer()
+StreamerFlv::~StreamerFlv()
 {
-    if  (reply_stream != nullptr) {
-        reply_stream->deleteLater();
-    }
+    close();
     QLocalServer::removeServer(stream_socket_path);
-    if (is_hls) {
-        QLocalServer::removeServer(ffmpeg_server_path);
-    }
 }
 
-
-void Streamer::requestStreamHLS()
+void StreamerFlv::start()
 {
-    hls_ffmpeg_process->terminate();
-    hls_ffmpeg_process->waitForFinished();
-    hls_ffmpeg_process->start("ffmpeg", QStringList() << "-loglevel" << "quiet" << "-user_agent" <<
-                              "aaa"
-                              << "-i" << real_url << "-c" << "copy" << "-f" << "flv" << "-listen" << "1" << "unix://" + ffmpeg_server_path);
-    connectToFFmpeg();
+    state = Idle;
+    socket_server = new QLocalServer(this);
+    connect(socket_server, &QLocalServer::newConnection, this, &StreamerFlv::setSocket);
+    socket_server->listen(stream_socket_path);
 }
 
-void Streamer::onStreamDataHLS()
+void StreamerFlv::close()
 {
-    if (on_streaming == false) {
-        on_streaming = true;
-        emit streamStart();
-    }
-    socket->write(socket_hls->readAll());
-}
-
-void Streamer::setRealUrl(int code, QProcess::ExitStatus es)
-{
-    Q_UNUSED(code);
-    Q_UNUSED(es);
-    QRegularExpression re("^(http.+)$");
-    QRegularExpression re_title("^title: +([^\n]+)$");
-    while(!ykdl_process->atEnd()) {
-        QString line(ykdl_process->readLine());
-        QRegularExpressionMatch match = re_title.match(line);
-        if (match.hasMatch()) {
-             emit titleMatched(match.captured(1));
-        }
-        match = re.match(line);
-        if (match.hasMatch() && real_url.isEmpty()) {
-             real_url = match.captured(1);
-             offline_counter = 0;
-             if (is_hls == false) {
-                 requestStream();
-             } else {
-                 requestStreamHLS();
-             }
-             return;
-        }
-    }
-    if (real_url.isEmpty()) {
-        qCritical() << "Stream url not found!";
-        if (offline_counter > 30) {
-            QCoreApplication::exit(0);
-        } else {
-            ++offline_counter;
-            QTimer::singleShot(1000, this, &Streamer::requestRealUrl);
-        }
-    }
-}
-
-void Streamer::onStreamData()
-{
-    if (on_streaming == false) {
-        on_streaming = true;
-        manual_restart_flag = false;
-        emit streamStart();
-    }
-    socket->write(reply_stream->readAll());
-}
-
-void Streamer::onHttpFinished()
-{
-    qDebug() << "http stream finished!!!!" << reply_stream->errorString();
-    emit streamError();
-}
-
-
-void Streamer::start()
-{
-    requestRealUrl();
-}
-
-void Streamer::restart()
-{
-    if (is_hls) {
-        if (hls_ffmpeg_process->state() != QProcess::NotRunning) {
-            terminate_ffmpeg = true;
-        }
-        socket_hls->disconnectFromServer();
-        hls_ffmpeg_process->terminate();
-    }
-    if (reply_stream != nullptr) {
-        reply_stream->disconnect(this);
-        reply_stream->abort();
-        reply_stream->deleteLater();
-        reply_stream = nullptr;
-    }
-    if (socket != nullptr) {
-        socket->abort();
-        socket->deleteLater();
-        socket = nullptr;
-    }
-    on_streaming = false;
-    manual_restart_flag = true;
-    real_url = "";
-    requestRealUrl();
-}
-
-void Streamer::stop()
-{
-    if (is_hls) {
-        if (hls_ffmpeg_process->state() != QProcess::NotRunning) {
-            terminate_ffmpeg = true;
-        }
-        socket_hls->disconnectFromServer();
-        hls_ffmpeg_process->terminate();
-    }
+    state = Closing;
     if (reply_stream != nullptr) {
         reply_stream->abort();
         reply_stream->deleteLater();
@@ -171,11 +39,9 @@ void Streamer::stop()
         socket->deleteLater();
         socket = nullptr;
     }
-    on_streaming = false;
-    real_url = "";
 }
 
-void Streamer::setSocket()
+void StreamerFlv::setSocket()
 {
     if (socket != nullptr) {
         socket->abort();
@@ -186,19 +52,31 @@ void Streamer::setSocket()
     connect(socket, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::error),
             [&](QLocalSocket::LocalSocketError socketError) {
         qDebug() << "stream socket error" << socketError;
-        emit streamError();
+        if (state != Closing) {
+            emit streamError();
+        }
     });
+    requestStream();
 }
 
-void Streamer::connectToFFmpeg()
+void StreamerFlv::onStreamData()
 {
-    if (socket_hls->state() == QLocalSocket::UnconnectedState) {
-        socket_hls->connectToServer(ffmpeg_server_path);
-        QTimer::singleShot(1000, this, &Streamer::connectToFFmpeg);
+    if (state == Idle) {
+        state = Running;
+        emit streamStart();
+    }
+    socket->write(reply_stream->readAll());
+}
+
+void StreamerFlv::onHttpFinished()
+{
+    qDebug() << "http stream finished!!!!" << reply_stream->errorString();
+    if (state != Closing) {
+        emit streamError();
     }
 }
 
-void Streamer::requestStream()
+void StreamerFlv::requestStream()
 {
     qDebug() << real_url;
     QNetworkRequest qnr(real_url);
@@ -208,23 +86,149 @@ void Streamer::requestStream()
     qnr.setTransferTimeout(5000);
 #endif
 
-
     qnr.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
-//    qnr.setRawHeader("User-Agent", "Mozilla/5.0 (Linux; Android 10; hi3660 Build/QQ2A.200405.005; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/84.0.4147.111 Mobile Safari/537.36");
     reply_stream = nam->get(qnr);
-    connect(reply_stream, &QNetworkReply::readyRead, this, &Streamer::onStreamData);
-    connect(reply_stream, &QNetworkReply::finished, this, &Streamer::onHttpFinished);
+    connect(reply_stream, &QNetworkReply::readyRead, this, &StreamerFlv::onStreamData);
+    connect(reply_stream, &QNetworkReply::finished, this, &StreamerFlv::onHttpFinished);
 }
 
-void Streamer::requestRealUrl()
+StreamerHls::StreamerHls(QString real_url, QString socket_path, QObject *parent)
+    : Streamer(parent)
 {
-    qDebug() << "start ykdl!";
-    ykdl_process->waitForFinished(10000);
-    auto tid = ++ykdl_id;
-    ykdl_process->start("ykdl", QStringList() << "-i" << room_url);
-    QTimer::singleShot(10000, [this, tid]() {
-        if (this->ykdl_process->state() == QProcess::Running && tid == this->ykdl_id) {
-            this->ykdl_process->kill();
+    this->real_url = real_url;
+    this->stream_socket_path = socket_path;
+
+    proc = new QProcess(this);
+    proc->setReadChannel(QProcess::StandardError);
+    connect(proc, &QProcess::readyRead, this, &StreamerHls::onProcStdout);
+    connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &StreamerHls::onProcFinished);
+}
+
+StreamerHls::~StreamerHls()
+{
+    close();
+    QLocalServer::removeServer(stream_socket_path);
+}
+
+void StreamerHls::start()
+{
+    state = Idle;
+    requestStream();
+}
+
+void StreamerHls::close()
+{
+    state = Closing;
+    proc->write("q\n");
+    proc->terminate();
+    proc->waitForFinished();
+}
+
+void StreamerHls::onProcStdout()
+{
+    while (proc->canReadLine()) {
+//        qDebug() << proc->readLine();
+        if (proc->readLine().contains("Input #0, mpegts")) {
+            QTimer::singleShot(2000, [this]() {
+                if (state == Idle) {
+                    emit this->streamStart();
+                    state = Running;
+                }
+            });
         }
-    });
+    }
+}
+
+void StreamerHls::onProcFinished(int code, QProcess::ExitStatus es)
+{
+    Q_UNUSED(code);
+    Q_UNUSED(es);
+
+    qDebug() << "hls stream finished!!!!";
+    if (state != Closing) {
+        emit streamError();
+    }
+}
+
+void StreamerHls::requestStream()
+{
+    proc->terminate();
+    proc->waitForFinished();
+//    proc->start("ffmpeg", QStringList() << "-nostats" << "-user_agent"
+//                << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"
+//                << "-i" << real_url << "-c" << "copy" << "-f"
+//                << "mpegts" << "-listen" << "1" << "unix://" + stream_socket_path);
+    proc->start("sh", QStringList() << "-c"
+                << "ffmpeg -nostats -user_agent 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36' -i '"
+                + real_url
+                + "' -c copy -f mpegts - | ffmpeg -nostats -f mpegts -i - -c copy -f flv -listen 1 unix://"
+                + stream_socket_path);
+}
+
+StreamerSl::StreamerSl(QString real_url, QString socket_path, QObject *parent)
+    : Streamer(parent)
+{
+    this->real_url = real_url;
+    this->stream_socket_path = socket_path;
+
+    proc = new QProcess(this);
+    proc->setReadChannel(QProcess::StandardError);
+    connect(proc, &QProcess::readyRead, this, &StreamerSl::onProcStdout);
+    connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &StreamerSl::onProcFinished);
+}
+
+StreamerSl::~StreamerSl()
+{
+    close();
+    QLocalServer::removeServer(stream_socket_path);
+}
+
+void StreamerSl::start()
+{
+    state = Idle;
+    requestStream();
+}
+
+void StreamerSl::close()
+{
+    state = Closing;
+    proc->write("q\n");
+    proc->terminate();
+    proc->waitForFinished();
+}
+
+void StreamerSl::onProcStdout()
+{
+    while (proc->canReadLine()) {
+//        qDebug() << proc->readLine();
+        if (proc->readLine().contains("Input #0")) {
+            QTimer::singleShot(2000, [this]() {
+                if (state == Idle) {
+                    emit this->streamStart();
+                    state = Running;
+                }
+            });
+        }
+    }
+}
+
+void StreamerSl::onProcFinished(int code, QProcess::ExitStatus es)
+{
+    Q_UNUSED(code);
+    Q_UNUSED(es);
+
+    qDebug() << "streamlink exited!!!!";
+    if (state != Closing) {
+        emit streamError();
+    }
+}
+
+void StreamerSl::requestStream()
+{
+    proc->terminate();
+    proc->waitForFinished();
+    proc->start("sh", QStringList() << "-c"
+                << "streamlink '" + real_url
+                + "' best -O  | ffmpeg -nostats -i - -c copy -f flv -listen 1 unix://"
+                + stream_socket_path);
 }

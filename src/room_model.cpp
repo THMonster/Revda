@@ -6,6 +6,7 @@ RoomModel::RoomModel(QObject *parent) : QObject(parent)
     m_saved_model = new QStandardItemModel(this);
     m_history_model = new QStandardItemModel(this);
     connect(&sites, &Sites::roomDecoded, this, &RoomModel::addRoomToModel);
+    connect(&sites, &Sites::urlVerified, this, &RoomModel::openRoom);
 }
 
 RoomModel::~RoomModel()
@@ -58,92 +59,69 @@ void RoomModel::save()
     settings->setValue("history", QStringList(history.mid(0, 12)));
 }
 
+inline
 QString RoomModel::urlToCode(QString url)
 {
     if (url.contains("douyu")) {
         QString rid = url.split('/', QString::SkipEmptyParts).last();
         return "do-" + rid;
-    } else if (url.contains("bilibili")) {
+    } else if (url.contains("live.bilibili.com")) {
         QString rid = url.split('/', QString::SkipEmptyParts).last();
         return "bi-" + rid;
     } else if (url.contains("huya")) {
         QString rid = url.split('/', QString::SkipEmptyParts).last();
         return "hu-" + rid;
+    } else if (url.contains("youtube.com/channel/")) {
+        QString rid = url.split('/', QString::SkipEmptyParts).last();
+        return "yt-" + rid;
+    } else if (url.contains("youtube.com/c/")) {
+        QString rid = url.split('/', QString::SkipEmptyParts).last();
+        return "ytv-" + rid;
     }
     return "";
 }
 
+void RoomModel::addUrlToHistory(QString url)
+{
+    QProcess::startDetached("qlphelper", QStringList() << "-u" << url);
+    auto a = urlToCode(url);
+    if (!a.isEmpty()) {
+        history.prepend(a);
+        history.removeDuplicates();
+        refresh(true);
+    }
+}
+
 void RoomModel::openRoom(QString url)
 {
-    if (url.contains("douyu")) {
-        QString rid = url.split('/', QString::SkipEmptyParts).last();
-        history.prepend("do-" + rid);
-    } else if (url.contains("bilibili")) {
-        if (url.contains("/video") || url.contains("/bangumi")) {
-
-        } else {
-            QString rid = url.split('/', QString::SkipEmptyParts).last();
-            history.prepend("bi-" + rid);
-        }
-    } else if (url.contains("huya")) {
-        QString rid = url.split('/', QString::SkipEmptyParts).last();
-        history.prepend("hu-" + rid);
+    auto a = urlToCode(url);
+    if (!a.isEmpty()) {
+        history.prepend(a);
+        history.removeDuplicates();
+        refresh(true);
     }
-    history.removeDuplicates();
-    refreshHistory();
     QProcess::startDetached("qlphelper", QStringList() << "-u" << url);
 }
 
-void RoomModel::refresh()
+void RoomModel::openUnverifiedRoom(QString url)
 {
-    QStringList sl;
-    for (auto& s : saved) {
-        sl = s.split('-');
-        if (sl[0] == "do") {
-            sites.checkUrl("https://www.douyu.com/betard/" + sl[1], 0);
-        } else if (sl[0] == "bi") {
-            sites.checkUrl("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], 0);
-        } else if (sl[0] == "hu") {
-            sites.checkUrl("https://m.huya.com/" + sl[1], 0);
-        }
-    }
-    int i = 1;
-    for (auto& s : history) {
-        sl = s.split('-');
-        if (sl[0] == "do") {
-            sites.checkUrl("https://www.douyu.com/betard/" + sl[1], 1, i);
-        } else if (sl[0] == "bi") {
-            sites.checkUrl("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], 1, i);
-        } else if (sl[0] == "hu") {
-            sites.checkUrl("https://m.huya.com/" + sl[1], 1, i);
-        }
-        if (i >= 12) {
-            break;
-        } else {
-            ++i;
-        }
-    }
-    m_saved_model->clear();
-    m_saved_model->insertColumn(0);
-    m_saved_model->insertColumn(1);
-    m_history_model->clear();
-    m_history_model->insertColumn(0);
-    m_history_model->insertColumn(1);
+    sites.checkUnverifiedUrl(url);
 }
 
-void RoomModel::refreshHistory()
+void RoomModel::refresh(bool history_only)
 {
-    int i = 1;
     QStringList sl;
-    for (auto& s : history) {
-        sl = s.split('-');
-        if (sl[0] == "do") {
-            sites.checkUrl("https://www.douyu.com/betard/" + sl[1], 1, i);
-        } else if (sl[0] == "bi") {
-            sites.checkUrl("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], 1, i);
-        } else if (sl[0] == "hu") {
-            sites.checkUrl("https://m.huya.com/" + sl[1], 1, i);
+    if (history_only == false) {
+        for (auto& s : saved) {
+            sites.checkUrl(s, 0);
         }
+        m_saved_model->clear();
+        m_saved_model->insertColumn(0);
+        m_saved_model->insertColumn(1);
+    }
+    int i = 1;
+    for (auto& s : history) {
+        sites.checkUrl(s, 1, i);
         if (i >= 12) {
             break;
         } else {
@@ -159,14 +137,8 @@ void RoomModel::openUrl(QString url)
 {
     QStringList sl;
     sl = url.split('-', QString::SkipEmptyParts);
-    if (sl.size() == 2) {
-        if (sl[0] == "do") {
-            openRoom("https://www.douyu.com/" + sl[1]);
-        } else if (sl[0] == "bi") {
-            openRoom("https://live.bilibili.com/" + sl[1]);
-        } else if (sl[0] == "hu") {
-            openRoom("https://www.huya.com/" + sl[1]);
-        }
+    if (sl.size() >= 2) {
+        openUnverifiedRoom(url);
     } else if (sl.size() == 1) {
         if (sl[0].left(2) == "av") {
             auto psl = sl[0].split(':', QString::SkipEmptyParts);
@@ -207,6 +179,9 @@ void RoomModel::toggleLike(int like, QString url)
         } else if (url.contains("huya")) {
             QString rid = url.split('/', QString::SkipEmptyParts).last();
             saved.prepend("hu-" + rid);
+        } else if (url.contains("youtube.com/c")) {
+            QString rid = url.split('/', QString::SkipEmptyParts).last();
+            saved.prepend("yt-" + rid);
         }
         saved.removeDuplicates();
     } else {
@@ -225,6 +200,12 @@ void RoomModel::toggleLike(int like, QString url)
         } else if (url.contains("huya")) {
             QString rid = url.split('/', QString::SkipEmptyParts).last();
             int i = saved.indexOf("hu-" + rid);
+            if (i != -1) {
+                saved.removeAt(i);
+            }
+        } else if (url.contains("youtube.com/c")) {
+            QString rid = url.split('/', QString::SkipEmptyParts).last();
+            int i = saved.indexOf("yt-" + rid);
             if (i != -1) {
                 saved.removeAt(i);
             }

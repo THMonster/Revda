@@ -4,7 +4,7 @@
 #include <QObject>
 #include "mpvcontrol.h"
 #include "ffmpegcontrol.h"
-#include "streamer.h"
+#include "streamfinder.h"
 #include "danmakulauncher.h"
 
 class QLPHelper : public QObject
@@ -24,7 +24,7 @@ signals:
 private:
     MpvControl* mpv_control = nullptr;
     FFmpegControl* ffmpeg_control = nullptr;
-    Streamer* streamer = nullptr;
+    StreamFinder* stream_finder = nullptr;
     DanmakuLauncher* danmaku_launcher = nullptr;
     bool reloading = false;
     bool streaming = false;

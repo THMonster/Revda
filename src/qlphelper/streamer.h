@@ -13,49 +13,101 @@
 class Streamer : public QObject
 {
     Q_OBJECT
-public:
-    explicit Streamer(QString room_url, QString stream_socket, QObject *parent = nullptr);
-    ~Streamer();
 
+public:
+    explicit Streamer(QObject *parent = nullptr)
+        : QObject(parent)
+    {
+
+    };
+    ~Streamer()
+    {
+
+    };
+
+    enum State {
+        Idle,
+        Running,
+        Closing
+    } state = Idle;
+
+    virtual void start() = 0;
+    virtual void close() = 0;
 
 signals:
     void streamError();
     void streamStart();
-    void titleMatched(QString title);
+};
 
-public slots:
-    void requestStreamHLS();
-    void onStreamDataHLS();
-    void requestStream();
-    void requestRealUrl();
-    void setRealUrl(int code, QProcess::ExitStatus es);
+class StreamerFlv : public Streamer
+{
+    Q_OBJECT
+public:
+    explicit StreamerFlv(QString real_url, QString socket_path, QObject *parent = nullptr);
+    ~StreamerFlv();
+
+    void start() override;
+    void close() override;
+
+private slots:
     void onStreamData();
     void onHttpFinished();
-    void start();
-    void restart();
-    void stop();
-    void setSocket();
-    void connectToFFmpeg();
 
 private:
-    QString room_url;
     QString real_url;
     QString stream_socket_path;
-    QString ffmpeg_server_path;
     QLocalServer* socket_server = nullptr;
     QLocalSocket* socket = nullptr;
-    QLocalSocket* socket_hls = nullptr;
     QNetworkAccessManager* nam = nullptr;
     QNetworkReply* reply_stream = nullptr;
-    QProcess* ykdl_process = nullptr;
-    QProcess* hls_ffmpeg_process = nullptr;
-    bool on_streaming = false;
-    int offline_counter = 0;
-    int ykdl_id = 0;
-    bool is_hls = false;
-    bool terminate_ffmpeg = false;
-    bool manual_restart_flag = true;
 
+    void setSocket();
+    void requestStream();
+};
+
+class StreamerHls : public Streamer
+{
+    Q_OBJECT
+public:
+    explicit StreamerHls(QString real_url, QString socket_path, QObject *parent = nullptr);
+    ~StreamerHls();
+
+    void start() override;
+    void close() override;
+
+private slots:
+    void onProcStdout();
+    void onProcFinished(int code, QProcess::ExitStatus es);
+
+private:
+    QString real_url;
+    QString stream_socket_path;
+    QProcess *proc = nullptr;
+
+    void requestStream();
+};
+
+// using streamlink
+class StreamerSl : public Streamer
+{
+    Q_OBJECT
+public:
+    explicit StreamerSl(QString real_url, QString socket_path, QObject *parent = nullptr);
+    ~StreamerSl();
+
+    void start() override;
+    void close() override;
+
+private slots:
+    void onProcStdout();
+    void onProcFinished(int code, QProcess::ExitStatus es);
+
+private:
+    QString real_url;
+    QString stream_socket_path;
+    QProcess *proc = nullptr;
+
+    void requestStream();
 };
 
 #endif // STREAMER_H

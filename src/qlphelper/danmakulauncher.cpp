@@ -7,19 +7,6 @@
 
 #define __PICK(n, i)   (((n)>>(8*i))&0xFF)
 
-void stopSubProcesses(qint64 parentProcessId) {
-    qDebug() << "stop subprocess for parent id:" << parentProcessId;
-    QProcess get_childs;
-    QStringList get_childs_cmd;
-    get_childs_cmd << "--ppid" << QString::number(parentProcessId) << "-o" << "pid" << "--no-heading";
-    get_childs.start("ps", get_childs_cmd);
-    get_childs.waitForFinished();
-    QString childIds(get_childs.readAllStandardOutput());
-    childIds.replace('\n', ' ');
-
-    QProcess::execute("kill " + childIds);
-}
-
 DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket)
 {
     fk = new FudujiKiller();
@@ -38,7 +25,7 @@ DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket)
         danmaku_channel[i].begin_pts = -10000;
     }
 
-    dmcPyProcess = new QProcess();
+    dmcPyProcess = new QProcess(this);
     connect(dmcPyProcess, &QProcess::readyRead, this, &DanmakuLauncher::loadDanmaku);
     connect(launch_timer, &QTimer::timeout, this, &DanmakuLauncher::launchDanmaku);
 }
@@ -49,7 +36,6 @@ DanmakuLauncher::~DanmakuLauncher()
     delete fk;
     dmcPyProcess->terminate();
     dmcPyProcess->waitForFinished(3000);
-    delete dmcPyProcess;
 }
 
 void DanmakuLauncher::startDmcPy()
@@ -323,7 +309,8 @@ int DanmakuLauncher::getAvailDanmakuChannel(int len)
 
 void DanmakuLauncher::start()
 {
-
+    state = NotRunning;
+    startDmcPy();
 }
 
 void DanmakuLauncher::restart()
@@ -338,6 +325,8 @@ void DanmakuLauncher::restart()
         danmaku_channel[i].length = 1;
         danmaku_channel[i].begin_pts = -10000;
     }
+    state = NotRunning;
+    startDmcPy();
 }
 
 void DanmakuLauncher::stop()
@@ -348,11 +337,18 @@ void DanmakuLauncher::stop()
         socket->deleteLater();
         socket = nullptr;
     }
+    state = NotRunning;
 }
 
 void DanmakuLauncher::onStreamStart()
 {
-
+    if (state == WaitingForStream) {
+        timer.restart();
+        launch_timer->start(200);
+        state = Running;
+    } else {
+        state = WaitingForSocket;
+    }
 }
 
 void DanmakuLauncher::setSocket()
@@ -363,8 +359,12 @@ void DanmakuLauncher::setSocket()
         socket = nullptr;
     }
     socket = socket_server->nextPendingConnection();
-    startDmcPy();
-    timer.restart();
-    launch_timer->start(200);
     socket->write(QByteArray(reinterpret_cast<const char*>(mkv_header), mkv_header_len));
+    if (state == WaitingForSocket) {
+        timer.restart();
+        launch_timer->start(200);
+        state = Running;
+    } else {
+        state = WaitingForStream;
+    }
 }

@@ -20,23 +20,24 @@ QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
 
     ffmpeg_control = new FFmpegControl(stream_socket, danmaku_socket, ff2mpv_fifo, record_file, is_debug, strict_stream);
     mpv_control = new MpvControl(ff2mpv_fifo, record_file);
-    streamer = new Streamer(room_url, stream_socket);
+    stream_finder = new StreamFinder(room_url, stream_socket, this);
     danmaku_launcher = new DanmakuLauncher(room_url, danmaku_socket);
 
-    connect(streamer, &Streamer::streamError, this, &QLPHelper::restart);
-    connect(streamer, &Streamer::streamStart, danmaku_launcher, &DanmakuLauncher::onStreamStart);
+    connect(stream_finder, &StreamFinder::streamError, this, &QLPHelper::restart);
+    connect(stream_finder, &StreamFinder::streamStart, danmaku_launcher, &DanmakuLauncher::onStreamStart);
     connect(mpv_control, &MpvControl::requestReload, this, &QLPHelper::restart);
     connect(mpv_control, &MpvControl::resFetched, danmaku_launcher, &DanmakuLauncher::setScale);
-    connect(streamer, &Streamer::titleMatched, mpv_control, &MpvControl::setTitle);
+    connect(stream_finder, &StreamFinder::titleMatched, mpv_control, &MpvControl::setTitle);
+    connect(stream_finder, &StreamFinder::ready, ffmpeg_control, &FFmpegControl::onStreamReady);
 }
 
 QLPHelper::~QLPHelper()
 {
     qCritical() << "Bye!";
     danmaku_launcher->stop();
-    streamer->stop();
+    stream_finder->stop();
     ffmpeg_control->stop();
-    delete streamer;
+    delete stream_finder;
     delete danmaku_launcher;
     delete ffmpeg_control;
     delete mpv_control;
@@ -48,7 +49,7 @@ QLPHelper::~QLPHelper()
 
 void QLPHelper::start()
 {
-    streamer->start();
+    stream_finder->start();
     qDebug() << "streamer started";
     danmaku_launcher->start();
     qDebug() << "danmaku launcher started";
@@ -64,7 +65,7 @@ void QLPHelper::restart()
     // If the last input of ffmpeg is stucked, the whole ffmpeg will be blocked.
     danmaku_launcher->restart();
     qDebug() << "danmaku launcher started";
-    streamer->restart();
+    stream_finder->restart();
     qDebug() << "streamer started";
 
     ffmpeg_control->restart();

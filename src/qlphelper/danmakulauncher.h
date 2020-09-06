@@ -16,6 +16,14 @@ struct DanmakuChannel
 class DanmakuLauncher : public QObject
 {
     Q_OBJECT
+
+    enum State {
+        NotRunning,
+        WaitingForStream,
+        WaitingForSocket,
+        Running
+    } state = NotRunning;
+
 public:
     DanmakuLauncher(QString room_url, QString danmaku_socket);
     ~DanmakuLauncher();

@@ -20,8 +20,8 @@ FFmpegControl::~FFmpegControl()
 
 void FFmpegControl::start()
 {
-    ff_proc->start("ffmpeg", getFFmpegCmdline());
-    ff_proc->waitForStarted();
+//    ff_proc->start("ffmpeg", getFFmpegCmdline());
+//    ff_proc->waitForStarted();
 }
 
 void FFmpegControl::restart()
@@ -30,8 +30,9 @@ void FFmpegControl::restart()
     ff_proc->waitForFinished(3000);
     ff_proc->terminate();
     ff_proc->waitForFinished();
-    ff_proc->start("ffmpeg", getFFmpegCmdline());
-    ff_proc->waitForStarted();
+//    ff_proc->start("ffmpeg", getFFmpegCmdline());
+//    ff_proc->waitForStarted();
+    ready_flag = 0;
 }
 
 void FFmpegControl::stop()
@@ -40,11 +41,24 @@ void FFmpegControl::stop()
     ff_proc->waitForFinished(3000);
     ff_proc->terminate();
     ff_proc->waitForFinished();
+    ready_flag = 0;
 }
 
 void FFmpegControl::setTitle(QString title)
 {
     this->title = title;
+}
+
+void FFmpegControl::onStreamReady()
+{
+    if (ready_flag >= 1) {
+        return;
+    }
+    ready_flag = ready_flag | 1;
+    if (ready_flag >= 1) {
+        ff_proc->start("ffmpeg", getFFmpegCmdline());
+        ff_proc->waitForStarted();
+    }
 }
 
 QStringList FFmpegControl::getFFmpegCmdline()

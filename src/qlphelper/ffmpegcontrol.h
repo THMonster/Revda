@@ -16,6 +16,7 @@ public slots:
     void restart();
     void stop();
     void setTitle(QString title);
+    void onStreamReady();
 
 signals:
 
@@ -29,6 +30,7 @@ private:
     QFile* ff2mpv_fifo = nullptr;
     QString title;
     bool strict_stream = false;
+    int ready_flag = 0;
 
     QStringList getFFmpegCmdline();
     QString genRecordFileName();
