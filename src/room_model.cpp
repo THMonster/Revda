@@ -62,13 +62,13 @@ void RoomModel::save()
 inline
 QString RoomModel::urlToCode(QString url)
 {
-    if (url.contains("douyu")) {
+    if (url.contains("douyu.com/")) {
         QString rid = url.split('/', QString::SkipEmptyParts).last();
         return "do-" + rid;
-    } else if (url.contains("live.bilibili.com")) {
+    } else if (url.contains("live.bilibili.com/")) {
         QString rid = url.split('/', QString::SkipEmptyParts).last();
         return "bi-" + rid;
-    } else if (url.contains("huya")) {
+    } else if (url.contains("huya.com/")) {
         QString rid = url.split('/', QString::SkipEmptyParts).last();
         return "hu-" + rid;
     } else if (url.contains("youtube.com/channel/")) {
@@ -77,6 +77,9 @@ QString RoomModel::urlToCode(QString url)
     } else if (url.contains("youtube.com/c/")) {
         QString rid = url.split('/', QString::SkipEmptyParts).last();
         return "ytv-" + rid;
+    } else if (url.contains("twitch.tv/")) {
+        QString rid = url.split('/', QString::SkipEmptyParts).last();
+        return "tw-" + rid;
     }
     return "";
 }
@@ -168,47 +171,15 @@ void RoomModel::openUrl(QString url)
 
 void RoomModel::toggleLike(int like, QString url)
 {
+    auto a = urlToCode(url);
     // 0 for like 1 for dislike
     if (like == 0) {
-        if (url.contains("douyu")) {
-            QString rid = url.split('/', QString::SkipEmptyParts).last();
-            saved.prepend("do-" + rid);
-        } else if (url.contains("bilibili")) {
-            QString rid = url.split('/', QString::SkipEmptyParts).last();
-            saved.prepend("bi-" + rid);
-        } else if (url.contains("huya")) {
-            QString rid = url.split('/', QString::SkipEmptyParts).last();
-            saved.prepend("hu-" + rid);
-        } else if (url.contains("youtube.com/c")) {
-            QString rid = url.split('/', QString::SkipEmptyParts).last();
-            saved.prepend("yt-" + rid);
-        }
+        saved.prepend(a);
         saved.removeDuplicates();
     } else {
-        if (url.contains("douyu")) {
-            QString rid = url.split('/', QString::SkipEmptyParts).last();
-            int i = saved.indexOf("do-" + rid);
-            if (i != -1) {
-                saved.removeAt(i);
-            }
-        } else if (url.contains("bilibili")) {
-            QString rid = url.split('/', QString::SkipEmptyParts).last();
-            int i = saved.indexOf("bi-" + rid);
-            if (i != -1) {
-                saved.removeAt(i);
-            }
-        } else if (url.contains("huya")) {
-            QString rid = url.split('/', QString::SkipEmptyParts).last();
-            int i = saved.indexOf("hu-" + rid);
-            if (i != -1) {
-                saved.removeAt(i);
-            }
-        } else if (url.contains("youtube.com/c")) {
-            QString rid = url.split('/', QString::SkipEmptyParts).last();
-            int i = saved.indexOf("yt-" + rid);
-            if (i != -1) {
-                saved.removeAt(i);
-            }
+        int i = saved.indexOf(a);
+        if (i != -1) {
+            saved.removeAt(i);
         }
     }
 }

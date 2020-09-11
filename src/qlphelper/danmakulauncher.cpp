@@ -310,7 +310,6 @@ int DanmakuLauncher::getAvailDanmakuChannel(int len)
 void DanmakuLauncher::start()
 {
     state = NotRunning;
-    startDmcPy();
 }
 
 void DanmakuLauncher::restart()
@@ -326,7 +325,6 @@ void DanmakuLauncher::restart()
         danmaku_channel[i].begin_pts = -10000;
     }
     state = NotRunning;
-    startDmcPy();
 }
 
 void DanmakuLauncher::stop()
@@ -345,6 +343,7 @@ void DanmakuLauncher::onStreamStart()
     if (state == WaitingForStream) {
         timer.restart();
         launch_timer->start(200);
+        startDmcPy();
         state = Running;
     } else {
         state = WaitingForSocket;
@@ -363,6 +362,7 @@ void DanmakuLauncher::setSocket()
     if (state == WaitingForSocket) {
         timer.restart();
         launch_timer->start(200);
+        startDmcPy();
         state = Running;
     } else {
         state = WaitingForStream;

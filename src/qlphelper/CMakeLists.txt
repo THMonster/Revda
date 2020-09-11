@@ -18,7 +18,7 @@ target_link_libraries(qlphelper
 
 target_compile_definitions(qlphelper PRIVATE -DPROJECT_VERSION="${PROJECT_VERSION}")
 
-file(GLOB dmcpyz dmc.pyz bili_url.py yt_url.py)
+file(GLOB dmcpyz dmc.pyz bili_url.py stream_finder.py)
 install(FILES ${dmcpyz} DESTINATION share/QLivePlayer)
 
 install(TARGETS qlphelper DESTINATION bin)

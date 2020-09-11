@@ -50,18 +50,17 @@ public:
     void close() override;
 
 private slots:
-    void onStreamData();
-    void onHttpFinished();
+    void onProcFinished(int code, QProcess::ExitStatus es);
+    void onProcStdout();
+    void setSocket();
 
 private:
     QString real_url;
     QString stream_socket_path;
     QLocalServer* socket_server = nullptr;
     QLocalSocket* socket = nullptr;
-    QNetworkAccessManager* nam = nullptr;
-    QNetworkReply* reply_stream = nullptr;
+    QProcess *proc = nullptr;
 
-    void setSocket();
     void requestStream();
 };
 
@@ -100,12 +99,15 @@ public:
 
 private slots:
     void onProcStdout();
+    void setSocket();
     void onProcFinished(int code, QProcess::ExitStatus es);
 
 private:
     QString real_url;
     QString stream_socket_path;
     QProcess *proc = nullptr;
+    QLocalServer* socket_server = nullptr;
+    QLocalSocket* socket = nullptr;
 
     void requestStream();
 };

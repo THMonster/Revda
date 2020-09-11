@@ -20,8 +20,7 @@ FFmpegControl::~FFmpegControl()
 
 void FFmpegControl::start()
 {
-//    ff_proc->start("ffmpeg", getFFmpegCmdline());
-//    ff_proc->waitForStarted();
+    state = Idle;
 }
 
 void FFmpegControl::restart()
@@ -30,9 +29,7 @@ void FFmpegControl::restart()
     ff_proc->waitForFinished(3000);
     ff_proc->terminate();
     ff_proc->waitForFinished();
-//    ff_proc->start("ffmpeg", getFFmpegCmdline());
-//    ff_proc->waitForStarted();
-    ready_flag = 0;
+    state = Idle;
 }
 
 void FFmpegControl::stop()
@@ -41,7 +38,7 @@ void FFmpegControl::stop()
     ff_proc->waitForFinished(3000);
     ff_proc->terminate();
     ff_proc->waitForFinished();
-    ready_flag = 0;
+    state = Idle;
 }
 
 void FFmpegControl::setTitle(QString title)
@@ -49,34 +46,45 @@ void FFmpegControl::setTitle(QString title)
     this->title = title;
 }
 
-void FFmpegControl::onStreamReady()
+void FFmpegControl::onStreamReady(QString title, int flag)
 {
-    if (ready_flag >= 1) {
-        return;
+    this->title = title;
+    if ((flag & 0x01) == 1) {
+        is_hls = true;
     }
-    ready_flag = ready_flag | 1;
-    if (ready_flag >= 1) {
+    if (state == Idle) {
         ff_proc->start("ffmpeg", getFFmpegCmdline());
         ff_proc->waitForStarted();
+        state = Running;
     }
 }
 
+inline
 QStringList FFmpegControl::getFFmpegCmdline()
 {
     QStringList ret;
+    ret.append("-y");
     if (is_debug) {
         ret.append("-report");
     } else {
-        ret.append("-loglevel");
-        ret.append("quiet");
+        ret << "-loglevel" << "quiet";
     }
     if (strict_stream) {
         ret.append("-xerror");
     }
-    ret << "-y" << "-i" << "unix://" + stream_socket_path << "-i"
-        << "unix://" + danmaku_socket_path << "-map" << "0:v:0"
-        << "-map" << "0:a:0" << "-map" << "1:s:0" << "-c" << "copy"
-        << "-f" << "matroska";
+    if (is_hls == true) {
+        ret << "-ss" << "5";
+    }
+    ret << "-i" << "unix://" + stream_socket_path;
+    ret << "-i" << "unix://" + danmaku_socket_path;
+    ret << "-map" << "0:v:0" << "-map" << "0:a:0" << "-map" << "1:s:0";
+    ret << "-c" << "copy";
+    if (is_hls == true) {
+        // Error parsing AAC extradata, unable to determine samplerate
+        ret << "-c:a" << "pcm_s16le";
+    }
+    ret << "-metadata" << "title=" + title;
+    ret << "-f" << "matroska";
     if (record_file.isEmpty() || true) {
         ret.append(ff2mpv_fifo->fileName());
     } else {
@@ -85,6 +93,7 @@ QStringList FFmpegControl::getFFmpegCmdline()
     return ret;
 }
 
+inline
 QString FFmpegControl::genRecordFileName()
 {
     return record_file + "." + QString::number(record_cnt++);

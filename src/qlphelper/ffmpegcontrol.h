@@ -11,12 +11,18 @@ public:
                            bool is_debug = false, bool strict_stream = false, QObject *parent = nullptr);
     ~FFmpegControl();
 
+    enum State {
+        Idle,
+        Ready,
+        Running
+    } state = Idle;
+
 public slots:
     void start();
     void restart();
     void stop();
     void setTitle(QString title);
-    void onStreamReady();
+    void onStreamReady(QString title, int flag = 0);
 
 signals:
 
@@ -31,6 +37,7 @@ private:
     QString title;
     bool strict_stream = false;
     int ready_flag = 0;
+    bool is_hls = false;
 
     QStringList getFFmpegCmdline();
     QString genRecordFileName();

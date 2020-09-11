@@ -21,7 +21,7 @@ signals:
     void titleMatched(QString title);
     void streamError();
     void streamStart();
-    void ready();
+    void ready(QString title, int flag);
 
 
 private:
@@ -35,8 +35,7 @@ private:
     Streamer *streamer = nullptr;
 
     void startRequest();
-    void slotYtbResponse(int code, QProcess::ExitStatus es);
-    void slotYkdlResponse(int code, QProcess::ExitStatus es);
+    void slotSfpyResponse(int code, QProcess::ExitStatus es);
     void startStreamer();
 };
 
