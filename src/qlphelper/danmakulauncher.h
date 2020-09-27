@@ -41,6 +41,7 @@ public slots:
     void onStreamStart();
     void setSocket();
     void setScale(int w, int h);
+    void setFont(double fs, double fa);
 
 private:
     int channel_num = 14;
@@ -61,6 +62,7 @@ private:
     bool on_streaming = false;
     QLocalServer* socket_server = nullptr;
     QLocalSocket* socket = nullptr;
+    QString font_alpha = QStringLiteral("00");
 };
 
 #endif // DANMAKULAUNCHER_H

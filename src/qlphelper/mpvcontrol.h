@@ -5,6 +5,8 @@
 #include <QLocalSocket>
 #include <QLocalServer>
 
+#include "qlpcmdparser.h"
+
 class MpvControl : public QObject
 {
     Q_OBJECT
@@ -22,6 +24,8 @@ signals:
     void requestReload();
     void reloaded();
     void resFetched(int w, int h);
+    void onQuality(int q);
+    void onFont(double fs, double fa);
 
 private:
     QString room_title;

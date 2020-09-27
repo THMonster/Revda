@@ -35,9 +35,9 @@ void MpvControl::start()
         if (mpv_socket->state() != QLocalSocket::ConnectedState) {
             mpv_socket->connectToServer(mpv_socket_path);
         } else {
-            mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlpreload\"] }\n"
-                                      "{ \"command\": [\"keybind\", \"alt+b\", \"script-message qlpprev\"] }\n"
-                                      "{ \"command\": [\"keybind\", \"alt+n\", \"script-message qlpnext\"] }\n").toUtf8());
+            mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlp:r\"] }\n"
+                                      "{ \"command\": [\"keybind\", \"alt+b\", \"script-message qlp:back\"] }\n"
+                                      "{ \"command\": [\"keybind\", \"alt+n\", \"script-message qlp:next\"] }\n").toUtf8());
             t->stop();
             t->deleteLater();
         }
@@ -57,28 +57,30 @@ void MpvControl::readMpvSocket()
 {
     while (mpv_socket->canReadLine()) {
         auto tmp = mpv_socket->readLine().trimmed();
-        qDebug() << tmp;
-        if (tmp.contains("qlpgo-")) {
-            QRegularExpression re("qlpgo-([0-9]+)");
-            auto m = re.match(tmp);
-            if (m.hasMatch()) {
-                emit jumpReceived(m.captured(1).toInt());
+        //        qDebug() << tmp;
+        if (tmp.contains("qlp:")) {
+            auto jobj = QJsonDocument::fromJson(tmp).object();
+            auto parser = QlpCmdParser(jobj["args"].toArray()[0].toString());
+            if (parser.getReload()) {
+                emit requestReload();
+            }
+            if (parser.getPage() != -1) {
+                emit jumpReceived(parser.getPage());
+            }
+            if (parser.getPageNext()) {
+                emit nextReceived();
+            }
+            if (parser.getPageBack()) {
+                emit prevReceived();
             }
         } else if (tmp.contains("end-file")) {
             emit playFinished();
         } else if (tmp.contains("file-loaded")) {
             emit fileLoaded();
             mpv_socket->write(QString("{ \"command\": [\"sub-add\", \"%1\"], \"async\": true }\n").arg(ass_path).toUtf8());
-        } else if (tmp.contains("qlpnext")) {
-            emit nextReceived();
-        } else if (tmp.contains("qlpprev")) {
-            emit prevReceived();
-        } else if (tmp.contains("qlpreload")) {
-            emit requestReload();
         }
     }
 }
-
 
 BiliVideo::BiliVideo(QObject *parent)
     : QObject(parent)

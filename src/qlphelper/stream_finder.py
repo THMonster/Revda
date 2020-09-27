@@ -25,10 +25,7 @@ async def get_title_yt():
     # print(a.group(1))
     async with aiohttp.ClientSession() as sess:
         async with sess.request('get', u) as resp:
-            t = re.search(r'"gridVideoRenderer"[\s\S]+?</script>', await resp.text()).group(0)
-            if re.search(r'"gridVideoRenderer".+?"label":"(LIVE|LIVE NOW|PREMIERING NOW)"', t) == None:
-                raise Exception("no live found!")
-            t = re.search(r'("gridVideoRenderer"(.(?!"gridVideoRenderer"))+"label":"(LIVE|LIVE NOW|PREMIERING NOW)".+)', t).group(1)
+            t = re.search(r'"gridVideoRenderer"((.(?!"gridVideoRenderer"))(?!"style":"UPCOMING"))+"label":"(LIVE|LIVE NOW|PREMIERING NOW)"([\s\S](?!"style":"UPCOMING"))+?("gridVideoRenderer"|</script>)', await resp.text()).group(0)
             vid = re.search(r'"gridVideoRenderer".+?"videoId":"(.+?)"', t).group(1)
             title = re.search(r'"gridVideoRenderer".+?"title".+?"text":"(.+?)(?<!\\)"', t).group(1)
             return title, vid

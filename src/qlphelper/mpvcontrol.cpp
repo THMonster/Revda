@@ -34,7 +34,7 @@ void MpvControl::start()
             if (mpv_socket->state() != QLocalSocket::ConnectedState) {
                 mpv_socket->connectToServer(mpv_socket_path);
             } else {
-                mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlpreload\"] }\n").toUtf8());
+                mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlp:r\"] }\n").toUtf8());
                 t->stop();
                 t->deleteLater();
             }
@@ -61,20 +61,29 @@ void MpvControl::readMpvSocket()
 {
     while (mpv_socket->canReadLine()) {
         auto tmp = mpv_socket->readLine();
-        if (tmp.contains("qlpreload")) {
-            emit requestReload();
+        if (tmp.contains("qlp:")) {
+            auto jobj = QJsonDocument::fromJson(tmp).object();
+            auto parser = QlpCmdParser(jobj["args"].toArray()[0].toString());
+            if (parser.getReload()) {
+                emit requestReload();
+            }
+            if (parser.getQuality() != -1) {
+                emit onQuality(parser.getQuality());
+            }
+            if (parser.getFs() != -1) {
+                emit onFont(parser.getFs(), -1);
+            }
+            if (parser.getFa() != -1) {
+                emit onFont(-1, parser.getFa());
+            }
         } else if (tmp.contains("file-loaded")) {
-            mpv_socket->write(QString("{ \"command\": [\"set_property\", \"force-media-title\", \"%1\"] }\n").arg(room_title).toUtf8());
-            QTimer::singleShot(1000, [=]() {
+            QTimer::singleShot(500, [=]() {
                 this->mpv_socket->write(QString("{ \"command\": [\"get_property\", \"video-params\"] }\n").toUtf8());
             });
             emit reloaded();
         } else if (tmp.contains("pixelformat")) {
             auto jobj = QJsonDocument::fromJson(tmp).object();
-            auto tmp = jobj.value("data")["w"];
-            if (!tmp.isUndefined()) {
-                emit resFetched(tmp.toInt(), jobj.value("data")["h"].toInt());
-            }
+            emit resFetched(jobj.value("data")["w"].toInt(1920), jobj.value("data")["h"].toInt(1080));
         }
     }
 }

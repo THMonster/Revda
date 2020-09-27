@@ -47,6 +47,12 @@ void StreamFinder::stop()
     }
 }
 
+void StreamFinder::setQuality(int q)
+{
+    quality = q;
+    emit streamError();
+}
+
 void StreamFinder::startRequest()
 {
     qInfo() << "Finding stream...";
@@ -99,7 +105,7 @@ void StreamFinder::startStreamer()
     } else {
         if (real_url.right(5) == "::hls") {
             real_url.chop(5);
-            streamer = new StreamerSl(real_url, stream_socket, this);
+            streamer = new StreamerSl(real_url, stream_socket, quality, this);
             connect(streamer, &Streamer::streamError, [this]() {
                 emit this->streamError();
             });
@@ -109,7 +115,7 @@ void StreamFinder::startStreamer()
             streamer->start();
             emit ready(title, 1);
         } else if (real_url.contains(".m3u8")) {
-            streamer = new StreamerSl("hls://"+real_url, stream_socket, this);
+            streamer = new StreamerSl("hls://"+real_url, stream_socket, quality, this);
             connect(streamer, &Streamer::streamError, [this]() {
                 emit this->streamError();
             });

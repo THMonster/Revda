@@ -16,6 +16,7 @@ public:
     void start();
     void restart();
     void stop();
+    void setQuality(int q);
 
 signals:
     void titleMatched(QString title);
@@ -33,6 +34,7 @@ private:
     int proc_id = 0;
     int offline_counter = 0;
     Streamer *streamer = nullptr;
+    int quality = 1;
 
     void startRequest();
     void slotSfpyResponse(int code, QProcess::ExitStatus es);

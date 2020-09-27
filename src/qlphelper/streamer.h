@@ -91,7 +91,7 @@ class StreamerSl : public Streamer
 {
     Q_OBJECT
 public:
-    explicit StreamerSl(QString real_url, QString socket_path, QObject *parent = nullptr);
+    explicit StreamerSl(QString real_url, QString socket_path, int quality = 1, QObject *parent = nullptr);
     ~StreamerSl();
 
     void start() override;
@@ -108,6 +108,7 @@ private:
     QProcess *proc = nullptr;
     QLocalServer* socket_server = nullptr;
     QLocalSocket* socket = nullptr;
+    int quality = 1;
 
     void requestStream();
 };

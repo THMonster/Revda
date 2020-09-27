@@ -162,11 +162,12 @@ void StreamerHls::requestStream()
                 + stream_socket_path);
 }
 
-StreamerSl::StreamerSl(QString real_url, QString socket_path, QObject *parent)
+StreamerSl::StreamerSl(QString real_url, QString socket_path, int quality, QObject *parent)
     : Streamer(parent)
 {
     this->real_url = real_url;
     this->stream_socket_path = socket_path;
+    this->quality = quality;
 
     proc = new QProcess(this);
     connect(proc, &QProcess::readyReadStandardOutput, this, &StreamerSl::onProcStdout);
@@ -224,11 +225,16 @@ void StreamerSl::requestStream()
 {
     proc->terminate();
     proc->waitForFinished();
-    proc->start("streamlink", QStringList() << real_url
-                << "best" << "--stream-segment-timeout" << "4"
-                << "--stream-timeout" << "5" << "--stdout");
-//    proc->start("streamlink", QStringList() << real_url
-//                << "best" << "-O");
+    auto args = QStringList();
+    args << real_url << "best" << "--stdout";
+    if (quality <= 1) {
+        // best
+    } else if (quality == 2) {
+        args << "--stream-sorting-exclude" << ">=1080p";
+    } else if (quality >= 3) {
+        args << "--stream-sorting-exclude" << ">=720p";
+    }
+    proc->start("streamlink", args);
 }
 
 void StreamerSl::setSocket()

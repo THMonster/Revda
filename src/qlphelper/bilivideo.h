@@ -7,6 +7,8 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QNetworkAccessManager>
+#include "qlpcmdparser.h"
+
 namespace BV {
 
 struct DanmakuChannelB

@@ -256,14 +256,14 @@ QStringList Sites::decodeHuya(const QString &s)
 
 QStringList Sites::decodeYoutube(const QString &ps)
 {
-    QRegularExpression re_data("\"gridVideoRenderer\"[\\s\\S]+?</script>");
-    QRegularExpression re_data1("(\"gridVideoRenderer\"(.(?!\"gridVideoRenderer\"))+\"label\":\"(LIVE|LIVE NOW|PREMIERING NOW)\"[\\s\\S]+?</script>)");
+    QRegularExpression re_status("(\"gridVideoRenderer\"((.(?!\"gridVideoRenderer\"))(?!\"style\":\"UPCOMING\"))+"
+                                 "\"label\":\"(LIVE|LIVE NOW|PREMIERING NOW)\""
+                                 "([\\s\\S](?!\"style\":\"UPCOMING\"))+?(\"gridVideoRenderer\"|</script>))");
     QRegularExpression re_rid("\"gridVideoRenderer\".+?\"channelId\":\"(.+?)\"");
     QRegularExpression re_title("\"gridVideoRenderer\".+?\"title\".+?\"text\":\"(.+?)(?<!\\\\)\"");
     QRegularExpression re_owner("\"gridVideoRenderer\".+?\"header\".+?\"title\":\"(.+?)\"");
     QRegularExpression re_cover("\"gridVideoRenderer\".+?\"thumbnail\".+?\"url\":\"(.+?)\"");
     QRegularExpression re_avatar("\"gridVideoRenderer\".+?\"avatar\".+?\"url\".+?\"url\":\"(.+?)\"");
-    QRegularExpression re_status("\"gridVideoRenderer\".+?\"label\":\"(LIVE|LIVE NOW|PREMIERING NOW)\"");
 
     bool live = false;
     QString s;
@@ -273,10 +273,7 @@ QStringList Sites::decodeYoutube(const QString &ps)
     match = re_status.match(ps);
     if (match.hasMatch()) {
         live = true;
-        match = re_data1.match(ps);
-        if (match.hasMatch()) {
-            s = match.captured(1);
-        }
+        s = match.captured(1);
     }
 
     match = re_rid.match(ps);
