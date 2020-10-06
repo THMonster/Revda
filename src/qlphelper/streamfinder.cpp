@@ -61,7 +61,7 @@ void StreamFinder::startRequest()
     QStringList args;
     args.append(QStandardPaths::locate(QStandardPaths::DataLocation, "stream_finder.py"));
     args.append(room_url);
-    proc->start("python", args);
+    proc->start("python3", args);
     QTimer::singleShot(20000, [this, tid]() {
         if (this->proc->state() == QProcess::Running && tid == this->proc_id) {
             this->proc->kill();
