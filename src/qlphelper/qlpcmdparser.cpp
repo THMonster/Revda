@@ -34,6 +34,10 @@ QlpCmdParser::QlpCmdParser(QString s)
             page_next = true;
         } else if ((t2[0].compare(QStringLiteral("back")) == 0)) {
             page_back = true;
+        } else if ((t2[0].compare(QStringLiteral("fsup")) == 0)) {
+            fs_up = true;
+        } else if ((t2[0].compare(QStringLiteral("fsdown")) == 0)) {
+            fs_down = true;
         }
     }
 }
@@ -76,4 +80,14 @@ bool QlpCmdParser::getPageBack()
 int QlpCmdParser::getPage()
 {
     return page;
+}
+
+bool QlpCmdParser::getFsUp()
+{
+    return fs_up;
+}
+
+bool QlpCmdParser::getFsDown()
+{
+    return fs_down;
 }

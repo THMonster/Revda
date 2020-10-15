@@ -42,6 +42,7 @@ public slots:
     void setSocket();
     void setScale(int w, int h);
     void setFont(double fs, double fa);
+    void setFontScaleDelta(double delta);
 
 private:
     int channel_num = 14;

@@ -35,6 +35,8 @@ void MpvControl::start()
                 mpv_socket->connectToServer(mpv_socket_path);
             } else {
                 mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlp:r\"] }\n").toUtf8());
+                mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+z\", \"script-message qlp:fsdown\"] }\n").toUtf8());
+                mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+x\", \"script-message qlp:fsup\"] }\n").toUtf8());
                 t->stop();
                 t->deleteLater();
             }
@@ -75,6 +77,12 @@ void MpvControl::readMpvSocket()
             }
             if (parser.getFa() != -1) {
                 emit onFont(-1, parser.getFa());
+            }
+            if (parser.getFsUp()) {
+                emit onFontScaleDelta(0.15);
+            }
+            if (parser.getFsDown()) {
+                emit onFontScaleDelta(-0.15);
             }
         } else if (tmp.contains("file-loaded")) {
             QTimer::singleShot(500, [=]() {

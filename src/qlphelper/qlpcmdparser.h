@@ -16,6 +16,8 @@ public:
     bool getPageNext();
     bool getPageBack();
     int getPage();
+    bool getFsUp();
+    bool getFsDown();
 
 private:
 //    QHash<QString, QString> cmds;
@@ -26,6 +28,8 @@ private:
     int page = -1;
     bool page_next = false;
     bool page_back = false;
+    bool fs_up = false;
+    bool fs_down = false;
 };
 
 #endif // QLPCMDPARSER_H

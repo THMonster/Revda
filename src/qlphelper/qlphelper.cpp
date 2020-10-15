@@ -29,6 +29,7 @@ QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
     connect(mpv_control, &MpvControl::resFetched, danmaku_launcher, &DanmakuLauncher::setScale);
     connect(mpv_control, &MpvControl::onQuality, stream_finder, &StreamFinder::setQuality);
     connect(mpv_control, &MpvControl::onFont, danmaku_launcher, &DanmakuLauncher::setFont);
+    connect(mpv_control, &MpvControl::onFontScaleDelta, danmaku_launcher, &DanmakuLauncher::setFontScaleDelta);
     connect(stream_finder, &StreamFinder::titleMatched, mpv_control, &MpvControl::setTitle);
     connect(stream_finder, &StreamFinder::ready, ffmpeg_control, &FFmpegControl::onStreamReady);
 }

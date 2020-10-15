@@ -67,6 +67,13 @@ void DanmakuLauncher::setFont(double fs, double fa)
     }
 }
 
+void DanmakuLauncher::setFontScaleDelta(double delta)
+{
+    font_size = font_size + (40 * delta);
+    channel_num = 540 / font_size;
+    ++channel_num;
+}
+
 int DanmakuLauncher::getDankamuDisplayLength(QString dm, int fontsize)
 {
     int ascii_num = 0;
