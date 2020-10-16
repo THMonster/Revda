@@ -234,7 +234,8 @@ void StreamerSl::requestStream()
     } else if (quality >= 3) {
         args << "--stream-sorting-exclude" << ">=720p";
     }
-    args << "--hls-timeout" << "5";
+    args << "--hls-timeout" << "10";
+//    args << "--hls-segment-threads" << "3";
     proc->start("streamlink", args);
 }
 
