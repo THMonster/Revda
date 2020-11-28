@@ -429,7 +429,7 @@ void BiliVideo::requestRealUrl(QString url)
     res_y = 1080;
     QProcess p;
     QStringList args;
-    args.append(QStandardPaths::locate(QStandardPaths::DataLocation, "bili_url.py"));
+    args.append(QStandardPaths::locate(QStandardPaths::DataLocation, "streamfinder.pyz"));
     args.append(url);
     args.append(cookie);
     qDebug() << args;

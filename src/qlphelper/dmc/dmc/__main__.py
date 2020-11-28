@@ -1,5 +1,5 @@
 import asyncio
-import danmaku
+from .dm import danmaku
 import sys
 
 async def printer(q):
@@ -19,4 +19,8 @@ async def main():
     asyncio.create_task(printer(q))
     await dmc.start()
 
-asyncio.run(main())
+def entry():
+    asyncio.run(main())
+
+if __name__ == '__main__':
+    asyncio.run(main())

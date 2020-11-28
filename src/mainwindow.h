@@ -6,7 +6,9 @@
 #include <QWidget>
 #include <QQuickWidget>
 #include <QShortcut>
+
 #include "room_model.h"
+#include "datasource.h"
 
 
 class MainWindow : public QMainWindow
@@ -23,8 +25,8 @@ public slots:
 
 private:
     QQuickWidget* root_qml = nullptr;
-    RoomModel *room_model = nullptr;
-    QShortcut *sc_quit = nullptr;
+    RM::RoomModel *room_model = nullptr;
+    DS::DataSource *data_source = nullptr;
 };
 
 #endif // MAINWINDOW_H

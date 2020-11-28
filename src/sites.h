@@ -11,13 +11,13 @@ class Sites : public QObject
 public:
     explicit Sites(QObject *parent = nullptr);
 
-    void checkUrl(QString url, int cata, int num = 0);
-    void checkUnverifiedUrl(QString url);
+    void checkUrl(QString url, bool open = false);
+//    void checkUnverifiedUrl(QString url);
     void httpFinished(QNetworkReply *reply);
 
 
 signals:
-    void roomDecoded(int cata, QString url, QString title, QString owner, QString cover, int status, int num);
+    void roomDecoded(QString url, QString title, QString owner, QString cover, int status, bool open);
     void urlVerified(QString url);
 
 private:
@@ -28,7 +28,7 @@ private:
     QStringList decodeHuya(const QString &s);
     QStringList decodeYoutube(const QString &ps);
     QStringList decodeTwitch(const QString &s);
-    QNetworkRequest genRequest(QString url, bool is_unverified, bool is_phone, int cata = 0, int num = 0, bool eng_only = false);
+    QNetworkRequest genRequest(QString url, bool is_phone, bool eng_only = false, bool open = false);
 };
 
 #endif // SITES_H

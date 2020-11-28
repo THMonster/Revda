@@ -1,0 +1,3 @@
+[submodule "src/qlphelper/dmc/dmc/dm"]
+	path = src/qlphelper/dmc/dmc/dm
+	url = https://github.com/IsoaSFlus/danmaku

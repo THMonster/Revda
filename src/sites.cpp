@@ -10,41 +10,41 @@ Sites::Sites(QObject *parent) : QObject(parent)
     connect(nam, &QNetworkAccessManager::finished, this, &Sites::httpFinished);
 }
 
-void Sites::checkUrl(QString url, int cata, int num)
+void Sites::checkUrl(QString url, bool open)
 {
     auto sl = url.split('-');
     if (sl[0] == "do") {
-        nam->get(genRequest("https://www.douyu.com/betard/" + sl[1], false, false, cata, num));
+        nam->get(genRequest("https://www.douyu.com/betard/" + sl[1], false, false, open));
     } else if (sl[0] == "bi") {
-        nam->get(genRequest("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], false, false, cata, num));
+        nam->get(genRequest("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], false, false, open));
     } else if (sl[0] == "hu") {
-        nam->get(genRequest("https://m.huya.com/" + sl[1], false, true, cata, num));
+        nam->get(genRequest("https://m.huya.com/" + sl[1], true, false, open));
     } else if (sl[0] == "yt") {
-        nam->get(genRequest("https://www.youtube.com/channel/" + url.mid(3) + "/videos", false, false, cata, num, true));
+        nam->get(genRequest("https://www.youtube.com/channel/" + url.mid(3) + "/videos", false, true, open));
     } else if (sl[0] == "ytv") {
-        nam->get(genRequest("https://www.youtube.com/c/" + url.mid(4) + "/videos", false, false, cata, num, true));
+        nam->get(genRequest("https://www.youtube.com/c/" + url.mid(4) + "/videos", false, true, open));
     } else if (sl[0] == "tw") {
-        nam->get(genRequest("https://m.twitch.tv/" + url.mid(3) + "/profile", false, true, cata, num, true));
+        nam->get(genRequest("https://m.twitch.tv/" + url.mid(3) + "/profile", true, true, open));
     }
 }
 
-void Sites::checkUnverifiedUrl(QString url)
-{
-    auto sl = url.split('-');
-    if (sl[0] == "do") {
-        nam->get(genRequest("https://www.douyu.com/betard/" + sl[1], true, false));
-    } else if (sl[0] == "bi") {
-        nam->get(genRequest("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], true, false));
-    } else if (sl[0] == "hu") {
-        nam->get(genRequest("https://m.huya.com/" + sl[1], true, true));
-    } else if (sl[0] == "yt") {
-        nam->get(genRequest("https://www.youtube.com/channel/" + url.mid(3) + "/videos", true, false, 0, 0, true));
-    } else if (sl[0] == "ytv") {
-        nam->get(genRequest("https://www.youtube.com/c/" + url.mid(4) + "/videos", true, false, 0, 0, true));
-    } else if (sl[0] == "tw") {
-        nam->get(genRequest("https://m.twitch.tv/" + url.mid(3) + "/profile", true, true, 0, 0, true));
-    }
-}
+//void Sites::checkUnverifiedUrl(QString url)
+//{
+//    auto sl = url.split('-');
+//    if (sl[0] == "do") {
+//        nam->get(genRequest("https://www.douyu.com/betard/" + sl[1], true, false));
+//    } else if (sl[0] == "bi") {
+//        nam->get(genRequest("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], true, false));
+//    } else if (sl[0] == "hu") {
+//        nam->get(genRequest("https://m.huya.com/" + sl[1], true, true));
+//    } else if (sl[0] == "yt") {
+//        nam->get(genRequest("https://www.youtube.com/channel/" + url.mid(3) + "/videos", true, false, 0, 0, true));
+//    } else if (sl[0] == "ytv") {
+//        nam->get(genRequest("https://www.youtube.com/c/" + url.mid(4) + "/videos", true, false, 0, 0, true));
+//    } else if (sl[0] == "tw") {
+//        nam->get(genRequest("https://m.twitch.tv/" + url.mid(3) + "/profile", true, true, 0, 0, true));
+//    }
+//}
 
 void Sites::httpFinished(QNetworkReply *reply)
 {
@@ -53,9 +53,8 @@ void Sites::httpFinished(QNetworkReply *reply)
         reply->deleteLater();
         return;
     }
+    bool open = reply->request().rawHeader("qlp-open") == "1" ? true : false;
     if (reply->request().url().toString().contains("douyu")) {
-        int cata = reply->request().rawHeader("qlp-cata") == "1" ? 1 : 0;
-        int num = reply->request().rawHeader("qlp-order").toInt();
         QStringList sl = decodeDouyu(reply->readAll());
         QString url;
         if (!sl[0].isEmpty()) {
@@ -64,14 +63,8 @@ void Sites::httpFinished(QNetworkReply *reply)
             reply->deleteLater();
             return;
         }
-        if (reply->request().rawHeader("qlp-unverified") == "true") {
-            emit urlVerified(url);
-            return;
-        }
-        emit roomDecoded(cata, url, sl[1], sl[2], sl[3], sl[4] == "1" ? 1 : 0, num);
+        emit roomDecoded(url, sl[1], sl[2], sl[3], sl[4] == "1" ? 1 : 0, open);
     } else if (reply->request().url().toString().contains("bilibili")) {
-        int cata = reply->request().rawHeader("qlp-cata") == "1" ? 1 : 0;
-        int num = reply->request().rawHeader("qlp-order").toInt();
         QStringList sl = decodeBilibili(reply->readAll());
         QString url;
         if (!sl[0].isEmpty()) {
@@ -80,14 +73,8 @@ void Sites::httpFinished(QNetworkReply *reply)
             reply->deleteLater();
             return;
         }
-        if (reply->request().rawHeader("qlp-unverified") == "true") {
-            emit urlVerified(url);
-            return;
-        }
-        emit roomDecoded(cata, url, sl[1], sl[2], sl[3], sl[4] == "1" ? 1 : 0, num);
+        emit roomDecoded(url, sl[1], sl[2], sl[3], sl[4] == "1" ? 1 : 0, open);
     } else if (reply->request().url().toString().contains("huya")) {
-        int cata = reply->request().rawHeader("qlp-cata") == "1" ? 1 : 0;
-        int num = reply->request().rawHeader("qlp-order").toInt();
         QStringList sl = decodeHuya(reply->readAll());
         QString url;
         if (!sl[0].isEmpty()) {
@@ -96,14 +83,8 @@ void Sites::httpFinished(QNetworkReply *reply)
             reply->deleteLater();
             return;
         }
-        if (reply->request().rawHeader("qlp-unverified") == "true") {
-            emit urlVerified(url);
-            return;
-        }
-        emit roomDecoded(cata, url, sl[1], sl[2], sl[3], sl[4] == "true" ? 1 : 0, num);
+        emit roomDecoded(url, sl[1], sl[2], sl[3], sl[4] == "true" ? 1 : 0, open);
     } else if (reply->request().url().toString().contains("youtube.com/c")) {
-        int cata = reply->request().rawHeader("qlp-cata") == "1" ? 1 : 0;
-        int num = reply->request().rawHeader("qlp-order").toInt();
         QStringList sl = decodeYoutube(reply->readAll());
         QString url;
         if (!sl[0].isEmpty()) {
@@ -112,14 +93,8 @@ void Sites::httpFinished(QNetworkReply *reply)
             reply->deleteLater();
             return;
         }
-        if (reply->request().rawHeader("qlp-unverified") == "true") {
-            emit urlVerified(url);
-            return;
-        }
-        emit roomDecoded(cata, url, sl[1], sl[2], sl[3], sl[4] == "true" ? 1 : 0, num);
+        emit roomDecoded(url, sl[1], sl[2], sl[3], sl[4] == "true" ? 1 : 0, open);
     } else if (reply->request().url().toString().contains("twitch.tv")) {
-        int cata = reply->request().rawHeader("qlp-cata") == "1" ? 1 : 0;
-        int num = reply->request().rawHeader("qlp-order").toInt();
         QStringList sl = decodeTwitch(reply->readAll());
         QString url;
         if (!sl[0].isEmpty()) {
@@ -128,11 +103,7 @@ void Sites::httpFinished(QNetworkReply *reply)
             reply->deleteLater();
             return;
         }
-        if (reply->request().rawHeader("qlp-unverified") == "true") {
-            emit urlVerified(url);
-            return;
-        }
-        emit roomDecoded(cata, url, sl[1], sl[2], sl[3], sl[4] == "true" ? 1 : 0, num);
+        emit roomDecoded(url, sl[1], sl[2], sl[3], sl[4] == "true" ? 1 : 0, open);
     }
 
     reply->deleteLater();
@@ -367,7 +338,7 @@ QStringList Sites::decodeTwitch(const QString &s)
 }
 
 inline
-QNetworkRequest Sites::genRequest(QString url, bool is_unverified, bool is_phone, int cata, int num, bool eng_only)
+QNetworkRequest Sites::genRequest(QString url, bool is_phone,  bool eng_only, bool open)
 {
     QNetworkRequest qnr(url);
     qnr.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
@@ -377,14 +348,11 @@ QNetworkRequest Sites::genRequest(QString url, bool is_unverified, bool is_phone
     } else {
         qnr.setRawHeader(QByteArray("user-agent"), QByteArray("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36"));
     }
-    if (is_unverified) {
-        qnr.setRawHeader(QByteArray("qlp-unverified"), QByteArray("true"));
-    } else {
-        qnr.setRawHeader(QByteArray("qlp-cata"), QByteArray().number(cata));
-        qnr.setRawHeader(QByteArray("qlp-order"), QByteArray().number(num));
-    }
     if (eng_only) {
         qnr.setRawHeader(QByteArray("accept-language"), QByteArray("en-US"));
+    }
+    if (open) {
+        qnr.setRawHeader(QByteArray("qlp-open"), QByteArray().number(1));
     }
     return qnr;
 }

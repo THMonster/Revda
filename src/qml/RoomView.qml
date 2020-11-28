@@ -37,35 +37,4 @@ Rectangle {
 
 
     }
-
-//    FastBlur {
-//        source: gv
-//        opacity: 0
-//        visible: opacity === 0 ? false : true
-//        id: blur
-//        anchors.fill: gv
-//        radius: 70
-//        transparentBorder: false
-//        layer.enabled: true
-//        layer.effect: HueSaturation {
-//            cached: true
-//            lightness: 0.6
-//        }
-
-//        Behavior on opacity {
-//            NumberAnimation { duration: 300 }
-//        }
-//    }
-
-//    BusyIndicator {
-//        opacity: 0
-//        visible: opacity === 0 ? false : true
-//        running: opacity === 0 ? false : true
-//        width: gv.height * 0.15
-//        height: gv.height * 0.15
-//        anchors.centerIn: gv
-//        Behavior on opacity {
-//            NumberAnimation { duration: 300 }
-//        }
-//    }
 }

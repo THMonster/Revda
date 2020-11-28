@@ -5,6 +5,8 @@
 #include <QtGui>
 #include "sites.h"
 
+namespace RM {
+
 class Room
 {
     Q_GADGET
@@ -60,39 +62,24 @@ private:
 class RoomModel : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QStandardItemModel* saved_model READ saved_model)
-    Q_PROPERTY(QStandardItemModel* history_model READ history_model)
+    Q_PROPERTY(QSortFilterProxyModel* saved_model READ saved_model)
+    Q_PROPERTY(QSortFilterProxyModel* history_model READ history_model)
     Q_DISABLE_COPY(RoomModel)
 
 public:
     explicit RoomModel(QObject *parent = nullptr);
     ~RoomModel();
-    QStandardItemModel* saved_model() const;
-    QStandardItemModel* history_model() const;
-    void load();
-    void addRoomToModel(int cata, QString url, QString title, QString owner, QString cover, int status, int num);
-    void save();
-    QString urlToCode(QString url);
-    void addUrlToHistory(QString url);
+    void sort();
 
-public slots:
-    void openRoom(QString url);
-    void openUnverifiedRoom(QString url);
-    void refresh(bool history_only = false);
-//    void refreshHistory();
-    void openUrl(QString url);
-    void toggleLike(int like, QString url);
+    QSortFilterProxyModel* saved_model() const;
+    QSortFilterProxyModel* history_model() const;
 
-
+    QStandardItemModel* base_model = nullptr;
 
 private:
-    QStandardItemModel* m_saved_model = nullptr;
-    QStandardItemModel* m_history_model = nullptr;
-    QStringList saved;
-    QStringList history;
-    QSettings* settings;
-    Sites sites;
+    QSortFilterProxyModel *m_saved_model = nullptr;
+    QSortFilterProxyModel *m_history_model = nullptr;
 
 };
-
+}
 #endif // ROOM_MODEL_H
