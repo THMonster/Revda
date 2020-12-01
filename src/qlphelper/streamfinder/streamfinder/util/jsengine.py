@@ -20,7 +20,7 @@
   Usage:
 
     from jsengine import JSEngine
-    
+
     if JSEngine is None:  # always check this first!
       ...
 
@@ -44,7 +44,7 @@
 
     If your want use a special external Javascript interpreter, please call
     `ExternalInterpreter` or `set_external_interpreter` after imported:
-      
+
     from jsengine import *
 
     binary = binary_name or binary_path
@@ -60,7 +60,7 @@
     if interpreter:
         # found
         ctx = ExternalJSEngine(interpreter)
-      
+
     if set_external_interpreter(binary, name=name,
                                 tempfile=tempfile,
                                 evalstring=evalstring,
@@ -94,7 +94,7 @@ _RuntimeError = RuntimeError
 
 class RuntimeError(_RuntimeError):
     pass
-    
+
 class ProgramError(Exception):
     pass
 
@@ -165,7 +165,7 @@ else:
 try:
     import quickjs
 except ImportError as e:
-    print(e)
+    pass
 else:
     quickjs_available = True
 
@@ -197,7 +197,7 @@ elif platform.system() == 'Windows':
 
 # Linux: Gjs on Gnome, CJS on Cinnamon, or JavaScriptCore, Node.js if installed
 elif platform.system() == 'Linux':
-    for interpreter in ('gjs', 'cjs', 'jsc', 'qjs', 'nodejs', 'node'):
+    for interpreter in ('qlpjs', 'gjs', 'cjs', 'jsc', 'qjs', 'nodejs', 'node'):
         external_interpreter = which(interpreter)
         if external_interpreter:
             break
@@ -527,6 +527,7 @@ class ExternalJSEngine(AbstractJSEngine):
                 raise ProgramError(result)
 
     def _run_interpreter(self, cmd, input=None):
+        ret = ""
         stdin = PIPE if input else None
         p = Popen(cmd, stdin=stdin, stdout=PIPE, stderr=PIPE)
         stdout_data, stderr_data = p.communicate(input=input)
@@ -536,7 +537,8 @@ class ExternalJSEngine(AbstractJSEngine):
         elif stderr_data:
             print("%r has warnings:" % external_interpreter, stderr_data.decode('utf8'))
         # Output unicode
-        return stdout_data.decode('utf8')
+        ret = ret + stdout_data.decode('utf8')
+        return ret
 
     def _run_interpreter_with_string(self, code):
         # `-e`, `-eval` means run command string as Javascript

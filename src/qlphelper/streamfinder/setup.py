@@ -2,7 +2,7 @@
 import setuptools
 
 
-REQ = ['quickjs', ]
+# REQ = ['quickjs', ]
 
 setuptools.setup(
     name = "streamfinder",
@@ -10,8 +10,8 @@ setuptools.setup(
     author="IsoaSFlus",
     author_email="me@isoasflus.com",
     packages = setuptools.find_packages(),
-    requires = REQ,
-    install_requires = REQ,
+    # requires = REQ,
+    # install_requires = REQ,
     platforms = 'any',
     package_data = {
         'streamfinder': ['*.js', ],

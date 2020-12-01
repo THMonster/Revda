@@ -1,7 +1,7 @@
 #! /bin/python3
 import aiohttp, asyncio, json, sys, re, pkgutil, random, time, uuid, string
-from .util.jsengine import JSEngine
-from .util.match import match1
+from util.jsengine import JSEngine
+from util.match import match1
 
 def get_random_name(l):
     return random.choice(string.ascii_lowercase) + \
@@ -24,7 +24,7 @@ class Douyu:
             'User-Agent': r"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Safari/537.36",
             # 'Cookie': cookie
         }
-        self.js_md5 = pkgutil.get_data('streamfinder', 'crypto-js-md5.min.js')
+        self.js_md5 = pkgutil.get_data(__name__, 'crypto-js-md5.min.js')
         if not isinstance(self.js_md5, str):
             self.js_md5 = self.js_md5.decode()
 
@@ -97,6 +97,7 @@ class Douyu:
         did = uuid.uuid4().hex
         tt = str(int(time.time()))
         ub98484234 = js_ctx.call('ub98484234', self.rid, did, tt)
+        # print(ub98484234)
         # extractor.logger.debug('ub98484234: %s', ub98484234)
         ub98484234 = ub98484234[names_dict['resoult']]
         params.update({

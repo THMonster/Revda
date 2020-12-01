@@ -1,6 +1,6 @@
 #! /bin/python3
 import aiohttp, asyncio, json, sys, re
-from .util.match import match1
+from util.match import match1
 
 class Bilibili:
     api_url1 = 'https://api.live.bilibili.com/xlive/web-room/v2/index/getRoomPlayInfo'

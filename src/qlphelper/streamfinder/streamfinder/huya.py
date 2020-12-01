@@ -1,7 +1,7 @@
 #! /bin/python3
 import aiohttp, asyncio, json, sys, re, random, base64
 from html.parser import HTMLParser
-from .util.match import match1
+from util.match import match1
 
 class Huya:
     api_url1 = 'https://www.douyu.com/swf_api/homeH5Enc'

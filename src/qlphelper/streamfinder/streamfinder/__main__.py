@@ -1,10 +1,10 @@
 #! /bin/python3
 import aiohttp, asyncio, json, sys, re
-from .bilibili import Bilibili
-from .douyu import Douyu
-from .huya import Huya
-from .youtube import Youtube
-from .twitch import Twitch
+from bilibili import Bilibili
+from douyu import Douyu
+from huya import Huya
+from youtube import Youtube
+from twitch import Twitch
 
 async def run_ykdl(url):
     proc = await asyncio.create_subprocess_shell(

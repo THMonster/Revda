@@ -1,5 +1,5 @@
 import asyncio
-from .dm import danmaku
+from dm import danmaku
 import sys
 
 async def printer(q):
