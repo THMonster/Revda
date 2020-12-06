@@ -50,6 +50,11 @@ sudo pacman -S qliveplayer-git
 yay -S qliveplayer-git # or any other aur helper
 ```
 
+### Gentoo
+
+#### [GURU](https://wiki.gentoo.org/wiki/Project:GURU)
+Thanks for [@jian-lin](https://github.com/jian-lin)'s maintenance, and check [this](https://github.com/IsoaSFlus/QLivePlayer/issues/14#issuecomment-739154154) for details.
+
 ### From source
 ```
 git clone https://github.com/IsoaSFlus/QLivePlayer.git
