@@ -37,6 +37,8 @@ signals:
     void prevReceived();
     void nextReceived();
     void fileLoaded();
+    void onFont(double fs, double fa);
+    void onFontScaleDelta(double delta);
 
 private:
     QString ass_path;
@@ -68,14 +70,18 @@ public:
     void autoNextPage();
     void goPrevPage();
     void goNextPage();
+    void setFont(double fs, double fa);
+    void setFontScaleDelta(double delta);
 
 signals:
     void dlFinished();
+
 
 private:
     double speed = 8.0; // duration of single danmaku in second
     int res_x = 1920;
     int res_y = 1080;
+    int font_size = 40;
     bool hevc = false;
     MpvControl *mpv = nullptr;
     QStringList real_url;

@@ -36,6 +36,8 @@ void MpvControl::start()
             mpv_socket->connectToServer(mpv_socket_path);
         } else {
             mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlp:r\"] }\n"
+                                      "{ \"command\": [\"keybind\", \"alt+z\", \"script-message qlp:fsdown\"] }\n"
+                                      "{ \"command\": [\"keybind\", \"alt+x\", \"script-message qlp:fsup\"] }\n"
                                       "{ \"command\": [\"keybind\", \"alt+b\", \"script-message qlp:back\"] }\n"
                                       "{ \"command\": [\"keybind\", \"alt+n\", \"script-message qlp:next\"] }\n").toUtf8());
             t->stop();
@@ -73,6 +75,18 @@ void MpvControl::readMpvSocket()
             if (parser.getPageBack()) {
                 emit prevReceived();
             }
+            if (parser.getFs() != -1) {
+                emit onFont(parser.getFs(), -1);
+            }
+            if (parser.getFa() != -1) {
+                emit onFont(-1, parser.getFa());
+            }
+            if (parser.getFsUp()) {
+                emit onFontScaleDelta(0.15);
+            }
+            if (parser.getFsDown()) {
+                emit onFontScaleDelta(-0.15);
+            }
         } else if (tmp.contains("end-file")) {
             emit playFinished();
         } else if (tmp.contains("file-loaded")) {
@@ -102,6 +116,8 @@ BiliVideo::BiliVideo(QObject *parent)
     connect(mpv, &MpvControl::prevReceived, this, &BiliVideo::goPrevPage);
     connect(mpv, &MpvControl::nextReceived, this, &BiliVideo::goNextPage);
 //    connect(mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
+    connect(mpv, &MpvControl::onFont, this, &BiliVideo::setFont);
+    connect(mpv, &MpvControl::onFontScaleDelta, this, &BiliVideo::setFontScaleDelta);
     connect(mpv, &MpvControl::fileLoaded, [=]() {
         connect(this->mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
     });
@@ -140,6 +156,21 @@ void BiliVideo::run(QString url)
     connect(reply_info, &QNetworkReply::finished, this, &BiliVideo::slotHttpVideoInfo);
 }
 
+void BiliVideo::setFont(double fs, double fa)
+{
+    if (fs > 0) {
+        font_size = 40 * fs;
+    }
+    if (fa >= 0 && fa <= 1) {
+//        font_alpha = QStringLiteral("%1").arg((uint)(255*fa), 2, 16, QLatin1Char('0'));
+    }
+}
+
+void BiliVideo::setFontScaleDelta(double delta)
+{
+    font_size = font_size + (40 * delta);
+}
+
 void BiliVideo::genAss()
 {
     if (!ass_file->open(QIODevice::WriteOnly | QIODevice::Text))
@@ -153,11 +184,13 @@ void BiliVideo::genAss()
            "WrapStyle: 0\n"
            "ScaledBorderAndShadow: yes\n"
            "YCbCr Matrix: None\n"
-           + QString("PlayResX: %1\n").arg(QString::number(res_x)) +
+           + QStringLiteral("PlayResX: %1\n").arg(QString::number(res_x)) +
            "PlayResY: 1080\n"
            "[V4+ Styles]\n"
            "Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n"
-           "Style: Default,Sans,40,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1,0,7,0,0,0,1\n"
+           "Style: Default,Sans,"
+           + QString::number(font_size) +
+           ",&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1,0,7,0,0,0,1\n"
            "[Events]\n"
            "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n";
     for (int i = 0; i < 30; i++) {
@@ -175,7 +208,7 @@ void BiliVideo::genAss()
         } else if (iter.value().first[0] == '5') {
             avail_channel = 1; // top
         } else {
-            display_length = getDankamuDisplayLength(iter.value().first.mid(1), 40);
+            display_length = getDankamuDisplayLength(iter.value().first.mid(1), font_size);
             avail_channel = getAvailDMChannel(iter.key(), display_length);
         }
         if (avail_channel >= 0) {
@@ -194,7 +227,7 @@ void BiliVideo::genAss()
                             .arg(t1).arg(t2).arg(c.midRef(4, 2) + c.midRef(2, 2) + c.midRef(0, 2)) << "\n";
             } else {
                 out << QString("Dialogue: 0,%4,%5,Default,,0,0,0,,{\\1c&%6&\\move(%7,%1,%2,%1)}%3")
-                            .arg(QString::number(avail_channel*(40))).arg(QString::number(0-display_length)).arg(iter.value().first.midRef(1))
+                            .arg(QString::number(avail_channel*(font_size))).arg(QString::number(0-display_length)).arg(iter.value().first.midRef(1))
                             .arg(t1).arg(t2).arg(c.midRef(4, 2) + c.midRef(2, 2) + c.midRef(0, 2)).arg(QString::number(res_x)) << "\n";
             }
         }

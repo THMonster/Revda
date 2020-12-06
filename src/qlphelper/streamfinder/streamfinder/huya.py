@@ -1,7 +1,7 @@
 #! /bin/python3
 import aiohttp, asyncio, json, sys, re, random, base64
-from html.parser import HTMLParser
 from util.match import match1
+import html
 
 class Huya:
     api_url1 = 'https://www.douyu.com/swf_api/homeH5Enc'
@@ -28,8 +28,8 @@ class Huya:
 
         async with aiohttp.ClientSession() as sess:
             async with sess.request('get', self.room_url, headers=self.headers) as resp:
-                html = await resp.text()
-                json_stream = match1(html, '"stream": "([a-zA-Z0-9+=/]+)"')
+                h = await resp.text()
+                json_stream = match1(h, '"stream": "([a-zA-Z0-9+=/]+)"')
                 assert json_stream, "live video is offline"
                 data = json.loads(base64.b64decode(json_stream).decode())
                 assert data['status'] == 200, data['msg']
@@ -45,7 +45,7 @@ class Huya:
                     sUrl = stream_info['s{}Url'.format(sType)]
                     sUrlSuffix = stream_info['s{}UrlSuffix'.format(sType)]
                     sAntiCode = stream_info['s{}AntiCode'.format(sType)]
-                    ret['play_url'] = HTMLParser().unescape(u'{}/{}.{}?{}'.format(sUrl, sStreamName, sUrlSuffix, sAntiCode))
+                    ret['play_url'] = html.unescape(u'{}/{}.{}?{}'.format(sUrl, sStreamName, sUrlSuffix, sAntiCode))
                     break
 
         # print(ret)
