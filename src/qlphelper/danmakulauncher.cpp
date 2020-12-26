@@ -2,12 +2,14 @@
 #include <QProcess>
 #include <cstdlib>
 #include <csignal>
+
 #include "danmakulauncher.h"
 #include "mkv_header.h"
+#include "../qlpconfig.h"
 
 #define __PICK(n, i)   (((n)>>(8*i))&0xFF)
 
-DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket)
+DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket, double fs, double fa)
 {
     fk = new FudujiKiller();
     this->danmaku_socket_path = danmaku_socket;
@@ -24,6 +26,10 @@ DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket)
         danmaku_channel[i].length = 1;
         danmaku_channel[i].begin_pts = -10000;
     }
+    font_size = 40 * fs;
+    channel_num = 540 / font_size;
+    ++channel_num;
+    font_alpha = QStringLiteral("%1").arg((uint)(255*fa), 2, 16, QLatin1Char('0'));
 
     dmcPyProcess = new QProcess(this);
     connect(dmcPyProcess, &QProcess::readyRead, this, &DanmakuLauncher::loadDanmaku);
@@ -61,17 +67,22 @@ void DanmakuLauncher::setFont(double fs, double fa)
         font_size = 40 * fs;
         channel_num = 540 / font_size;
         ++channel_num;
+        QlpConfig::getInstance().writeFontScale(fs);
     }
     if (fa >= 0 && fa <= 1) {
         font_alpha = QStringLiteral("%1").arg((uint)(255*fa), 2, 16, QLatin1Char('0'));
+        QlpConfig::getInstance().writeFontAlpha(fa);
     }
 }
 
 void DanmakuLauncher::setFontScaleDelta(double delta)
 {
-    font_size = font_size + (40 * delta);
-    channel_num = 540 / font_size;
-    ++channel_num;
+    setFont((font_size + (40 * delta)) / 40, -1);
+}
+
+void DanmakuLauncher::setToggleNick()
+{
+    show_nick = !show_nick;
 }
 
 int DanmakuLauncher::getDankamuDisplayLength(QString dm, int fontsize)
@@ -131,15 +142,18 @@ void DanmakuLauncher::launchDanmaku()
         }
         dm.replace(QRegularExpression(QStringLiteral("[\\x{1F300}-\\x{1F5FF}|\\x{1F1E6}-\\x{1F1FF}|\\x{2700}-\\x{27BF}|\\x{1F900}-\\x{1F9FF}|\\x{1F600}-\\x{1F64F}|\\x{1F680}-\\x{1F6FF}|\\x{2600}-\\x{26FF}]"))
                    , QStringLiteral("[em]")); // remove emoji
+        if (show_nick) {
+            dm = speaker + QStringLiteral(": ") + dm;
+        }
         display_length = getDankamuDisplayLength(dm, font_size);
         avail_dc = getAvailDanmakuChannel(display_length);
         if (avail_dc >= 0) {
             QByteArray tmp;
             ass_event = QStringLiteral("%4,0,Default,%5,0,0,0,,{\\alpha%8\\fs%7\\1c&%6&\\move(1920,%1,%2,%1)}%3")
-                    .arg(QString::number(avail_dc*(font_size))).arg(QString::number(0-display_length))
-                    .arg(dm).arg(QString::number(read_order)).arg(speaker)
-                    .arg(color.midRef(4, 2) + color.midRef(2, 2) + color.midRef(0, 2))
-                    .arg(QString::number(font_size)).arg(font_alpha);
+                    .arg(QString::number(avail_dc*(font_size)), QString::number(0-display_length),
+                         dm, QString::number(read_order), speaker,
+                         color.midRef(4, 2) + color.midRef(2, 2) + color.midRef(0, 2),
+                         QString::number(font_size), font_alpha);
             ++read_order;
             tmp = ass_event.toLocal8Bit();
             tmp.prepend((char)0x00);
@@ -180,10 +194,10 @@ void DanmakuLauncher::launchDanmaku()
             if (avail_dc >= 0) {
                 QByteArray tmp;
                 ass_event = QStringLiteral("%4,0,Default,%5,0,0,0,,{\\alpha%8\\fs%7\\1c&%6&\\move(1920,%1,%2,%1)}%3")
-                        .arg(QString::number(avail_dc*(font_size))).arg(QString::number(0-display_length))
-                        .arg((*iter).at(2)).arg(QString::number(read_order)).arg((*iter).at(1))
-                        .arg((*iter).at(0).midRef(4, 2) + (*iter).at(0).midRef(2, 2) + (*iter).at(0).midRef(0, 2))
-                        .arg(QString::number(font_size)).arg(font_alpha);
+                        .arg(QString::number(avail_dc*(font_size)), QString::number(0-display_length),
+                             (*iter).at(2), QString::number(read_order), (*iter).at(1),
+                             (*iter).at(0).midRef(4, 2) + (*iter).at(0).midRef(2, 2) + (*iter).at(0).midRef(0, 2),
+                             QString::number(font_size), font_alpha);
                 ++read_order;
                 tmp = ass_event.toLocal8Bit();
                 tmp.prepend((char)0x00);

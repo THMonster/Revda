@@ -27,6 +27,7 @@ signals:
     void onQuality(int q);
     void onFont(double fs, double fa);
     void onFontScaleDelta(double delta);
+    void onToggleNick();
 
 private:
     QString room_title;

@@ -38,6 +38,8 @@ QlpCmdParser::QlpCmdParser(QString s)
             fs_up = true;
         } else if ((t2[0].compare(QStringLiteral("fsdown")) == 0)) {
             fs_down = true;
+        } else if ((t2[0].compare(QStringLiteral("nick")) == 0)) {
+            show_nick = true;
         }
     }
 }
@@ -90,4 +92,9 @@ bool QlpCmdParser::getFsUp()
 bool QlpCmdParser::getFsDown()
 {
     return fs_down;
+}
+
+bool QlpCmdParser::getShowNick()
+{
+    return show_nick;
 }

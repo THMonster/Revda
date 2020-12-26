@@ -1,5 +1,6 @@
 #include <iostream>
 #include "bilivideo.h"
+#include "../qlpconfig.h"
 using namespace BV;
 
 MpvControl::MpvControl(QObject *parent) : QObject(parent)
@@ -96,7 +97,7 @@ void MpvControl::readMpvSocket()
     }
 }
 
-BiliVideo::BiliVideo(QObject *parent)
+BiliVideo::BiliVideo(QStringList args, QObject *parent)
     : QObject(parent)
 {
     ass_file = new QFile(QString("/tmp/qlp-%1.ass").arg(QUuid::createUuid().toString()), this);
@@ -107,10 +108,20 @@ BiliVideo::BiliVideo(QObject *parent)
     QSettings s("QLivePlayer", "QLivePlayer", this);
     cookie = s.value("bcookie", QString("")).toString();
     hevc = s.value("bhevc", false).toBool();
+    bool ok = false;
+    auto fs = args.at(0).toDouble(&ok);
+    if (ok == false || fs <= 0) {
+        fs = QlpConfig::getInstance().readFontScale();
+    }
+    auto fa = args.at(1).toDouble(&ok);
+    if (ok == false || (fa < 0 || fa > 1)) {
+        fa = QlpConfig::getInstance().readFontAlpha();
+    }
+    font_size = 40 * fs;
 
     mpv = new MpvControl(this);
     connect(mpv, &MpvControl::jumpReceived, this, &BiliVideo::playPage);
-    connect(mpv, &MpvControl::requestReload, [=]() {
+    connect(mpv, &MpvControl::requestReload, [this]() {
         this->playPage(this->current_page);
     });
     connect(mpv, &MpvControl::prevReceived, this, &BiliVideo::goPrevPage);
@@ -118,7 +129,7 @@ BiliVideo::BiliVideo(QObject *parent)
 //    connect(mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
     connect(mpv, &MpvControl::onFont, this, &BiliVideo::setFont);
     connect(mpv, &MpvControl::onFontScaleDelta, this, &BiliVideo::setFontScaleDelta);
-    connect(mpv, &MpvControl::fileLoaded, [=]() {
+    connect(mpv, &MpvControl::fileLoaded, [this]() {
         connect(this->mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
     });
 }

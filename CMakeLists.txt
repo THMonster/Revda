@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 # SET(CMAKE_INSTALL_PREFIX /usr CACHE PATH "Set install prefix.")
 project(QLivePlayer)
-set(PROJECT_VERSION "3.20.2")
+set(PROJECT_VERSION "3.21.0")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)

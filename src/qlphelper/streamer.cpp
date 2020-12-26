@@ -86,6 +86,7 @@ void StreamerFlv::requestStream()
     proc->waitForFinished();
     proc->start("curl", QStringList()
                 << "-H" << "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36"
+                << "--speed-limit" << "1000" << "--speed-time" << "5"
                 << "-s" << "-L" << real_url);
 }
 

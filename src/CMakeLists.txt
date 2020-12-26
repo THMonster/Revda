@@ -4,6 +4,7 @@ set(qlp_file_SRCS
     room_model.cpp
     sites.cpp
     datasource.cpp
+    qlpconfig.cpp
 )
 
 qt5_add_resources(qlp_file_SRCS resource.qrc)

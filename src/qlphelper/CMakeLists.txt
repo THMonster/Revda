@@ -9,6 +9,7 @@ set(qlphelper_file_SRCS
     bilivideo.cpp
     streamfinder.cpp
     qlpcmdparser.cpp
+    ../qlpconfig.cpp
 )
 
 add_executable(qlphelper ${qlphelper_file_SRCS})

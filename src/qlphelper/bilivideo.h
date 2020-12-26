@@ -51,7 +51,7 @@ class BiliVideo : public QObject
 {
     Q_OBJECT
 public:
-    explicit BiliVideo(QObject *parent = nullptr);
+    explicit BiliVideo(QStringList args, QObject *parent = nullptr);
     ~BiliVideo();
 
     void run(QString url);

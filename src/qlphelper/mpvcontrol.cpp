@@ -34,9 +34,10 @@ void MpvControl::start()
             if (mpv_socket->state() != QLocalSocket::ConnectedState) {
                 mpv_socket->connectToServer(mpv_socket_path);
             } else {
-                mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlp:r\"] }\n").toUtf8());
-                mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+z\", \"script-message qlp:fsdown\"] }\n").toUtf8());
-                mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+x\", \"script-message qlp:fsup\"] }\n").toUtf8());
+                mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlp:r\"] }\n"
+                                          "{ \"command\": [\"keybind\", \"alt+z\", \"script-message qlp:fsdown\"] }\n"
+                                          "{ \"command\": [\"keybind\", \"alt+x\", \"script-message qlp:fsup\"] }\n"
+                                          "{ \"command\": [\"keybind\", \"alt+i\", \"script-message qlp:nick\"] }\n").toUtf8());
                 t->stop();
                 t->deleteLater();
             }
@@ -83,6 +84,9 @@ void MpvControl::readMpvSocket()
             }
             if (parser.getFsDown()) {
                 emit onFontScaleDelta(-0.15);
+            }
+            if (parser.getShowNick()) {
+                emit onToggleNick();
             }
         } else if (tmp.contains("file-loaded")) {
             QTimer::singleShot(500, [=]() {

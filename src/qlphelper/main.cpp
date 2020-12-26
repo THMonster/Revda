@@ -89,6 +89,11 @@ int main(int argc, char *argv[])
     parser.addOption(strictStreamOption);
     QCommandLineOption debugOption(QStringList() << "d" << "debug", "Show debug info");
     parser.addOption(debugOption);
+    QCommandLineOption fontScaleOption(QStringList() << "fs", "set font scale", "float", "null");
+    parser.addOption(fontScaleOption);
+    QCommandLineOption fontAlphaOption(QStringList() << "fa", "set font alpha", "float", "null");
+    parser.addOption(fontAlphaOption);
+
 
     parser.process(a);
 
@@ -110,7 +115,10 @@ int main(int argc, char *argv[])
     }
 
     if (url.contains("bilibili.com/video") || url.contains("bilibili.com/bangumi")) {
-        auto bv = new BV::BiliVideo(&a);
+        QStringList args;
+        args << parser.value(fontScaleOption);
+        args << parser.value(fontAlphaOption);
+        auto bv = new BV::BiliVideo(args, &a);
         if (parser.value(recordOption) != "null") {
             bv->setSavedFilePath(parser.value(recordOption));
         }
@@ -121,6 +129,8 @@ int main(int argc, char *argv[])
         args << parser.value(recordOption);
         args << (parser.isSet(strictStreamOption) ? "true" : "false");
         args << (parser.isSet(debugOption) ? "true" : "false");
+        args << parser.value(fontScaleOption);
+        args << parser.value(fontAlphaOption);
         auto qlphelper = new QLPHelper(args, &a);
         qlphelper->start();
     }

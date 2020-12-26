@@ -1,4 +1,5 @@
 #include "qlphelper.h"
+#include "../qlpconfig.h"
 
 QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
 {
@@ -11,17 +12,26 @@ QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
         is_debug = true;
     }
 
+    bool ok = false;
+    auto fs = args.at(4).toDouble(&ok);
+    if (ok == false || fs <= 0) {
+        fs = QlpConfig::getInstance().readFontScale();
+    }
+    auto fa = args.at(5).toDouble(&ok);
+    if (ok == false || (fa < 0 || fa > 1)) {
+        fa = QlpConfig::getInstance().readFontAlpha();
+    }
+
     stream_socket = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
     danmaku_socket = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
     auto f = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
     QProcess::execute("mkfifo", QStringList() << f);
     ff2mpv_fifo = new QFile(f, this);
 
-
     ffmpeg_control = new FFmpegControl(stream_socket, danmaku_socket, ff2mpv_fifo, record_file, is_debug, strict_stream);
     mpv_control = new MpvControl(ff2mpv_fifo, record_file);
     stream_finder = new StreamFinder(room_url, stream_socket, this);
-    danmaku_launcher = new DanmakuLauncher(room_url, danmaku_socket);
+    danmaku_launcher = new DanmakuLauncher(room_url, danmaku_socket, fs, fa);
 
     connect(stream_finder, &StreamFinder::streamError, this, &QLPHelper::restart);
     connect(stream_finder, &StreamFinder::streamStart, danmaku_launcher, &DanmakuLauncher::onStreamStart);
@@ -30,6 +40,7 @@ QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
     connect(mpv_control, &MpvControl::onQuality, stream_finder, &StreamFinder::setQuality);
     connect(mpv_control, &MpvControl::onFont, danmaku_launcher, &DanmakuLauncher::setFont);
     connect(mpv_control, &MpvControl::onFontScaleDelta, danmaku_launcher, &DanmakuLauncher::setFontScaleDelta);
+    connect(mpv_control, &MpvControl::onToggleNick, danmaku_launcher, &DanmakuLauncher::setToggleNick);
     connect(stream_finder, &StreamFinder::titleMatched, mpv_control, &MpvControl::setTitle);
     connect(stream_finder, &StreamFinder::ready, ffmpeg_control, &FFmpegControl::onStreamReady);
 }
