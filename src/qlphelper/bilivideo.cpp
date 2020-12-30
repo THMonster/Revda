@@ -228,20 +228,20 @@ void BiliVideo::genAss()
             t2 = QTime::fromMSecsSinceStartOfDay((iter.key()+speed)*1000.0).toString("hh:mm:ss.zzz");
             t1.chop(1);
             t2.chop(1);
-            c = QString::number(iter.value().second, 16);
+            c = QStringLiteral("%1").arg(iter.value().second, 6, 16, QLatin1Char('0'));
             QStringView sv1{c};
-            auto sv2 = sv1.mid(4, 2) % sv1.mid(2, 2) % sv1.mid(0, 2);
+            c = sv1.mid(4, 2) % sv1.mid(2, 2) % sv1.mid(0, 2);
             if (iter.value().first[0] == '4') {
-                out << QString("Dialogue: 0,%2,%3,Default,,0,0,0,,{\\1c&%4&\\an2}%1")
-                       .arg(iter.value().first.mid(1), t1, t2, sv2) << "\n";
+                out << QStringLiteral("Dialogue: 0,%2,%3,Default,,0,0,0,,{\\1c&%4&\\an2}%1")
+                       .arg(iter.value().first.mid(1), t1, t2, c) << "\n";
             } else if (iter.value().first[0] == '5') {
-                out << QString("Dialogue: 0,%2,%3,Default,,0,0,0,,{\\1c&%4&\\an8}%1")
-                            .arg(iter.value().first.mid(1), t1, t2, sv2) << "\n";
+                out << QStringLiteral("Dialogue: 0,%2,%3,Default,,0,0,0,,{\\1c&%4&\\an8}%1")
+                       .arg(iter.value().first.mid(1), t1, t2, c) << "\n";
             } else {
-                out << QString("Dialogue: 0,%4,%5,Default,,0,0,0,,{\\1c&%6&\\move(%7,%1,%2,%1)}%3")
-                            .arg(QString::number(avail_channel*(font_size)),
-                                 QString::number(0-display_length), iter.value().first.mid(1),
-                                 t1, t2, sv2, QString::number(res_x)) << "\n";
+                out << QStringLiteral("Dialogue: 0,%4,%5,Default,,0,0,0,,{\\1c&%6&\\move(%7,%1,%2,%1)}%3")
+                       .arg(QString::number(avail_channel*(font_size)),
+                            QString::number(0-display_length), iter.value().first.mid(1),
+                            t1, t2, c, QString::number(res_x)) << "\n";
             }
         }
         ++iter;

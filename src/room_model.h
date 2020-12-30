@@ -62,8 +62,8 @@ private:
 class RoomModel : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QSortFilterProxyModel* saved_model READ saved_model)
-    Q_PROPERTY(QSortFilterProxyModel* history_model READ history_model)
+    Q_PROPERTY(QSortFilterProxyModel* saved_model READ saved_model NOTIFY savedModelChanged)
+    Q_PROPERTY(QSortFilterProxyModel* history_model READ history_model NOTIFY historyModelChanged)
     Q_DISABLE_COPY(RoomModel)
 
 public:
@@ -75,6 +75,10 @@ public:
     QSortFilterProxyModel* history_model() const;
 
     QStandardItemModel* base_model = nullptr;
+
+signals:
+    void savedModelChanged();
+    void historyModelChanged();
 
 private:
     QSortFilterProxyModel *m_saved_model = nullptr;

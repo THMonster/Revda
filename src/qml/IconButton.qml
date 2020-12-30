@@ -32,25 +32,3 @@ Button {
     ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
     ToolTip.text: root.action.text
 }
-
-//Button {
-//    id: flatButtonWithToolTip
-
-
-
-//    Keys.onReturnPressed: flatButtonWithToolTip.clicked()
-//    Accessible.onPressAction: flatButtonWithToolTip.clicked()
-
-//    flat: true
-//    display: AbstractButton.IconOnly
-
-//    icon.width: 30
-//    icon.height: 30
-
-////    implicitWidth: icon.width + 16
-////    implicitHeight: icon.height + 16
-
-//    ToolTip.visible: hovered
-//    ToolTip.delay: Qt.styleHints.mousePressAndHoldInterval
-//    ToolTip.text: flatButtonWithToolTip.text
-//}
