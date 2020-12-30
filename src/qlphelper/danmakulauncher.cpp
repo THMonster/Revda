@@ -49,7 +49,7 @@ void DanmakuLauncher::startDmcPy()
     dmcPyProcess->terminate();
     dmcPyProcess->waitForFinished();
     QStringList dmcPy;
-    dmcPy.append(QStandardPaths::locate(QStandardPaths::DataLocation, "dmc.pyz"));
+    dmcPy.append(QStandardPaths::locate(QStandardPaths::AppDataLocation, "dmc.pyz"));
     dmcPy.append(room_url);
     dmcPyProcess->start("python3", dmcPy);
     qDebug() << "Danmaku process started!";
@@ -130,7 +130,9 @@ void DanmakuLauncher::launchDanmaku()
     while (!danmaku_queue.isEmpty()) {
         dm = danmaku_queue.dequeue();
         dm.chop(1);
-        color = dm.mid(0, 6);
+        color.append(dm.mid(4, 2));
+        color.append(dm.mid(2, 2));
+        color.append(dm.mid(0, 2));
         dm.remove(0, 6);
         qInfo().noquote() << dm;
         dm.remove(0, 1);
@@ -151,9 +153,7 @@ void DanmakuLauncher::launchDanmaku()
             QByteArray tmp;
             ass_event = QStringLiteral("%4,0,Default,%5,0,0,0,,{\\alpha%8\\fs%7\\1c&%6&\\move(1920,%1,%2,%1)}%3")
                     .arg(QString::number(avail_dc*(font_size)), QString::number(0-display_length),
-                         dm, QString::number(read_order), speaker,
-                         color.midRef(4, 2) + color.midRef(2, 2) + color.midRef(0, 2),
-                         QString::number(font_size), font_alpha);
+                         dm, QString::number(read_order), speaker, color, QString::number(font_size), font_alpha);
             ++read_order;
             tmp = ass_event.toLocal8Bit();
             tmp.prepend((char)0x00);
@@ -196,8 +196,7 @@ void DanmakuLauncher::launchDanmaku()
                 ass_event = QStringLiteral("%4,0,Default,%5,0,0,0,,{\\alpha%8\\fs%7\\1c&%6&\\move(1920,%1,%2,%1)}%3")
                         .arg(QString::number(avail_dc*(font_size)), QString::number(0-display_length),
                              (*iter).at(2), QString::number(read_order), (*iter).at(1),
-                             (*iter).at(0).midRef(4, 2) + (*iter).at(0).midRef(2, 2) + (*iter).at(0).midRef(0, 2),
-                             QString::number(font_size), font_alpha);
+                             (*iter).at(0), QString::number(font_size), font_alpha);
                 ++read_order;
                 tmp = ass_event.toLocal8Bit();
                 tmp.prepend((char)0x00);

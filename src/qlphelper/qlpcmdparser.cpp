@@ -1,10 +1,10 @@
 #include "qlpcmdparser.h"
 
-QlpCmdParser::QlpCmdParser(QString s)
+QlpCmdParser::QlpCmdParser(QStringView s)
 {
 //    qInfo() << s;
     bool ok = false;
-    auto t = s.splitRef(QStringLiteral("qlp:"), Qt::SkipEmptyParts);
+    auto t = s.split(QStringLiteral("qlp:"), Qt::SkipEmptyParts);
     auto args = t.last().split(',', Qt::SkipEmptyParts);
     for (const auto& arg : args) {
         auto t2 = arg.split('=', Qt::SkipEmptyParts);

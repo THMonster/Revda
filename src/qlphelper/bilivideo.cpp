@@ -1,4 +1,5 @@
 #include <iostream>
+#include <QStringBuilder>
 #include "bilivideo.h"
 #include "../qlpconfig.h"
 using namespace BV;
@@ -228,18 +229,19 @@ void BiliVideo::genAss()
             t1.chop(1);
             t2.chop(1);
             c = QString::number(iter.value().second, 16);
+            QStringView sv1{c};
+            auto sv2 = sv1.mid(4, 2) % sv1.mid(2, 2) % sv1.mid(0, 2);
             if (iter.value().first[0] == '4') {
                 out << QString("Dialogue: 0,%2,%3,Default,,0,0,0,,{\\1c&%4&\\an2}%1")
-                            .arg(iter.value().first.midRef(1))
-                            .arg(t1).arg(t2).arg(c.midRef(4, 2) + c.midRef(2, 2) + c.midRef(0, 2)) << "\n";
+                       .arg(iter.value().first.mid(1), t1, t2, sv2) << "\n";
             } else if (iter.value().first[0] == '5') {
                 out << QString("Dialogue: 0,%2,%3,Default,,0,0,0,,{\\1c&%4&\\an8}%1")
-                            .arg(iter.value().first.midRef(1))
-                            .arg(t1).arg(t2).arg(c.midRef(4, 2) + c.midRef(2, 2) + c.midRef(0, 2)) << "\n";
+                            .arg(iter.value().first.mid(1), t1, t2, sv2) << "\n";
             } else {
                 out << QString("Dialogue: 0,%4,%5,Default,,0,0,0,,{\\1c&%6&\\move(%7,%1,%2,%1)}%3")
-                            .arg(QString::number(avail_channel*(font_size))).arg(QString::number(0-display_length)).arg(iter.value().first.midRef(1))
-                            .arg(t1).arg(t2).arg(c.midRef(4, 2) + c.midRef(2, 2) + c.midRef(0, 2)).arg(QString::number(res_x)) << "\n";
+                            .arg(QString::number(avail_channel*(font_size)),
+                                 QString::number(0-display_length), iter.value().first.mid(1),
+                                 t1, t2, sv2, QString::number(res_x)) << "\n";
             }
         }
         ++iter;
@@ -328,8 +330,8 @@ void BiliVideo::slotHttpDMXml()
         }
         i = xml.indexOf("\"", cur + 6);
         j = xml.indexOf("</d>", cur);
-        danmaku_map.insert(xml.midRef(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[0].toDouble(),
-                QPair<QString, int>(xml.midRef(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[1] + xml.midRef(i + 2, j - i - 2), xml.midRef(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[3].toInt()));
+        danmaku_map.insert(QStringView{xml}.mid(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[0].toDouble(),
+                QPair<QString, int>(QStringView{xml}.mid(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[1] % QStringView{xml}.mid(i + 2, j - i - 2), QStringView{xml}.mid(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[3].toInt()));
     }
 
     genAss();
@@ -473,7 +475,7 @@ void BiliVideo::requestRealUrl(QString url)
     res_y = 1080;
     QProcess p;
     QStringList args;
-    args.append(QStandardPaths::locate(QStandardPaths::DataLocation, "streamfinder.pyz"));
+    args.append(QStandardPaths::locate(QStandardPaths::AppDataLocation, "streamfinder.pyz"));
     args.append(url);
     args.append(cookie);
     qDebug() << args;
