@@ -1,13 +1,13 @@
 #include "qlpcmdparser.h"
 
-QlpCmdParser::QlpCmdParser(QString s)
+QlpCmdParser::QlpCmdParser(QStringView s)
 {
 //    qInfo() << s;
     bool ok = false;
-    auto t = s.splitRef(QStringLiteral("qlp:"), QString::SkipEmptyParts);
-    auto args = t.last().split(',', QString::SkipEmptyParts);
+    auto t = s.split(QStringLiteral("qlp:"), Qt::SkipEmptyParts);
+    auto args = t.last().split(',', Qt::SkipEmptyParts);
     for (const auto& arg : args) {
-        auto t2 = arg.split('=', QString::SkipEmptyParts);
+        auto t2 = arg.split('=', Qt::SkipEmptyParts);
         if ((t2.length() >= 2) && ((t2[0].compare(QStringLiteral("q")) == 0) || (t2[0].compare(QStringLiteral("quality")) == 0))) {
             quality = t2[1].toInt(&ok);
             if (ok == false) {

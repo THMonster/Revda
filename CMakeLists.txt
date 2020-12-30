@@ -5,6 +5,8 @@ set(PROJECT_VERSION "3.21.0")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
 find_package(ECM 1.0 REQUIRED)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -13,7 +15,7 @@ find_program(MPV_PATH NAMES mpv REQUIRED)
 IF(${MPV_PATH} STREQUAL MPV_PATH-NOTFOUND)
 	message(FATAL_ERROR "mpv not found!!!")
 ENDIF()
-find_package(Qt5 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS Core Gui Widgets Quick QuickControls2 QuickWidgets )
+find_package(Qt5 COMPONENTS Core Gui Widgets Network Quick Qml QuickWidgets REQUIRED)
 
 install(FILES "icon/qliveplayer.svg"
         DESTINATION "share/icons/hicolor/scalable/apps")

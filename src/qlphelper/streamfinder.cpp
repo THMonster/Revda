@@ -59,7 +59,7 @@ void StreamFinder::startRequest()
     proc->waitForFinished(10000);
     auto tid = ++proc_id;
     QStringList args;
-    args.append(QStandardPaths::locate(QStandardPaths::DataLocation, "streamfinder.pyz"));
+    args.append(QStandardPaths::locate(QStandardPaths::AppDataLocation, "streamfinder.pyz"));
     args.append(room_url);
     if (QFileInfo(QStringLiteral("/tmp/unlock-qlp")).exists()) {
         if (room_url.contains(QStringLiteral("live.bilibili.com/"))) {

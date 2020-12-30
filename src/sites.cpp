@@ -28,24 +28,6 @@ void Sites::checkUrl(QString url, bool open)
     }
 }
 
-//void Sites::checkUnverifiedUrl(QString url)
-//{
-//    auto sl = url.split('-');
-//    if (sl[0] == "do") {
-//        nam->get(genRequest("https://www.douyu.com/betard/" + sl[1], true, false));
-//    } else if (sl[0] == "bi") {
-//        nam->get(genRequest("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], true, false));
-//    } else if (sl[0] == "hu") {
-//        nam->get(genRequest("https://m.huya.com/" + sl[1], true, true));
-//    } else if (sl[0] == "yt") {
-//        nam->get(genRequest("https://www.youtube.com/channel/" + url.mid(3) + "/videos", true, false, 0, 0, true));
-//    } else if (sl[0] == "ytv") {
-//        nam->get(genRequest("https://www.youtube.com/c/" + url.mid(4) + "/videos", true, false, 0, 0, true));
-//    } else if (sl[0] == "tw") {
-//        nam->get(genRequest("https://m.twitch.tv/" + url.mid(3) + "/profile", true, true, 0, 0, true));
-//    }
-//}
-
 void Sites::httpFinished(QNetworkReply *reply)
 {
     if (reply->error() != QNetworkReply::NoError) {
@@ -341,7 +323,7 @@ inline
 QNetworkRequest Sites::genRequest(QString url, bool is_phone,  bool eng_only, bool open)
 {
     QNetworkRequest qnr(url);
-    qnr.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
+    qnr.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
 //    qnr.setMaximumRedirectsAllowed(5);
     if (is_phone) {
         qnr.setRawHeader(QByteArray("user-agent"), QByteArray("Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Mobile Safari/537.36"));
