@@ -70,27 +70,27 @@ void DataSource::refresh()
 void DataSource::openUrl(QString url)
 {
     QStringList sl;
-    sl = url.split('-', QString::SkipEmptyParts);
+    sl = url.split('-', Qt::SkipEmptyParts);
     if (sl.size() >= 2) {
         sites.checkUrl(url, true);
     } else if (sl.size() == 1) {
         if (sl[0].left(2) == "av") {
-            auto psl = sl[0].split(':', QString::SkipEmptyParts);
+            auto psl = sl[0].split(':', Qt::SkipEmptyParts);
             openQlphelper("https://www.bilibili.com/video/" + psl[0] + "?p=" + (psl.size() == 2 ? psl[1] : "1"));
         } else if (sl[0].left(2) == "ep") {
             openQlphelper("https://www.bilibili.com/bangumi/play/" + sl[0]);
         } else if (sl[0].left(2) == "BV") {
-            auto psl = sl[0].split(':', QString::SkipEmptyParts);
+            auto psl = sl[0].split(':', Qt::SkipEmptyParts);
             openQlphelper("https://www.bilibili.com/video/" + psl[0] + "?p=" + (psl.size() == 2 ? psl[1] : "1"));
         } else if (sl[0].left(2) == "ss") {
-            auto psl = sl[0].split(':', QString::SkipEmptyParts);
+            auto psl = sl[0].split(':', Qt::SkipEmptyParts);
             openQlphelper("https://www.bilibili.com/bangumi/play/" + psl[0] + "?p=" + (psl.size() == 2 ? psl[1] : "1"));
         } else if (sl[0].left(4) == "http") {
             if (!sl[0].contains("bilibili")) {
                 return;
             }
             QUrl url(sl[0]);
-            QString bi_code, part;
+            QString bi_code;
             bi_code = url.fileName();
             if (bi_code.left(2) != "av" && bi_code.left(2) != "ep" && bi_code.left(2) != "BV") {
                 return;
@@ -159,22 +159,22 @@ inline
 QString DataSource::urlToCode(QString url)
 {
     if (url.contains("douyu.com/")) {
-        QString rid = url.split('/', QString::SkipEmptyParts).last();
+        QString rid = url.split('/', Qt::SkipEmptyParts).last();
         return "do-" + rid;
     } else if (url.contains("live.bilibili.com/")) {
-        QString rid = url.split('/', QString::SkipEmptyParts).last();
+        QString rid = url.split('/', Qt::SkipEmptyParts).last();
         return "bi-" + rid;
     } else if (url.contains("huya.com/")) {
-        QString rid = url.split('/', QString::SkipEmptyParts).last();
+        QString rid = url.split('/', Qt::SkipEmptyParts).last();
         return "hu-" + rid;
     } else if (url.contains("youtube.com/channel/")) {
-        QString rid = url.split('/', QString::SkipEmptyParts).last();
+        QString rid = url.split('/', Qt::SkipEmptyParts).last();
         return "yt-" + rid;
     } else if (url.contains("youtube.com/c/")) {
-        QString rid = url.split('/', QString::SkipEmptyParts).last();
+        QString rid = url.split('/', Qt::SkipEmptyParts).last();
         return "ytv-" + rid;
     } else if (url.contains("twitch.tv/")) {
-        QString rid = url.split('/', QString::SkipEmptyParts).last();
+        QString rid = url.split('/', Qt::SkipEmptyParts).last();
         return "tw-" + rid;
     }
     return "";

@@ -47,7 +47,7 @@ void StreamerFlv::setSocket()
         socket = nullptr;
     }
     socket = socket_server->nextPendingConnection();
-    connect(socket, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::error),
+    connect(socket, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::errorOccurred),
             [&](QLocalSocket::LocalSocketError socketError) {
         qDebug() << "stream socket error" << socketError;
         if (state != Closing) {
@@ -248,7 +248,7 @@ void StreamerSl::setSocket()
         socket = nullptr;
     }
     socket = socket_server->nextPendingConnection();
-    connect(socket, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::error),
+    connect(socket, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::errorOccurred),
             [&](QLocalSocket::LocalSocketError socketError) {
         qDebug() << "stream socket error" << socketError;
         if (state != Closing) {

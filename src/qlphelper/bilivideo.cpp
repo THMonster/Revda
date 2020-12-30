@@ -328,8 +328,8 @@ void BiliVideo::slotHttpDMXml()
         }
         i = xml.indexOf("\"", cur + 6);
         j = xml.indexOf("</d>", cur);
-        danmaku_map.insertMulti(xml.midRef(cur + 6, i - cur - 6).split(',', QString::SkipEmptyParts)[0].toDouble(),
-                QPair<QString, int>(xml.midRef(cur + 6, i - cur - 6).split(',', QString::SkipEmptyParts)[1] + xml.midRef(i + 2, j - i - 2), xml.midRef(cur + 6, i - cur - 6).split(',', QString::SkipEmptyParts)[3].toInt()));
+        danmaku_map.insert(xml.midRef(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[0].toDouble(),
+                QPair<QString, int>(xml.midRef(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[1] + xml.midRef(i + 2, j - i - 2), xml.midRef(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[3].toInt()));
     }
 
     genAss();
@@ -504,7 +504,7 @@ void BiliVideo::requestRealUrl(QString url)
 
     genEDLUrl();
 
-    auto sl = real_url[0].split('/', QString::SkipEmptyParts);
+    auto sl = real_url[0].split('/', Qt::SkipEmptyParts);
     auto cid = sl.at(sl.length() - 2);
     //    qDebug() << cid;
     QNetworkRequest qnr("https://comment.bilibili.com/" + cid + ".xml");
