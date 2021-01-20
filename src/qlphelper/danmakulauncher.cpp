@@ -181,14 +181,14 @@ void DanmakuLauncher::launchDanmaku()
             tmp.prepend(0xa0);
             bin_out.append(tmp);
         } else {
-            droped_danmaku_list.append(QStringList() << color << speaker << dm);
+            dropped_danmaku_list.append(QStringList() << color << speaker << dm);
             continue;
         }
     }
-    if (!droped_danmaku_list.isEmpty()) {
-//        qDebug() << "droped list size: " << droped_danmaku_list.size();
-        auto iter = droped_danmaku_list.begin();
-        while (iter < droped_danmaku_list.end()) {
+    if (!dropped_danmaku_list.isEmpty()) {
+//        qDebug() << "dropped list size: " << dropped_danmaku_list.size();
+        auto iter = dropped_danmaku_list.begin();
+        while (iter < dropped_danmaku_list.end()) {
             display_length = getDankamuDisplayLength((*iter).at(2), font_size);
             avail_dc = getAvailDanmakuChannel(display_length);
             if (avail_dc >= 0) {
@@ -224,13 +224,13 @@ void DanmakuLauncher::launchDanmaku()
                 tmp.prepend(__PICK(buf, 3));
                 tmp.prepend(0xa0);
                 bin_out.append(tmp);
-                iter = droped_danmaku_list.erase(iter);
+                iter = dropped_danmaku_list.erase(iter);
             } else {
                 ++iter;
             }
         }
-        if (droped_danmaku_list.size() > 500) {
-            droped_danmaku_list.clear();
+        if (dropped_danmaku_list.size() > 500) {
+            dropped_danmaku_list.clear();
         }
     }
     buf = (pts + timer.elapsed());
