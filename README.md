@@ -38,13 +38,17 @@ Linux平台下的弹幕直播播放器。
 
 ### Archlinux
 
-Thanks for [@MarvelousBlack](https://github.com/MarvelousBlack)'s maintenance.
+```
+sudo pacman -S qliveplayer
+```
 
 #### [ArchlinuxCN](https://wiki.archlinux.org/index.php/Unofficial_user_repositories#archlinuxcn) repo
 
 ```
 sudo pacman -S qliveplayer-git
 ```
+Thanks for [@MarvelousBlack](https://github.com/MarvelousBlack)'s maintenance.
+
 #### AUR
 ```
 yay -S qliveplayer-git # or any other aur helper
