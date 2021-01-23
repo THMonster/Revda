@@ -6,7 +6,7 @@
 class QlpCmdParser
 {
 public:
-    QlpCmdParser(QString s);
+    QlpCmdParser(QStringView s);
     ~QlpCmdParser();
 
     bool getReload();

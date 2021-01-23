@@ -3,29 +3,58 @@
 function print_help()
 {
     echo "Basic options:
- -u <url>            url of room
- -t <time-interval>  default is 5 seconds
- -f <file-prefix>    prefix of record file
+ -u   <string>   url of room
+ -t   <int>      default is 5 seconds
+ -f   <string>   prefix of record file
+ --fs <float>    font scale
+ --fa <float>    font alpha
 " >&2
 }
 room_url=''
 time_interval='5'
 file_prefix='record'
+fs='-1'
+fa='-1'
 
-while getopts "u:t:f:" opt; do
-    case $opt in
-        u)
-            room_url="$OPTARG"
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+
+    case $key in
+        -u|--url)
+            room_url="$2"
+            shift # past argument
+            shift # past value
             ;;
-        t)
-            time_interval="$OPTARG"
+        -t|--time)
+            time_intervel="$2"
+            shift # past argument
+            shift # past value
             ;;
-        f)
-            file_prefix="$OPTARG"
+        -f|--file-prefix)
+            file_prefix="$2"
+            shift # past argument
+            shift # past value
             ;;
-        \?)
+        --fs)
+            fs="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        --fa)
+            fa="$2"
+            shift # past argument
+            shift # past value
+            ;;
+        -h|--help)
             print_help
-            exit 1
+            exit
+            shift # past argument
+            ;;
+        *)    # unknown option
+            POSITIONAL+=("$1") # save it in an array for later
+            shift # past argument
             ;;
     esac
 done
@@ -39,6 +68,6 @@ fi
 
 while [[ 1 == 1 ]]
 do
-    qlphelper -u "${room_url}" -r "${file_prefix}-$(date +%Y-%m-%d-%H-%M-%S).mkv" --strict-stream
+    qlphelper -u "${room_url}" -r "${file_prefix}-$(date +%Y-%m-%d-%H-%M-%S).mkv" --strict-stream --fs "${fs}" --fa "${fa}"
     sleep ${time_interval}
 done

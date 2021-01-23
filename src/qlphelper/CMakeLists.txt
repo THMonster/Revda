@@ -13,12 +13,11 @@ set(qlphelper_file_SRCS
 )
 
 add_executable(qlphelper ${qlphelper_file_SRCS})
+target_compile_definitions(qlphelper PRIVATE -DPROJECT_VERSION="${PROJECT_VERSION}")
 target_link_libraries(qlphelper
   Qt5::Core
   Qt5::Network
 )
-
-target_compile_definitions(qlphelper PRIVATE -DPROJECT_VERSION="${PROJECT_VERSION}")
 
 file(GLOB dmcpyz dmc.pyz streamfinder.pyz)
 install(FILES ${dmcpyz} DESTINATION share/QLivePlayer)

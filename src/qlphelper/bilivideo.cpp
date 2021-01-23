@@ -1,4 +1,5 @@
 #include <iostream>
+#include <QStringBuilder>
 #include "bilivideo.h"
 #include "../qlpconfig.h"
 using namespace BV;
@@ -227,19 +228,20 @@ void BiliVideo::genAss()
             t2 = QTime::fromMSecsSinceStartOfDay((iter.key()+speed)*1000.0).toString("hh:mm:ss.zzz");
             t1.chop(1);
             t2.chop(1);
-            c = QString::number(iter.value().second, 16);
+            c = QStringLiteral("%1").arg(iter.value().second, 6, 16, QLatin1Char('0'));
+            QStringView sv1{c};
+            c = sv1.mid(4, 2) % sv1.mid(2, 2) % sv1.mid(0, 2);
             if (iter.value().first[0] == '4') {
-                out << QString("Dialogue: 0,%2,%3,Default,,0,0,0,,{\\1c&%4&\\an2}%1")
-                            .arg(iter.value().first.midRef(1))
-                            .arg(t1).arg(t2).arg(c.midRef(4, 2) + c.midRef(2, 2) + c.midRef(0, 2)) << "\n";
+                out << QStringLiteral("Dialogue: 0,%2,%3,Default,,0,0,0,,{\\1c&%4&\\an2}%1")
+                       .arg(iter.value().first.mid(1), t1, t2, c) << "\n";
             } else if (iter.value().first[0] == '5') {
-                out << QString("Dialogue: 0,%2,%3,Default,,0,0,0,,{\\1c&%4&\\an8}%1")
-                            .arg(iter.value().first.midRef(1))
-                            .arg(t1).arg(t2).arg(c.midRef(4, 2) + c.midRef(2, 2) + c.midRef(0, 2)) << "\n";
+                out << QStringLiteral("Dialogue: 0,%2,%3,Default,,0,0,0,,{\\1c&%4&\\an8}%1")
+                       .arg(iter.value().first.mid(1), t1, t2, c) << "\n";
             } else {
-                out << QString("Dialogue: 0,%4,%5,Default,,0,0,0,,{\\1c&%6&\\move(%7,%1,%2,%1)}%3")
-                            .arg(QString::number(avail_channel*(font_size))).arg(QString::number(0-display_length)).arg(iter.value().first.midRef(1))
-                            .arg(t1).arg(t2).arg(c.midRef(4, 2) + c.midRef(2, 2) + c.midRef(0, 2)).arg(QString::number(res_x)) << "\n";
+                out << QStringLiteral("Dialogue: 0,%4,%5,Default,,0,0,0,,{\\1c&%6&\\move(%7,%1,%2,%1)}%3")
+                       .arg(QString::number(avail_channel*(font_size)),
+                            QString::number(0-display_length), iter.value().first.mid(1),
+                            t1, t2, c, QString::number(res_x)) << "\n";
             }
         }
         ++iter;
@@ -328,8 +330,8 @@ void BiliVideo::slotHttpDMXml()
         }
         i = xml.indexOf("\"", cur + 6);
         j = xml.indexOf("</d>", cur);
-        danmaku_map.insertMulti(xml.midRef(cur + 6, i - cur - 6).split(',', QString::SkipEmptyParts)[0].toDouble(),
-                QPair<QString, int>(xml.midRef(cur + 6, i - cur - 6).split(',', QString::SkipEmptyParts)[1] + xml.midRef(i + 2, j - i - 2), xml.midRef(cur + 6, i - cur - 6).split(',', QString::SkipEmptyParts)[3].toInt()));
+        danmaku_map.insert(QStringView{xml}.mid(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[0].toDouble(),
+                QPair<QString, int>(QStringView{xml}.mid(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[1] % QStringView{xml}.mid(i + 2, j - i - 2), QStringView{xml}.mid(cur + 6, i - cur - 6).split(',', Qt::SkipEmptyParts)[3].toInt()));
     }
 
     genAss();
@@ -473,7 +475,7 @@ void BiliVideo::requestRealUrl(QString url)
     res_y = 1080;
     QProcess p;
     QStringList args;
-    args.append(QStandardPaths::locate(QStandardPaths::DataLocation, "streamfinder.pyz"));
+    args.append(QStandardPaths::locate(QStandardPaths::AppDataLocation, "streamfinder.pyz"));
     args.append(url);
     args.append(cookie);
     qDebug() << args;
@@ -504,7 +506,7 @@ void BiliVideo::requestRealUrl(QString url)
 
     genEDLUrl();
 
-    auto sl = real_url[0].split('/', QString::SkipEmptyParts);
+    auto sl = real_url[0].split('/', Qt::SkipEmptyParts);
     auto cid = sl.at(sl.length() - 2);
     //    qDebug() << cid;
     QNetworkRequest qnr("https://comment.bilibili.com/" + cid + ".xml");
@@ -531,8 +533,8 @@ void BiliVideo::playPage(int p)
 
 void BiliVideo::autoNextPage()
 {
-    QTimer::singleShot(3000, [=]() {
-        playPage(current_page + 1);
+    QTimer::singleShot(3000, [this]() {
+        this->playPage(this->current_page + 1);
     });
 }
 

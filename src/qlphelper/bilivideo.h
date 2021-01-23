@@ -89,7 +89,7 @@ private:
     QString title;
     QString cookie;
     QFile *ass_file = nullptr;
-    QMap<double, QPair<QString, int>> danmaku_map;
+    QMultiMap<double, QPair<QString, int>> danmaku_map;
     DanmakuChannelB danmaku_channel[30];
     QNetworkAccessManager *nam = nullptr;
     QProcess *mpv_proc = nullptr;
