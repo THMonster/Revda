@@ -18,37 +18,40 @@ async def run_ykdl(url):
         print(stderr.decode(), flush=True)
 
 async def main():
-    if "youtube.com/c" in sys.argv[1]:
-        s = Youtube(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else '')
+    url = sys.argv[1]
+    if url.startswith("qliveplayer://"):
+        url = "https" + url[11:]
+    if "youtube.com/c" in url:
+        s = Youtube(url, sys.argv[2] if len(sys.argv) > 2 else '')
         data = await s.get_play_info()
         title = data['title']
         url = data['play_url']
-    elif "twitch.tv/" in sys.argv[1]:
-        s = Twitch(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else '')
+    elif "twitch.tv/" in url:
+        s = Twitch(url, sys.argv[2] if len(sys.argv) > 2 else '')
         data = await s.get_play_info()
         title = data['title']
         url = data['play_url']
-    elif "douyu.com/" in sys.argv[1]:
-        s = Douyu(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else '')
+    elif "douyu.com/" in url:
+        s = Douyu(url, sys.argv[2] if len(sys.argv) > 2 else '')
         data = await s.get_play_info()
         title = data['title']
         url = data['play_url']
-    elif "huya.com/" in sys.argv[1]:
-        s = Huya(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else '')
+    elif "huya.com/" in url:
+        s = Huya(url, sys.argv[2] if len(sys.argv) > 2 else '')
         data = await s.get_play_info()
         title = data['title']
         url = data['play_url']
-    elif "live.bilibili.com/" in sys.argv[1]:
-        s = Bilibili(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else '')
+    elif "live.bilibili.com/" in url:
+        s = Bilibili(url, sys.argv[2] if len(sys.argv) > 2 else '')
         data = await s.get_play_info()
         title = data['title']
         url = data['play_url']
-    elif "bilibili.com/" in sys.argv[1]:
-        s = Bilibili(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else '')
+    elif "bilibili.com/" in url:
+        s = Bilibili(url, sys.argv[2] if len(sys.argv) > 2 else '')
         await s.get_play_info_video()
         return
     else:
-        await run_ykdl(sys.argv[1])
+        await run_ykdl(url)
         return
 
     print("title: " + title, flush=True)
