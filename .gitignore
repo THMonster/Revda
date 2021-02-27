@@ -47,3 +47,4 @@ CMakeLists.txt.user*
 
 # User
 build/
+web-ext-artifacts/

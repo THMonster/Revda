@@ -13,6 +13,7 @@ public:
     int getQuality();
     double getFs();
     double getFa();
+    int getSpeed();
     bool getPageNext();
     bool getPageBack();
     int getPage();
@@ -26,6 +27,7 @@ private:
     bool reload = false;
     double fs = -1; // font scale
     double fa = -1; // font alpha from 0 to 1
+    int speed = -1; // danmaku duration in ms
     int page = -1;
     bool page_next = false;
     bool page_back = false;

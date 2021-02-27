@@ -15,11 +15,14 @@ public:
 
     double readFontScale();
     double readFontAlpha();
+    int readDanmakuSpeed();
     void writeFontScale(double fs);
     void writeFontAlpha(double fa);
+    void writeDanmakuSpeed(int ms);
 
     uint fs_cnt = 0;
     uint fa_cnt = 0;
+    uint sp_cnt = 0;
 
 signals:
 

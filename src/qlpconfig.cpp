@@ -24,6 +24,17 @@ double QlpConfig::readFontAlpha()
     }
 }
 
+int QlpConfig::readDanmakuSpeed()
+{
+    QSettings s("QLivePlayer", "QLivePlayer");
+    auto ret = s.value(QStringLiteral("danmaku_speed"), 8000).toInt();
+    if (ret > 500 && ret < 30000) {
+        return ret;
+    } else {
+        return 8000;
+    }
+}
+
 void QlpConfig::writeFontScale(double fs)
 {
     ++fs_cnt;
@@ -45,6 +56,18 @@ void QlpConfig::writeFontAlpha(double fa)
             s.setValue("font_alpha", fa);
         }
         --fa_cnt;
+    });
+}
+
+void QlpConfig::writeDanmakuSpeed(int ms)
+{
+    ++sp_cnt;
+    QTimer::singleShot(1000, [this, ms]() {
+        if (this->sp_cnt <= 1) {
+            QSettings s("QLivePlayer", "QLivePlayer");
+            s.setValue("danmaku_speed", ms);
+        }
+        --sp_cnt;
     });
 }
 

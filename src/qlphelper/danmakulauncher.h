@@ -25,13 +25,13 @@ class DanmakuLauncher : public QObject
     } state = NotRunning;
 
 public:
-    DanmakuLauncher(QString room_url, QString danmaku_socket, double fs = -1, double fa = -1);
+    DanmakuLauncher(QString room_url, QString danmaku_socket, double fs = -1, double fa = -1, int speed = 8000);
     ~DanmakuLauncher();
     void startDmcPy();
     int getDankamuDisplayLength(QString dm, int fontsize);
     void loadDanmaku();
     void launchDanmaku();
-    void launchVoidDanmaku();
+    void launchVoidDanmaku(int cnt = 1);
     int getAvailDanmakuChannel(int len);
 
 public slots:
@@ -44,12 +44,13 @@ public slots:
     void setFont(double fs, double fa);
     void setFontScaleDelta(double delta);
     void setToggleNick();
+    void setSpeed(int ms);
 
 private:
     int channel_num = 14;
     int font_size = 40;
     double scale = 1.0;
-    qint64 speed = 8000; // duration of each danmaku in ms
+    int speed; // duration of each danmaku in ms
     QString danmaku_socket_path;
     QTimer *launch_timer = nullptr;
     QString room_url;

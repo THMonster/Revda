@@ -5,6 +5,7 @@ set(qlp_file_SRCS
     sites.cpp
     datasource.cpp
     qlpconfig.cpp
+    launcher.cpp
     resource.qrc
 )
 

@@ -137,6 +137,7 @@ void DataSource::loadSettings()
 
 void DataSource::saveSettings()
 {
+    qDebug() << "Saving config...";
     QSettings s("QLivePlayer", "QLivePlayer");
     QStringList saved;
     QStringList history;

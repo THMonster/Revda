@@ -1,0 +1,32 @@
+{
+    "manifest_version": 2,
+
+    "name": "Open With QLivePlayer",
+    "description": "Open With QLivePlayer",
+    "version": "0.1.0",
+
+    "author": "IsoaSFlus <me@isoasflus.com>",
+
+    "icons": {
+        "48": "icons/qliveplayer.png"
+    },
+
+    "background": {
+        "scripts": [
+            "extension.js"
+        ],
+        "persistent": false
+    },
+
+    "permissions": [
+        "tabs",
+        "contextMenus"
+    ],
+
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "open-with-qliveplayer@isoasflus.com",
+            "strict_min_version": "50.0"
+        }
+    }
+}

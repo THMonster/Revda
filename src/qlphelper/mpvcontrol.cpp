@@ -10,7 +10,7 @@ MpvControl::MpvControl(QFile* ff2mpv_fifo, QString record_file, QObject *parent)
     connect(mpv_socket, &QLocalSocket::readyRead, this, &MpvControl::readMpvSocket);
     if (record_file.isEmpty()) {
         connect(mpv_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                [=](int exitCode, QProcess::ExitStatus exitStatus){
+                [=](int exitCode, QProcess::ExitStatus exitStatus) {
             Q_UNUSED(exitStatus);
             QCoreApplication::exit(exitCode);
         });
@@ -78,6 +78,9 @@ void MpvControl::readMpvSocket()
             }
             if (parser.getFa() != -1) {
                 emit onFont(-1, parser.getFa());
+            }
+            if (parser.getSpeed() != -1) {
+                emit onSpeed(parser.getSpeed());
             }
             if (parser.getFsUp()) {
                 emit onFontScaleDelta(0.15);

@@ -73,7 +73,7 @@ QStringList FFmpegControl::getFFmpegCmdline()
         ret.append("-xerror");
     }
     if (is_hls == true) {
-        ret << "-ss" << "5";
+//        ret << "-ss" << "5";
     }
     ret << "-i" << "unix://" + stream_socket_path;
     ret << "-i" << "unix://" + danmaku_socket_path;

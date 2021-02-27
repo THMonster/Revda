@@ -1,6 +1,7 @@
 #include "streamfinder.h"
 
-StreamFinder::StreamFinder(QString room_url, QString stream_socket, QObject *parent) : QObject(parent)
+StreamFinder::StreamFinder(QString room_url, QString stream_socket, QObject* parent)
+  : QObject(parent)
 {
     this->room_url = room_url;
     this->stream_socket = stream_socket;
@@ -21,12 +22,14 @@ StreamFinder::~StreamFinder()
     proc->waitForFinished(3000);
 }
 
-void StreamFinder::start()
+void
+StreamFinder::start()
 {
     startRequest();
 }
 
-void StreamFinder::restart()
+void
+StreamFinder::restart()
 {
     real_url.clear();
     if (streamer != nullptr) {
@@ -37,7 +40,8 @@ void StreamFinder::restart()
     startRequest();
 }
 
-void StreamFinder::stop()
+void
+StreamFinder::stop()
 {
     real_url.clear();
     if (streamer != nullptr) {
@@ -47,13 +51,15 @@ void StreamFinder::stop()
     }
 }
 
-void StreamFinder::setQuality(int q)
+void
+StreamFinder::setQuality(int q)
 {
     quality = q;
     emit streamError();
 }
 
-void StreamFinder::startRequest()
+void
+StreamFinder::startRequest()
 {
     qInfo() << "Finding stream...";
     proc->waitForFinished(10000);
@@ -61,7 +67,7 @@ void StreamFinder::startRequest()
     QStringList args;
     args.append(QStandardPaths::locate(QStandardPaths::AppDataLocation, "streamfinder.pyz"));
     args.append(room_url);
-    if (QFileInfo(QStringLiteral("/tmp/unlock-qlp")).exists()) {
+    if (QFileInfo::exists(QStringLiteral("/tmp/unlock-qlp"))) {
         if (room_url.contains(QStringLiteral("live.bilibili.com/"))) {
             QSettings s("QLivePlayer", "QLivePlayer", this);
             args.append(s.value("bcookie", QString("")).toString());
@@ -75,14 +81,15 @@ void StreamFinder::startRequest()
     });
 }
 
-void StreamFinder::slotSfpyResponse(int code, QProcess::ExitStatus es)
+void
+StreamFinder::slotSfpyResponse(int code, QProcess::ExitStatus es)
 {
     Q_UNUSED(code);
     Q_UNUSED(es);
     real_url.clear();
     QRegularExpression re("^(http.+)$");
     QRegularExpression re_title("^title: +([^\n]+)$");
-    while(!proc->atEnd()) {
+    while (!proc->atEnd()) {
         QString line(proc->readLine());
         QRegularExpressionMatch match = re_title.match(line);
         if (match.hasMatch()) {
@@ -91,14 +98,15 @@ void StreamFinder::slotSfpyResponse(int code, QProcess::ExitStatus es)
         }
         match = re.match(line);
         if (match.hasMatch() && real_url.isEmpty()) {
-             real_url = match.captured(1);
-             offline_counter = 0;
+            real_url = match.captured(1);
+            offline_counter = 0;
         }
     }
     startStreamer();
 }
 
-void StreamFinder::startStreamer()
+void
+StreamFinder::startStreamer()
 {
     if (real_url.isEmpty()) {
         qCritical() << "Stream url not found!";
@@ -112,32 +120,20 @@ void StreamFinder::startStreamer()
         if (real_url.right(5) == "::hls") {
             real_url.chop(5);
             streamer = new StreamerSl(real_url, stream_socket, quality, this);
-            connect(streamer, &Streamer::streamError, [this]() {
-                emit this->streamError();
-            });
-            connect(streamer, &Streamer::streamStart, [this]() {
-                emit this->streamStart();
-            });
+            connect(streamer, &Streamer::streamError, [this]() { emit this->streamError(); });
+            connect(streamer, &Streamer::streamStart, [this]() { emit this->streamStart(); });
             streamer->start();
             emit ready(title, 1);
         } else if (real_url.contains(".m3u8")) {
-            streamer = new StreamerSl("hls://"+real_url, stream_socket, quality, this);
-            connect(streamer, &Streamer::streamError, [this]() {
-                emit this->streamError();
-            });
-            connect(streamer, &Streamer::streamStart, [this]() {
-                emit this->streamStart();
-            });
+            streamer = new StreamerSl("hls://" + real_url, stream_socket, quality, this);
+            connect(streamer, &Streamer::streamError, [this]() { emit this->streamError(); });
+            connect(streamer, &Streamer::streamStart, [this]() { emit this->streamStart(); });
             streamer->start();
             emit this->ready(title, 1);
         } else {
             streamer = new StreamerFlv(real_url, stream_socket, this);
-            connect(streamer, &Streamer::streamError, [this]() {
-                emit this->streamError();
-            });
-            connect(streamer, &Streamer::streamStart, [this]() {
-                emit this->streamStart();
-            });
+            connect(streamer, &Streamer::streamError, [this]() { emit this->streamError(); });
+            connect(streamer, &Streamer::streamStart, [this]() { emit this->streamStart(); });
             streamer->start();
             emit ready(title, 0);
         }

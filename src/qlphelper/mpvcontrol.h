@@ -28,6 +28,7 @@ signals:
     void onFont(double fs, double fa);
     void onFontScaleDelta(double delta);
     void onToggleNick();
+    void onSpeed(int speed);
 
 private:
     QString room_title;

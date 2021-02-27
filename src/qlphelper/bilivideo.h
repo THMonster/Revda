@@ -1,19 +1,20 @@
 #ifndef BILIVIDEO_H
 #define BILIVIDEO_H
 
-#include <QtCore>
-#include <QLocalSocket>
 #include <QLocalServer>
-#include <QNetworkRequest>
-#include <QNetworkReply>
+#include <QLocalSocket>
 #include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QtCore>
+
 #include "qlpcmdparser.h"
 
 namespace BV {
 
 struct DanmakuChannelB
 {
-//    double duration;
+    //    double duration;
     int length;
     double begin_pts;
 };
@@ -21,16 +22,16 @@ struct DanmakuChannelB
 class MpvControl : public QObject
 {
     Q_OBJECT
-public:
-    explicit MpvControl(QObject *parent = nullptr);
+  public:
+    explicit MpvControl(QObject* parent = nullptr);
     ~MpvControl();
 
-public slots:
+  public slots:
     void start();
     void loadVideo(QString edl_url, QString ass_file_path, QString title);
     void readMpvSocket();
 
-signals:
+  signals:
     void requestReload();
     void playFinished();
     void jumpReceived(int n);
@@ -39,8 +40,9 @@ signals:
     void fileLoaded();
     void onFont(double fs, double fa);
     void onFontScaleDelta(double delta);
+    void onSpeed(int ms);
 
-private:
+  private:
     QString ass_path;
     QString mpv_socket_path;
     QLocalSocket* mpv_socket = nullptr;
@@ -50,8 +52,8 @@ private:
 class BiliVideo : public QObject
 {
     Q_OBJECT
-public:
-    explicit BiliVideo(QStringList args, QObject *parent = nullptr);
+  public:
+    explicit BiliVideo(QStringList args, QObject* parent = nullptr);
     ~BiliVideo();
 
     void run(QString url);
@@ -72,35 +74,35 @@ public:
     void goNextPage();
     void setFont(double fs, double fa);
     void setFontScaleDelta(double delta);
+    void setSpeed(int ms);
 
-signals:
+  signals:
     void dlFinished();
 
-
-private:
+  private:
     double speed = 8.0; // duration of single danmaku in second
     int res_x = 1920;
     int res_y = 1080;
     int font_size = 40;
     bool hevc = false;
-    MpvControl *mpv = nullptr;
+    MpvControl* mpv = nullptr;
     QStringList real_url;
     QString edl_url;
     QString title;
     QString cookie;
-    QFile *ass_file = nullptr;
+    QFile* ass_file = nullptr;
     QMultiMap<double, QPair<QString, int>> danmaku_map;
     DanmakuChannelB danmaku_channel[30];
-    QNetworkAccessManager *nam = nullptr;
-    QProcess *mpv_proc = nullptr;
-    QFile *saved_file = nullptr;
-    QFile *merge_file = nullptr;
+    QNetworkAccessManager* nam = nullptr;
+    QProcess* mpv_proc = nullptr;
+    QFile* saved_file = nullptr;
+    QFile* merge_file = nullptr;
     QList<QFile*> seg_file_list;
     QVector<QString> pages;
     int current_page = 1;
     QString base_url;
-    QNetworkReply *reply_dm = nullptr;
-    QNetworkReply *reply_info = nullptr;
+    QNetworkReply* reply_dm = nullptr;
+    QNetworkReply* reply_info = nullptr;
 };
 
 }

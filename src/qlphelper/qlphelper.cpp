@@ -31,7 +31,7 @@ QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
     ffmpeg_control = new FFmpegControl(stream_socket, danmaku_socket, ff2mpv_fifo, record_file, is_debug, strict_stream);
     mpv_control = new MpvControl(ff2mpv_fifo, record_file);
     stream_finder = new StreamFinder(room_url, stream_socket, this);
-    danmaku_launcher = new DanmakuLauncher(room_url, danmaku_socket, fs, fa);
+    danmaku_launcher = new DanmakuLauncher(room_url, danmaku_socket, fs, fa, QlpConfig::getInstance().readDanmakuSpeed());
 
     connect(stream_finder, &StreamFinder::streamError, this, &QLPHelper::restart);
     connect(stream_finder, &StreamFinder::streamStart, danmaku_launcher, &DanmakuLauncher::onStreamStart);
@@ -40,6 +40,7 @@ QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
     connect(mpv_control, &MpvControl::onQuality, stream_finder, &StreamFinder::setQuality);
     connect(mpv_control, &MpvControl::onFont, danmaku_launcher, &DanmakuLauncher::setFont);
     connect(mpv_control, &MpvControl::onFontScaleDelta, danmaku_launcher, &DanmakuLauncher::setFontScaleDelta);
+    connect(mpv_control, &MpvControl::onSpeed, danmaku_launcher, &DanmakuLauncher::setSpeed);
     connect(mpv_control, &MpvControl::onToggleNick, danmaku_launcher, &DanmakuLauncher::setToggleNick);
     connect(stream_finder, &StreamFinder::titleMatched, mpv_control, &MpvControl::setTitle);
     connect(stream_finder, &StreamFinder::ready, ffmpeg_control, &FFmpegControl::onStreamReady);

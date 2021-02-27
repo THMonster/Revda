@@ -1,6 +1,6 @@
 #include <QtCore>
 #include <QApplication>
-#include "mainwindow.h"
+#include "launcher.h"
 
 int main(int argc, char *argv[])
 {
@@ -15,8 +15,7 @@ int main(int argc, char *argv[])
 
     parser.process(a);
 
-    MainWindow w;
-    w.setWindowTitle("QLivePlayer");
-    w.show();
+    Launcher launcher;
+    launcher.start();
     return a.exec();
 }

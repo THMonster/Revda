@@ -25,6 +25,11 @@ QlpCmdParser::QlpCmdParser(QStringView s)
             if (ok == false) {
                 fa = -1;
             }
+        } else if ((t2.length() >= 2) && (t2[0].compare(QStringLiteral("speed"))) == 0) {
+            speed = t2[1].toInt(&ok);
+            if (ok == false) {
+                speed = -1;
+            }
         } else if ((t2.length() >= 2) && ((t2[0].compare(QStringLiteral("p")) == 0) || (t2[0].compare(QStringLiteral("page")) == 0))) {
             page = t2[1].toInt(&ok);
             if (ok == false) {
@@ -67,6 +72,11 @@ double QlpCmdParser::getFs()
 double QlpCmdParser::getFa()
 {
     return fa;
+}
+
+int QlpCmdParser::getSpeed()
+{
+    return speed;
 }
 
 bool QlpCmdParser::getPageNext()
