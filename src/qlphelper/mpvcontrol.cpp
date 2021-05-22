@@ -1,6 +1,7 @@
 #include "mpvcontrol.h"
 
-MpvControl::MpvControl(QFile* ff2mpv_fifo, QString record_file, QObject *parent) : QObject(parent)
+MpvControl::MpvControl(QFile* ff2mpv_fifo, QString record_file, QObject* parent)
+  : QObject(parent)
 {
     this->ff2mpv_fifo = ff2mpv_fifo;
     this->record_file = record_file;
@@ -9,8 +10,7 @@ MpvControl::MpvControl(QFile* ff2mpv_fifo, QString record_file, QObject *parent)
     mpv_socket = new QLocalSocket(this);
     connect(mpv_socket, &QLocalSocket::readyRead, this, &MpvControl::readMpvSocket);
     if (record_file.isEmpty()) {
-        connect(mpv_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
-                [=](int exitCode, QProcess::ExitStatus exitStatus) {
+        connect(mpv_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), [=](int exitCode, QProcess::ExitStatus exitStatus) {
             Q_UNUSED(exitStatus);
             QCoreApplication::exit(exitCode);
         });
@@ -24,20 +24,26 @@ MpvControl::~MpvControl()
     QLocalServer::removeServer(mpv_socket_path);
 }
 
-void MpvControl::start()
+void
+MpvControl::start()
 {
     if (record_file.isEmpty()) {
-        mpv_proc->start("mpv", QStringList() << "--idle=yes" << "--player-operation-mode=pseudo-gui" << "--cache=yes"
-                        << "--vf=lavfi=\"fps=60\"" << "--input-ipc-server=" + mpv_socket_path << ff2mpv_fifo->fileName());
+        mpv_proc->start("mpv", QStringList() << "--idle=yes"
+                                             << "--player-operation-mode=pseudo-gui"
+                                             << "--cache=yes"
+                                             << "--cache-pause-initial=yes"
+                                             << "--vf=lavfi=\"fps=60\""
+                                             << "--input-ipc-server=" + mpv_socket_path << ff2mpv_fifo->fileName());
         auto t = new QTimer(this);
-        connect(t, &QTimer::timeout, [&, t]() {
+        connect(t, &QTimer::timeout, this, [this, t]() {
             if (mpv_socket->state() != QLocalSocket::ConnectedState) {
                 mpv_socket->connectToServer(mpv_socket_path);
             } else {
                 mpv_socket->write(QString("{ \"command\": [\"keybind\", \"alt+r\", \"script-message qlp:r\"] }\n"
                                           "{ \"command\": [\"keybind\", \"alt+z\", \"script-message qlp:fsdown\"] }\n"
                                           "{ \"command\": [\"keybind\", \"alt+x\", \"script-message qlp:fsup\"] }\n"
-                                          "{ \"command\": [\"keybind\", \"alt+i\", \"script-message qlp:nick\"] }\n").toUtf8());
+                                          "{ \"command\": [\"keybind\", \"alt+i\", \"script-message qlp:nick\"] }\n")
+                                    .toUtf8());
                 t->stop();
                 t->deleteLater();
             }
@@ -48,7 +54,8 @@ void MpvControl::start()
     }
 }
 
-void MpvControl::restart()
+void
+MpvControl::restart()
 {
     if (record_file.isEmpty()) {
         // do loadfile
@@ -60,7 +67,8 @@ void MpvControl::restart()
     }
 }
 
-void MpvControl::readMpvSocket()
+void
+MpvControl::readMpvSocket()
 {
     while (mpv_socket->canReadLine()) {
         auto tmp = mpv_socket->readLine();
@@ -92,7 +100,7 @@ void MpvControl::readMpvSocket()
                 emit onToggleNick();
             }
         } else if (tmp.contains("file-loaded")) {
-            QTimer::singleShot(500, [=]() {
+            QTimer::singleShot(500, this, [this]() {
                 this->mpv_socket->write(QString("{ \"command\": [\"get_property\", \"video-params\"] }\n").toUtf8());
             });
             emit reloaded();
@@ -103,15 +111,16 @@ void MpvControl::readMpvSocket()
     }
 }
 
-void MpvControl::setTitle(QString title)
+void
+MpvControl::setTitle(QString title)
 {
     room_title = title;
 }
 
-
-QString MpvControl::genRecordFileName()
+QString
+MpvControl::genRecordFileName()
 {
-    if(record_file.right(4) == ".mkv" || record_file.right(4) == ".mp4" || record_file.right(4) == ".flv" ) {
+    if (record_file.right(4) == ".mkv" || record_file.right(4) == ".mp4" || record_file.right(4) == ".flv") {
         record_file.chop(4);
     }
     return record_file + "-" + QString::number(record_cnt++) + ".mkv";

@@ -1,7 +1,13 @@
 #include "ffmpegcontrol.h"
 
-FFmpegControl::FFmpegControl(QString stream_socket, QString danmaku_socket, QFile *ff2mpv_fifo, QString record_file, bool is_debug, bool strict_stream, QObject *parent)
-    : QObject(parent)
+FFmpegControl::FFmpegControl(QString stream_socket,
+                             QString danmaku_socket,
+                             QFile* ff2mpv_fifo,
+                             QString record_file,
+                             bool is_debug,
+                             bool strict_stream,
+                             QObject* parent)
+  : QObject(parent)
 {
     ff_proc = new QProcess(this);
     this->is_debug = is_debug;
@@ -18,21 +24,14 @@ FFmpegControl::~FFmpegControl()
     ff_proc->terminate();
 }
 
-void FFmpegControl::start()
+void
+FFmpegControl::start()
 {
     state = Idle;
 }
 
-void FFmpegControl::restart()
-{
-    qDebug() << "waiting for ffmpeg exit!";
-    ff_proc->waitForFinished(3000);
-    ff_proc->terminate();
-    ff_proc->waitForFinished();
-    state = Idle;
-}
-
-void FFmpegControl::stop()
+void
+FFmpegControl::restart()
 {
     qDebug() << "waiting for ffmpeg exit!";
     ff_proc->waitForFinished(3000);
@@ -41,12 +40,24 @@ void FFmpegControl::stop()
     state = Idle;
 }
 
-void FFmpegControl::setTitle(QString title)
+void
+FFmpegControl::stop()
+{
+    qDebug() << "waiting for ffmpeg exit!";
+    ff_proc->waitForFinished(3000);
+    ff_proc->terminate();
+    ff_proc->waitForFinished();
+    state = Idle;
+}
+
+void
+FFmpegControl::setTitle(QString title)
 {
     this->title = title;
 }
 
-void FFmpegControl::onStreamReady(QString title, int flag)
+void
+FFmpegControl::onStreamReady(QString title, int flag)
 {
     this->title = title;
     if ((flag & 0x01) == 1) {
@@ -59,32 +70,41 @@ void FFmpegControl::onStreamReady(QString title, int flag)
     }
 }
 
-inline
-QStringList FFmpegControl::getFFmpegCmdline()
+QStringList
+FFmpegControl::getFFmpegCmdline()
 {
     QStringList ret;
     ret.append("-y");
     if (is_debug) {
         ret.append("-report");
     } else {
-        ret << "-loglevel" << "quiet";
+        ret << "-loglevel"
+            << "quiet";
     }
-    if (strict_stream) {
+    if (strict_stream || is_hls) {
         ret.append("-xerror");
     }
-    if (is_hls == true) {
-//        ret << "-ss" << "5";
-    }
-    ret << "-i" << "unix://" + stream_socket_path;
-    ret << "-i" << "unix://" + danmaku_socket_path;
-    ret << "-map" << "0:v:0" << "-map" << "0:a:0" << "-map" << "1:s:0";
-    ret << "-c" << "copy";
+    ret << "-i"
+        << "unix://" + stream_socket_path;
+    ret << "-i"
+        << "unix://" + danmaku_socket_path;
+    ret << "-map"
+        << "0:v:0"
+        << "-map"
+        << "0:a:0"
+        << "-map"
+        << "1:s:0";
+    ret << "-c"
+        << "copy";
     if (is_hls == true) {
         // Error parsing AAC extradata, unable to determine samplerate
-        ret << "-c:a" << "pcm_s16le";
+        ret << "-c:a"
+            << "pcm_s16le";
     }
-    ret << "-metadata" << "title=" + title;
-    ret << "-f" << "matroska";
+    ret << "-metadata"
+        << "title=" + title;
+    ret << "-f"
+        << "matroska";
     if (record_file.isEmpty() || true) {
         ret.append(ff2mpv_fifo->fileName());
     } else {
@@ -93,8 +113,8 @@ QStringList FFmpegControl::getFFmpegCmdline()
     return ret;
 }
 
-inline
-QString FFmpegControl::genRecordFileName()
+inline QString
+FFmpegControl::genRecordFileName()
 {
     return record_file + "." + QString::number(record_cnt++);
 }

@@ -74,7 +74,7 @@ StreamFinder::startRequest()
         }
     }
     proc->start("python3", args);
-    QTimer::singleShot(20000, [this, tid]() {
+    QTimer::singleShot(20000, this, [this, tid]() {
         if (this->proc->state() == QProcess::Running && tid == this->proc_id) {
             this->proc->kill();
         }
@@ -109,7 +109,7 @@ void
 StreamFinder::startStreamer()
 {
     if (real_url.isEmpty()) {
-        qCritical() << "Stream url not found!";
+        qInfo() << "Stream url not found!";
         if (offline_counter > 30) {
             QCoreApplication::exit(0);
         } else {
@@ -117,23 +117,24 @@ StreamFinder::startStreamer()
             QTimer::singleShot(1000, this, &StreamFinder::startRequest);
         }
     } else {
+        qInfo().noquote() << "Playing: " << title;
         if (real_url.right(5) == "::hls") {
             real_url.chop(5);
             streamer = new StreamerSl(real_url, stream_socket, quality, this);
-            connect(streamer, &Streamer::streamError, [this]() { emit this->streamError(); });
-            connect(streamer, &Streamer::streamStart, [this]() { emit this->streamStart(); });
+            connect(streamer, &Streamer::streamError, this, [this]() { emit this->streamError(); });
+            connect(streamer, &Streamer::streamStart, this, [this]() { emit this->streamStart(); });
             streamer->start();
             emit ready(title, 1);
         } else if (real_url.contains(".m3u8")) {
-            streamer = new StreamerSl("hls://" + real_url, stream_socket, quality, this);
-            connect(streamer, &Streamer::streamError, [this]() { emit this->streamError(); });
-            connect(streamer, &Streamer::streamStart, [this]() { emit this->streamStart(); });
+            streamer = new StreamerHls(real_url, stream_socket, this);
+            connect(streamer, &Streamer::streamError, this, [this]() { emit this->streamError(); });
+            connect(streamer, &Streamer::streamStart, this, [this]() { emit this->streamStart(); });
             streamer->start();
             emit this->ready(title, 1);
         } else {
             streamer = new StreamerFlv(real_url, stream_socket, this);
-            connect(streamer, &Streamer::streamError, [this]() { emit this->streamError(); });
-            connect(streamer, &Streamer::streamStart, [this]() { emit this->streamStart(); });
+            connect(streamer, &Streamer::streamError, this, [this]() { emit this->streamError(); });
+            connect(streamer, &Streamer::streamStart, this, [this]() { emit this->streamStart(); });
             streamer->start();
             emit ready(title, 0);
         }

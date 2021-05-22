@@ -3,5 +3,6 @@ Version=1.0
 Name=QLivePlayer Mime
 NoDisplay=true
 Exec=qlphelper -u %u
+Icon=qliveplayer
 Type=Application
 MimeType=x-scheme-handler/qliveplayer;
