@@ -121,20 +121,32 @@ StreamFinder::startStreamer()
         if (real_url.right(5) == "::hls") {
             real_url.chop(5);
             streamer = new StreamerSl(real_url, stream_socket, quality, this);
-            connect(streamer, &Streamer::streamError, this, [this]() { emit this->streamError(); });
-            connect(streamer, &Streamer::streamStart, this, [this]() { emit this->streamStart(); });
+            connect(streamer, &Streamer::streamError, this, [this]() {
+                emit this->streamError();
+            });
+            connect(streamer, &Streamer::streamStart, this, [this]() {
+                emit this->streamStart();
+            });
             streamer->start();
             emit ready(title, 1);
         } else if (real_url.contains(".m3u8")) {
             streamer = new StreamerHls(real_url, stream_socket, this);
-            connect(streamer, &Streamer::streamError, this, [this]() { emit this->streamError(); });
-            connect(streamer, &Streamer::streamStart, this, [this]() { emit this->streamStart(); });
+            connect(streamer, &Streamer::streamError, this, [this]() {
+                emit this->streamError();
+            });
+            connect(streamer, &Streamer::streamStart, this, [this]() {
+                emit this->streamStart();
+            });
             streamer->start();
             emit this->ready(title, 1);
         } else {
-            streamer = new StreamerFlv(real_url, stream_socket, this);
-            connect(streamer, &Streamer::streamError, this, [this]() { emit this->streamError(); });
-            connect(streamer, &Streamer::streamStart, this, [this]() { emit this->streamStart(); });
+            streamer = new StreamerFlv(real_url, room_url, stream_socket, this);
+            connect(streamer, &Streamer::streamError, this, [this]() {
+                emit this->streamError();
+            });
+            connect(streamer, &Streamer::streamStart, this, [this]() {
+                emit this->streamStart();
+            });
             streamer->start();
             emit ready(title, 0);
         }

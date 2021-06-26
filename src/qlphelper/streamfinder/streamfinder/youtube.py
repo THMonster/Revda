@@ -46,13 +46,10 @@ class Youtube:
                 'html5': 1,
                 'el': 'detailpage'
             }
-            async with sess.request("get", f"https://www.youtube.com/get_video_info", params=p, headers=self.headers) as resp:
-                d = parse_qsl(await resp.text())
-                for k, v in d:
-                    if k == "player_response":
-                        j = json.loads(v)
-                        hls_manifest = j["streamingData"]["hlsManifestUrl"]
-                        break
+            # async with sess.request("get", f"https://www.youtube.com/get_video_info", params=p, headers=self.headers) as resp:
+            async with sess.request("get", f"https://www.youtube.com/watch?v={vid}", headers=self.headers) as resp:
+                hls_manifest = re.search(r'"hlsManifestUrl":"([^"]+)"', await resp.text()).group(1)
+                # print(hls_manifest)
                 # ret["play_url"] = j["streamingData"]["adaptiveFormats"][0]["url"]
             async with sess.request("get", hls_manifest) as resp:
                 for line in (await resp.text()).splitlines():

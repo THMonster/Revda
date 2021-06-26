@@ -1,12 +1,14 @@
+#include <QRandomGenerator>
 #include <QtGlobal>
 
 #include "streamer.h"
 
 #define qsl(s) QStringLiteral(s)
 
-StreamerFlv::StreamerFlv(QString real_url, QString socket_path, QObject* parent)
+StreamerFlv::StreamerFlv(QString real_url, QString room_url, QString socket_path, QObject* parent)
   : Streamer(parent)
   , real_url(real_url)
+  , room_url(room_url)
   , stream_socket_path(socket_path)
 {
     proc = new QProcess(this);
@@ -90,10 +92,10 @@ StreamerFlv::requestStream()
     qDebug() << real_url;
     proc->terminate();
     proc->waitForFinished();
+    quint32 v = QRandomGenerator::global()->bounded(21) + 68;
     proc->start(
-      "curl", QStringList() << "-H"
-                            << "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36"
-                            << "--speed-limit"
+      "curl", QStringList() << "-H" << qsl("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:%1.0) Gecko/20100101 Firefox/%2.0").arg(v).arg(v)
+                            << "-H" << qsl("Referer: %1").arg(room_url) << "--speed-limit"
                             << "1000"
                             << "--speed-time"
                             << "5"
@@ -193,6 +195,7 @@ StreamerHls::requestStream()
             download_buf[i].second = true;
             while (download_buf.constBegin() != download_buf.constEnd() && download_buf.constBegin().value().second == true) {
                 socket->write(download_buf.constBegin().value().first);
+                last_downloaded_hls_seg_a = download_buf.constBegin().key();
                 download_buf.remove(download_buf.constBegin().key());
             }
             reply->deleteLater();
@@ -208,17 +211,13 @@ StreamerHls::requestStream()
 void
 StreamerHls::requestHlsManifest()
 {
-    if (download_buf.constBegin() != download_buf.constEnd()) {
-        if (last_downloaded_hls_seg == download_buf.constBegin().key()) {
-            ++no_new_seg_time;
-        } else {
-            last_downloaded_hls_seg = download_buf.constBegin().key();
-            no_new_seg_time = 0;
-        }
+    if (last_downloaded_hls_seg_a != last_downloaded_hls_seg_b) {
+        no_new_seg_time = 0;
+        last_downloaded_hls_seg_b = last_downloaded_hls_seg_a;
     } else {
         ++no_new_seg_time;
     }
-    if (no_new_seg_time > 5) {
+    if (no_new_seg_time > 10 && last_downloaded_hls_seg_a != -1) {
         if (state != Closing) {
             emit streamError();
         }

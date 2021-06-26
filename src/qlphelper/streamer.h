@@ -42,7 +42,7 @@ class StreamerFlv : public Streamer
 {
     Q_OBJECT
   public:
-    explicit StreamerFlv(QString real_url, QString socket_path, QObject* parent = nullptr);
+    explicit StreamerFlv(QString real_url, QString room_url, QString socket_path, QObject* parent = nullptr);
     ~StreamerFlv();
 
     void start() override;
@@ -55,6 +55,7 @@ class StreamerFlv : public Streamer
 
   private:
     QString real_url;
+    QString room_url;
     QString stream_socket_path;
     QLocalServer* socket_server = nullptr;
     QLocalSocket* socket = nullptr;
@@ -81,7 +82,8 @@ class StreamerHls : public Streamer
     QNetworkAccessManager* nam = nullptr;
     qint64 hls_seg = -1;
     qint64 downloading_hls_seg = 0;
-    qint64 last_downloaded_hls_seg = -1;
+    qint64 last_downloaded_hls_seg_a = -1;
+    qint64 last_downloaded_hls_seg_b = -2;
     int no_new_seg_time = 0;
     QQueue<QByteArray> hls_seg_queue;
     QMap<qint64, QPair<QByteArray, bool>> download_buf;

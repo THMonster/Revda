@@ -1,6 +1,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QRandomGenerator>
 
 #include "sites.h"
 
@@ -71,7 +72,7 @@ Sites::httpFinished(QNetworkReply* reply)
             reply->deleteLater();
             return;
         }
-        emit roomDecoded(url, sl[1], sl[2], sl[3], sl[4] == "true" ? 1 : 0, open);
+        emit roomDecoded(url, sl[1], sl[2], sl[3], sl[4] == "2" ? 1 : 0, open);
     } else if (reply->request().url().toString().contains("youtube.com/channel")) {
         QStringList sl = decodeYoutube(reply->readAll());
         QString url;
@@ -183,11 +184,12 @@ Sites::decodeBilibili(const QString& s)
 QStringList
 Sites::decodeHuya(const QString& s)
 {
-    QRegularExpression re_rid("class=\"roomid\">[^0-9]*([0-9]+)[^0-9]+");
-    QRegularExpression re_title("liveRoomName *= *'([^']+)'");
-    QRegularExpression re_owner("ANTHOR_NICK *= *'([^']+)'");
-    QRegularExpression re_cover("picURL *= *'([^']+)'");
-    QRegularExpression re_status("ISLIVE *= *(true)");
+    QRegularExpression re_rid("\"roomInfo\":.+?\"lProfileRoom\":([0-9]+)");
+    QRegularExpression re_title("\"roomInfo\":.+?\"sRoomName\":\"([^\"]+)\"");
+    QRegularExpression re_owner("\"roomInfo\":.+?\"sNick\":\"([^\"]+)\"");
+    QRegularExpression re_cover("\"roomInfo\":.+?\"sScreenshot\":\"([^\"]+)\"");
+    QRegularExpression re_status("\"roomInfo\":.+?\"eLiveStatus\":([0-9])");
+    QRegularExpression re_avatar("\"roomInfo\":.+?\"sAvatar180\":\"([^\"]+)\"");
 
     QStringList ret;
     QRegularExpressionMatch match;
@@ -213,7 +215,12 @@ Sites::decodeHuya(const QString& s)
     if (match.hasMatch()) {
         ret.append(match.captured(1));
     } else {
-        ret.append("");
+        match = re_avatar.match(s);
+        if (match.hasMatch()) {
+            ret.append(match.captured(1));
+        } else {
+            ret.append("");
+        }
     }
     match = re_status.match(s);
     if (match.hasMatch()) {
@@ -344,13 +351,13 @@ Sites::genRequest(QString url, bool is_phone, bool eng_only, bool open)
     QNetworkRequest qnr(url);
     qnr.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
     //    qnr.setMaximumRedirectsAllowed(5);
+    quint32 v = QRandomGenerator::global()->bounded(21) + 68;
     if (is_phone) {
-        qnr.setRawHeader(QByteArray("user-agent"),
-                         QByteArray("Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) "
-                                    "Chrome/79.0.3945.117 Mobile Safari/537.36"));
+        auto ua = qsl("Mozilla/5.0 (Android 10; Mobile; rv:%1.0) Gecko/%2.0 Firefox/%3.0").arg(v).arg(v).arg(v);
+        qnr.setRawHeader(QByteArray("User-Agent"), ua.toLatin1());
     } else {
-        qnr.setRawHeader(QByteArray("user-agent"),
-                         QByteArray("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36"));
+        auto ua = qsl("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:%1.0) Gecko/20100101 Firefox/%2.0").arg(v).arg(v);
+        qnr.setRawHeader(QByteArray("User-Agent"), ua.toLatin1());
     }
     if (eng_only) {
         qnr.setRawHeader(QByteArray("accept-language"), QByteArray("en-US"));
