@@ -22,7 +22,8 @@ Sites::checkUrl(QString url, bool open)
     if (sl[0] == "do") {
         nam->get(genRequest("https://www.douyu.com/betard/" + sl[1], false, false, open));
     } else if (sl[0] == "bi") {
-        nam->get(genRequest("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], false, false, open));
+        nam->get(genRequest("https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom?room_id=" + sl[1], true, false, open));
+        //        nam->get(genRequest("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom?room_id=" + sl[1], false, false, open));
     } else if (sl[0] == "hu") {
         nam->get(genRequest("https://m.huya.com/" + sl[1], true, false, open));
     } else if (sl[0] == "yt") {
@@ -140,11 +141,11 @@ Sites::decodeDouyu(const QByteArray& s)
 QStringList
 Sites::decodeBilibili(const QString& s)
 {
-    QRegularExpression re_rid(qsl("\"room_info\"[^}]+?\"room_id\" *: *([0-9]+)"));
-    QRegularExpression re_title("\"room_info\"[^}]+?\"title\" *: *\"([^\"]+)\"");
-    QRegularExpression re_owner("\"base_info\"[^}]+?\"uname\" *: *\"([^\"]+)\"");
-    QRegularExpression re_cover("\"room_info\"[^}]+?\"keyframe\" *: *\"([^\"]+)\"");
-    QRegularExpression re_status("\"room_info\"[^}]+?\"live_status\" *: *([0-9]+)");
+    QRegularExpression re_rid(qsl("\"room_info\".+?\"room_id\" *: *([0-9]+)"));
+    QRegularExpression re_title("\"room_info\".+?\"title\" *: *\"([^\"]+)\"");
+    QRegularExpression re_owner("\"base_info\".+?\"uname\" *: *\"([^\"]+)\"");
+    QRegularExpression re_cover("\"room_info\".+?\"cover\" *: *\"([^\"]+)\"");
+    QRegularExpression re_status("\"room_info\".+?\"live_status\" *: *([0-9]+)");
 
     QStringList ret;
     QRegularExpressionMatch match;

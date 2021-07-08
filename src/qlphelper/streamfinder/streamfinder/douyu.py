@@ -51,7 +51,8 @@ class Douyu:
             "decryptedCodes": get_random_name(8),
             "resoult": get_random_name(8),
             "_ub98484234": get_random_name(8),
-            "workflow": match1(js_enc, "function ub98484234\(.+?\Weval\((\w+)\);"),
+            #"workflow": match1(js_enc, "function ub98484234\(.+?\Weval\((\w+)\);"),
+            "workflow": get_random_name(8),
         }
         js_dom = """
         {debugMessages} = {{{decryptedCodes}: []}};
