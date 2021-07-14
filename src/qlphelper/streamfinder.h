@@ -9,8 +9,8 @@
 class StreamFinder : public QObject
 {
     Q_OBJECT
-public:
-    explicit StreamFinder(QString room_url, QString stream_socket, QObject *parent = nullptr);
+  public:
+    explicit StreamFinder(QString room_url, QString stream_socket, QObject* parent = nullptr);
     ~StreamFinder();
 
     void start();
@@ -18,26 +18,24 @@ public:
     void stop();
     void setQuality(int q);
 
-signals:
+  signals:
     void titleMatched(QString title);
     void streamError();
     void streamStart();
     void ready(QString title, int flag);
 
-
-private:
+  private:
     QString room_url;
     QString stream_socket;
     QString real_url;
     QString title;
-    QProcess *proc = nullptr;
+    QProcess* proc = nullptr;
     int proc_id = 0;
     int offline_counter = 0;
-    Streamer *streamer = nullptr;
+    Streamer* streamer = nullptr;
     int quality = 1;
 
     void startRequest();
-    void slotSfpyResponse(int code, QProcess::ExitStatus es);
     void startStreamer();
 };
 

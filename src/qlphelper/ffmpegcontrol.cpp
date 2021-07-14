@@ -64,6 +64,7 @@ FFmpegControl::onStreamReady(QString title, int flag)
         is_hls = true;
     }
     if (state == Idle) {
+        qDebug() << "start ffmpeg proc";
         ff_proc->start("ffmpeg", getFFmpegCmdline());
         ff_proc->waitForStarted();
         state = Running;

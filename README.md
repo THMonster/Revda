@@ -25,14 +25,11 @@ Linux平台下的弹幕直播播放器。
 ## Requirements
 * cmake (for build)
 * extra-cmake-modules (for build)
+* a proper [rust](https://kaisery.github.io/trpl-zh-cn/ch01-01-installation.html) compiler with cargo (for build)
 * [mpv](https://github.com/mpv-player/mpv)
 * ffmpeg
 * curl
 * Qt5 (>=5.15)
-* python3 (>=3.7)
-* python-aiohttp
-* python-protobuf (optional, for YouTube LiveChat support)
-* [streamlink](https://streamlink.github.io/) (optional, for foreign streaming service support)
 
 ## Installation
 
@@ -61,7 +58,7 @@ Thanks for [@jian-lin](https://github.com/jian-lin)'s maintenance, and check [th
 
 ### From source
 ```
-git clone https://github.com/IsoaSFlus/QLivePlayer.git
+git clone https://github.com/IsoaSFlus/QLivePlayer.git --recursive
 cd QLivePlayer
 mkdir build
 cd ./build

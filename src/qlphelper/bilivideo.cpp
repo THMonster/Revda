@@ -1,8 +1,11 @@
 #include "bilivideo.h"
+#include "../Binding.h"
 #include "../qlpconfig.h"
 #include <QStringBuilder>
 #include <iostream>
+
 using namespace BV;
+#define qsl(s) QStringLiteral(s)
 
 MpvControl::MpvControl(QObject* parent)
   : QObject(parent)
@@ -31,11 +34,10 @@ MpvControl::start()
     args.append("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                 "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36");
     args.append("--http-header-fields-add=Referer: https://www.bilibili.com/");
-    mpv_proc->start("mpv",
-                    args << "--idle=yes"
-                         << "--player-operation-mode=pseudo-gui"
-                         << "--vf=lavfi=\"fps=60\""
-                         << "--input-ipc-server=" + mpv_socket_path);
+    mpv_proc->start("mpv", args << "--idle=yes"
+                                << "--player-operation-mode=pseudo-gui"
+                                << "--vf=lavfi=\"fps=60\""
+                                << "--input-ipc-server=" + mpv_socket_path);
     auto t = new QTimer(this);
     connect(t, &QTimer::timeout, [this, t]() {
         if (mpv_socket->state() != QLocalSocket::ConnectedState) {
@@ -141,14 +143,18 @@ BiliVideo::BiliVideo(QStringList args, QObject* parent)
 
     mpv = new MpvControl(this);
     connect(mpv, &MpvControl::jumpReceived, this, &BiliVideo::playPage);
-    connect(mpv, &MpvControl::requestReload, [this]() { this->playPage(this->current_page); });
+    connect(mpv, &MpvControl::requestReload, [this]() {
+        this->playPage(this->current_page);
+    });
     connect(mpv, &MpvControl::prevReceived, this, &BiliVideo::goPrevPage);
     connect(mpv, &MpvControl::nextReceived, this, &BiliVideo::goNextPage);
     //    connect(mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
     connect(mpv, &MpvControl::onFont, this, &BiliVideo::setFont);
     connect(mpv, &MpvControl::onSpeed, this, &BiliVideo::setSpeed);
     connect(mpv, &MpvControl::onFontScaleDelta, this, &BiliVideo::setFontScaleDelta);
-    connect(mpv, &MpvControl::fileLoaded, [this]() { connect(this->mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage); });
+    connect(mpv, &MpvControl::fileLoaded, [this]() {
+        connect(this->mpv, &MpvControl::playFinished, this, &BiliVideo::autoNextPage);
+    });
 }
 
 BiliVideo::~BiliVideo()
@@ -179,9 +185,8 @@ BiliVideo::run(QString url)
     base_url = qu.adjusted(QUrl::RemoveQuery).toString();
     QNetworkRequest qnr(base_url);
     qnr.setMaximumRedirectsAllowed(5);
-    qnr.setRawHeader(QByteArray("User-Agent"),
-                     QByteArray("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, "
-                                "like Gecko) Chrome/79.0.3945.117 Safari/537.36"));
+    qnr.setRawHeader(QByteArray("User-Agent"), QByteArray("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, "
+                                                          "like Gecko) Chrome/79.0.3945.117 Safari/537.36"));
     qnr.setRawHeader(QByteArray("Referer"), QByteArray("https://www.bilibili.com/"));
     reply_info = nam->get(qnr);
     connect(reply_info, &QNetworkReply::finished, this, &BiliVideo::slotHttpVideoInfo);
@@ -276,12 +281,7 @@ BiliVideo::genAss()
             } else {
                 out << QStringLiteral("Dialogue: "
                                       "0,%4,%5,Default,,0,0,0,,{\\1c&%6&\\move(%7,%1,%2,%1)}%3")
-                         .arg(QString::number(avail_channel * (font_size)),
-                              QString::number(0 - display_length),
-                              iter.value().first.mid(1),
-                              t1,
-                              t2,
-                              c,
+                         .arg(QString::number(avail_channel * (font_size)), QString::number(0 - display_length), iter.value().first.mid(1), t1, t2, c,
                               QString::number(res_x))
                     << "\n";
             }
@@ -300,17 +300,16 @@ void
 BiliVideo::setRes()
 {
     QProcess p;
-    p.start("ffprobe",
-            QStringList() << "-show_streams"
-                          << "-loglevel"
-                          << "quiet"
-                          << "-select_streams"
-                          << "v"
-                          << "-user_agent"
-                          << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                             "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
-                          << "-headers"
-                          << "Referer: https://www.bilibili.com/" << real_url[0]);
+    p.start("ffprobe", QStringList() << "-show_streams"
+                                     << "-loglevel"
+                                     << "quiet"
+                                     << "-select_streams"
+                                     << "v"
+                                     << "-user_agent"
+                                     << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                                        "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+                                     << "-headers"
+                                     << "Referer: https://www.bilibili.com/" << real_url[0]);
     p.waitForStarted(5000);
     p.waitForFinished();
     QRegularExpression reh("\\nheight=([0-9]+)");
@@ -463,40 +462,40 @@ void
 BiliVideo::downloadVideo()
 {
     QProcess* p = new QProcess(this);
-    connect(p, &QProcess::readyReadStandardError, [=]() { std::cerr << p->readAllStandardError().toStdString(); });
+    connect(p, &QProcess::readyReadStandardError, [=]() {
+        std::cerr << p->readAllStandardError().toStdString();
+    });
     connect(p, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), [=](int exitCode, QProcess::ExitStatus exitStatus) {
         Q_UNUSED(exitStatus);
         QCoreApplication::exit(exitCode);
     });
     if (real_url[0].contains(".m4s")) {
         if (real_url.length() == 3 && hevc == true) {
-            p->start("ffmpeg",
-                     QStringList() << "-user_agent"
-                                   << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                                      "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
-                                   << "-headers"
-                                   << "Referer: https://www.bilibili.com/"
-                                   << "-i" << real_url[2] << "-user_agent"
-                                   << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                                      "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
-                                   << "-headers"
-                                   << "Referer: https://www.bilibili.com/"
-                                   << "-i" << real_url[1] << "-i" << ass_file->fileName() << "-c"
-                                   << "copy" << saved_file->fileName());
+            p->start("ffmpeg", QStringList() << "-user_agent"
+                                             << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                                                "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+                                             << "-headers"
+                                             << "Referer: https://www.bilibili.com/"
+                                             << "-i" << real_url[2] << "-user_agent"
+                                             << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                                                "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+                                             << "-headers"
+                                             << "Referer: https://www.bilibili.com/"
+                                             << "-i" << real_url[1] << "-i" << ass_file->fileName() << "-c"
+                                             << "copy" << saved_file->fileName());
         } else {
-            p->start("ffmpeg",
-                     QStringList() << "-user_agent"
-                                   << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                                      "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
-                                   << "-headers"
-                                   << "Referer: https://www.bilibili.com/"
-                                   << "-i" << real_url[0] << "-user_agent"
-                                   << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                                      "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
-                                   << "-headers"
-                                   << "Referer: https://www.bilibili.com/"
-                                   << "-i" << real_url[1] << "-i" << ass_file->fileName() << "-c"
-                                   << "copy" << saved_file->fileName());
+            p->start("ffmpeg", QStringList() << "-user_agent"
+                                             << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                                                "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+                                             << "-headers"
+                                             << "Referer: https://www.bilibili.com/"
+                                             << "-i" << real_url[0] << "-user_agent"
+                                             << "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                                                "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+                                             << "-headers"
+                                             << "Referer: https://www.bilibili.com/"
+                                             << "-i" << real_url[1] << "-i" << ass_file->fileName() << "-c"
+                                             << "copy" << saved_file->fileName());
         }
     } else {
         startSegFifoProc();
@@ -510,13 +509,12 @@ BiliVideo::downloadVideo()
             out << "\n";
         }
         this->merge_file->close();
-        p->start("ffmpeg",
-                 QStringList() << "-f"
-                               << "concat"
-                               << "-safe"
-                               << "0"
-                               << "-i" << this->merge_file->fileName() << "-i" << this->ass_file->fileName() << "-c"
-                               << "copy" << this->saved_file->fileName());
+        p->start("ffmpeg", QStringList() << "-f"
+                                         << "concat"
+                                         << "-safe"
+                                         << "0"
+                                         << "-i" << this->merge_file->fileName() << "-i" << this->ass_file->fileName() << "-c"
+                                         << "copy" << this->saved_file->fileName());
     }
 }
 
@@ -534,13 +532,12 @@ BiliVideo::startSegFifoProc()
         QFile* f = new QFile(QString("/tmp/qlp-%1.flv").arg(QUuid::createUuid().toString()), this);
         seg_file_list.append(f);
         QProcess::execute("mkfifo", QStringList() << seg_file_list.last()->fileName());
-        p->start("curl",
-                 QStringList() << u << "-H"
-                               << "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-                                  "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
-                               << "-H"
-                               << "Referer: https://www.bilibili.com/"
-                               << "-o" << seg_file_list.last()->fileName());
+        p->start("curl", QStringList() << u << "-H"
+                                       << "User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+                                          "(KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+                                       << "-H"
+                                       << "Referer: https://www.bilibili.com/"
+                                       << "-o" << seg_file_list.last()->fileName());
     }
 }
 
@@ -551,33 +548,20 @@ BiliVideo::requestRealUrl(QString url)
     title.clear();
     res_x = 1920;
     res_y = 1080;
-    QProcess p;
-    QStringList args;
-    args.append(QStandardPaths::locate(QStandardPaths::AppDataLocation, "streamfinder.pyz"));
-    args.append(url);
-    args.append(cookie);
-    qDebug() << args;
-    p.start("python3", args);
-    p.waitForStarted(5000);
-    p.waitForFinished();
-    QRegularExpression re("^(http.+)$");
-    while (!p.atEnd()) {
-        QString line(p.readLine());
-        qDebug() << line;
-        if (line.left(6) == "title:") {
-            line.remove(0, 6);
-            line.chop(1);
-            this->title = line;
-            continue;
-        }
-        QRegularExpressionMatch match = re.match(line);
-        if (match.hasMatch()) {
-            real_url.append(match.captured(1));
-        }
-    }
-    if (real_url.isEmpty()) {
+    QLivePlayerLib qlib;
+    auto res = qlib.get_url(url, cookie);
+    if (res.startsWith("qlp_nostream")) {
         qInfo() << "No valid url fetched!";
         exit(1);
+    } else {
+        auto u = res.split("\n", Qt::SkipEmptyParts);
+        this->title = u.first();
+        u.pop_front();
+        for (const auto& i : u) {
+            if (i.startsWith(qsl("http"))) {
+                this->real_url.append(i);
+            }
+        }
     }
 
     setRes();
@@ -613,7 +597,9 @@ BiliVideo::playPage(int p)
 void
 BiliVideo::autoNextPage()
 {
-    QTimer::singleShot(3000, [this]() { this->playPage(this->current_page + 1); });
+    QTimer::singleShot(3000, [this]() {
+        this->playPage(this->current_page + 1);
+    });
 }
 
 void

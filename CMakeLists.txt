@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 # SET(CMAKE_INSTALL_PREFIX /usr CACHE PATH "Set install prefix.")
 project(QLivePlayer)
-set(PROJECT_VERSION "3.22.4")
+set(PROJECT_VERSION "4.0.0")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
@@ -15,6 +15,13 @@ find_program(MPV_PATH NAMES mpv REQUIRED)
 IF(${MPV_PATH} STREQUAL MPV_PATH-NOTFOUND)
 	message(FATAL_ERROR "mpv not found!!!")
 ENDIF()
+
+include(FeatureSummary)
+find_package(Cargo REQUIRED)
+find_package(Rust REQUIRED)
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+find_package(Threads REQUIRED)
+find_package(OpenSSL REQUIRED)
 find_package(Qt5 COMPONENTS Core Gui Widgets Network Quick Qml QuickWidgets REQUIRED)
 
 install(FILES "icon/qliveplayer.svg"

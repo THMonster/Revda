@@ -1,17 +1,18 @@
-﻿#include <QtCore>
-#include <QProcess>
-#include <cstdlib>
-#include <csignal>
+﻿#include <QProcess>
 #include <QStringBuilder>
+#include <QtConcurrent/QtConcurrent>
+#include <QtCore>
+#include <csignal>
+#include <cstdlib>
 
+#include "../qlpconfig.h"
 #include "danmakulauncher.h"
 #include "mkv_header.h"
-#include "../qlpconfig.h"
 
-#define __PICK(n, i)   (((n)>>(8*i))&0xFF)
+#define __PICK(n, i) (((n) >> (8 * i)) & 0xFF)
 
 DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket, double fs, double fa, int speed)
-    : speed(speed)
+  : speed(speed)
 {
     fk = new FudujiKiller();
     this->danmaku_socket_path = danmaku_socket;
@@ -31,39 +32,48 @@ DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket, doubl
     font_size = 40 * fs;
     channel_num = 540 / font_size;
     ++channel_num;
-    font_alpha = QStringLiteral("%1").arg((uint)(255*fa), 2, 16, QLatin1Char('0'));
+    font_alpha = QStringLiteral("%1").arg((uint)(255 * fa), 2, 16, QLatin1Char('0'));
 
-    dmcPyProcess = new QProcess(this);
-    connect(dmcPyProcess, &QProcess::readyRead, this, &DanmakuLauncher::loadDanmaku);
+    qlp_lib = new QLivePlayerLib(this);
+    //    auto fu = QtConcurrent::run(qlp_lib, &QLivePlayerLib::run_danmaku_client, this->room_url);
+    auto fu = QtConcurrent::run([this]() {
+        qlp_lib->run_danmaku_client(this->room_url);
+        qInfo() << "danmaku client exit";
+    });
     connect(launch_timer, &QTimer::timeout, this, &DanmakuLauncher::launchDanmaku);
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this, &DanmakuLauncher::stopDanmakuClient);
 }
 
 DanmakuLauncher::~DanmakuLauncher()
 {
     launch_timer->stop();
     delete fk;
-    dmcPyProcess->terminate();
-    dmcPyProcess->waitForFinished(3000);
 }
 
-void DanmakuLauncher::startDmcPy()
+void
+DanmakuLauncher::fetchDanmaku()
 {
-    dmcPyProcess->terminate();
-    dmcPyProcess->waitForFinished();
-    QStringList dmcPy;
-    dmcPy.append(QStandardPaths::locate(QStandardPaths::AppDataLocation, "dmc.pyz"));
-    dmcPy.append(room_url);
-    dmcPyProcess->start("python3", dmcPy);
-    qDebug() << "Danmaku process started!";
+    auto dms = qlp_lib->get_danmaku().split("\n", Qt::SkipEmptyParts);
+    for (const auto& d : dms) {
+        this->danmaku_queue.enqueue(d);
+    }
 }
 
-void DanmakuLauncher::setScale(int w, int h)
+void
+DanmakuLauncher::stopDanmakuClient()
+{
+    qlp_lib->stop_danmaku_client();
+}
+
+void
+DanmakuLauncher::setScale(int w, int h)
 {
     scale = 16.0 * h / w / 9.0;
     qDebug() << w << h << scale;
 }
 
-void DanmakuLauncher::setFont(double fs, double fa)
+void
+DanmakuLauncher::setFont(double fs, double fa)
 {
     if (fs > 0) {
         font_size = 40 * fs;
@@ -72,22 +82,25 @@ void DanmakuLauncher::setFont(double fs, double fa)
         QlpConfig::getInstance().writeFontScale(fs);
     }
     if (fa >= 0 && fa <= 1) {
-        font_alpha = QStringLiteral("%1").arg((uint)(255*fa), 2, 16, QLatin1Char('0'));
+        font_alpha = QStringLiteral("%1").arg((uint)(255 * fa), 2, 16, QLatin1Char('0'));
         QlpConfig::getInstance().writeFontAlpha(fa);
     }
 }
 
-void DanmakuLauncher::setFontScaleDelta(double delta)
+void
+DanmakuLauncher::setFontScaleDelta(double delta)
 {
     setFont((font_size + (40 * delta)) / 40, -1);
 }
 
-void DanmakuLauncher::setToggleNick()
+void
+DanmakuLauncher::setToggleNick()
 {
     show_nick = !show_nick;
 }
 
-void DanmakuLauncher::setSpeed(int ms)
+void
+DanmakuLauncher::setSpeed(int ms)
 {
     if (ms > 500 && ms < 30000) {
         speed = ms;
@@ -95,14 +108,15 @@ void DanmakuLauncher::setSpeed(int ms)
     }
 }
 
-int DanmakuLauncher::getDankamuDisplayLength(QString dm, int fontsize)
+int
+DanmakuLauncher::getDankamuDisplayLength(QString dm, int fontsize)
 {
     int ascii_num = 0;
     int dm_size = dm.size();
     if (dm_size <= 0) {
         return fontsize * 0.75 * 10;
     }
-    const QChar *data = dm.constData();
+    const QChar* data = dm.constData();
     while (dm_size > 0) {
         if (data->unicode() < 128) {
             ++ascii_num;
@@ -113,16 +127,10 @@ int DanmakuLauncher::getDankamuDisplayLength(QString dm, int fontsize)
     return ((fontsize * 0.75 * dm.size()) - (fontsize * 0.25 * ascii_num)) * scale;
 }
 
-
-void DanmakuLauncher::loadDanmaku()
+void
+DanmakuLauncher::launchDanmaku()
 {
-    while(dmcPyProcess->canReadLine()) {
-        danmaku_queue.enqueue(dmcPyProcess->readLine());
-    }
-}
-
-void DanmakuLauncher::launchDanmaku()
-{
+    fetchDanmaku();
     fk->addTime();
     fk->ebb();
     launchVoidDanmaku(1);
@@ -139,8 +147,7 @@ void DanmakuLauncher::launchDanmaku()
     quint64 buf;
     while (!danmaku_queue.isEmpty()) {
         dm = danmaku_queue.dequeue();
-        dm.chop(1);
-        QStringView sv1{dm};
+        QStringView sv1{ dm };
         color = sv1.mid(4, 2) % sv1.mid(2, 2) % sv1.mid(0, 2);
         dm.remove(0, 6);
         qInfo().noquote() << dm;
@@ -151,8 +158,9 @@ void DanmakuLauncher::launchDanmaku()
         if (!fk->checkDanmaku(dm)) {
             continue;
         }
-        dm.replace(QRegularExpression(QStringLiteral("[\\x{1F300}-\\x{1F5FF}|\\x{1F1E6}-\\x{1F1FF}|\\x{2700}-\\x{27BF}|\\x{1F900}-\\x{1F9FF}|\\x{1F600}-\\x{1F64F}|\\x{1F680}-\\x{1F6FF}|\\x{2600}-\\x{26FF}]"))
-                   , QStringLiteral("[em]")); // remove emoji
+        dm.replace(QRegularExpression(QStringLiteral("[\\x{1F300}-\\x{1F5FF}|\\x{1F1E6}-\\x{1F1FF}|\\x{2700}-\\x{27BF}|\\x{1F900}-\\x{1F9FF}|\\x{"
+                                                     "1F600}-\\x{1F64F}|\\x{1F680}-\\x{1F6FF}|\\x{2600}-\\x{26FF}]")),
+                   QStringLiteral("[em]")); // remove emoji
         if (show_nick) {
             dm = speaker + QStringLiteral(": ") + dm;
         }
@@ -161,8 +169,8 @@ void DanmakuLauncher::launchDanmaku()
         if (avail_dc >= 0) {
             QByteArray tmp;
             ass_event = QStringLiteral("%4,0,Default,%5,0,0,0,,{\\alpha%8\\fs%7\\1c&%6&\\move(1920,%1,%2,%1)}%3")
-                    .arg(QString::number(avail_dc*(font_size)), QString::number(0-display_length),
-                         dm, QString::number(read_order), speaker, color, QString::number(font_size), font_alpha);
+                          .arg(QString::number(avail_dc * (font_size)), QString::number(0 - display_length), dm, QString::number(read_order), speaker,
+                               color, QString::number(font_size), font_alpha);
             ++read_order;
             tmp = ass_event.toLocal8Bit();
             tmp.prepend((char)0x00);
@@ -176,7 +184,7 @@ void DanmakuLauncher::launchDanmaku()
             tmp.prepend(__PICK(buf, 3));
             tmp.prepend(0xa1);
             buf = 0x849b;
-            tmp.append((const char *)&buf, 2);
+            tmp.append((const char*)&buf, 2);
             buf = this->speed;
             tmp.append(__PICK(buf, 3));
             tmp.append(__PICK(buf, 2));
@@ -203,9 +211,8 @@ void DanmakuLauncher::launchDanmaku()
             if (avail_dc >= 0) {
                 QByteArray tmp;
                 ass_event = QStringLiteral("%4,0,Default,%5,0,0,0,,{\\alpha%8\\fs%7\\1c&%6&\\move(1920,%1,%2,%1)}%3")
-                        .arg(QString::number(avail_dc*(font_size)), QString::number(0-display_length),
-                             (*iter).at(2), QString::number(read_order), (*iter).at(1),
-                             (*iter).at(0), QString::number(font_size), font_alpha);
+                              .arg(QString::number(avail_dc * (font_size)), QString::number(0 - display_length), (*iter).at(2),
+                                   QString::number(read_order), (*iter).at(1), (*iter).at(0), QString::number(font_size), font_alpha);
                 ++read_order;
                 tmp = ass_event.toLocal8Bit();
                 tmp.prepend((char)0x00);
@@ -219,7 +226,7 @@ void DanmakuLauncher::launchDanmaku()
                 tmp.prepend(__PICK(buf, 3));
                 tmp.prepend(0xa1);
                 buf = 0x849b;
-                tmp.append((const char *)&buf, 2);
+                tmp.append((const char*)&buf, 2);
                 buf = this->speed;
                 tmp.append(__PICK(buf, 3));
                 tmp.append(__PICK(buf, 2));
@@ -269,7 +276,8 @@ void DanmakuLauncher::launchDanmaku()
     socket->write(bin_out);
 }
 
-void DanmakuLauncher::launchVoidDanmaku(int cnt)
+void
+DanmakuLauncher::launchVoidDanmaku(int cnt)
 {
     QString ass_event;
     QByteArray bin_out;
@@ -333,16 +341,16 @@ void DanmakuLauncher::launchVoidDanmaku(int cnt)
     socket->write(bin_out);
 }
 
-int DanmakuLauncher::getAvailDanmakuChannel(int len)
+int
+DanmakuLauncher::getAvailDanmakuChannel(int len)
 {
     double s = (1920.0 + len) / this->speed;
     qint64 c_pts = timer.elapsed() + pts;
-    for(int i = 0; i < channel_num; i++)
-    {
+    for (int i = 0; i < channel_num; i++) {
         if (((this->speed - c_pts + danmaku_channel[i].begin_pts) * s) > 1920) {
             continue;
         } else {
-            if (((danmaku_channel[i].length + 1920.0) * (c_pts - danmaku_channel[i].begin_pts) / this->speed) < danmaku_channel[i].length ) {
+            if (((danmaku_channel[i].length + 1920.0) * (c_pts - danmaku_channel[i].begin_pts) / this->speed) < danmaku_channel[i].length) {
                 continue;
             } else {
                 danmaku_channel[i].length = len;
@@ -354,13 +362,14 @@ int DanmakuLauncher::getAvailDanmakuChannel(int len)
     return -4;
 }
 
-void DanmakuLauncher::start()
+void
+DanmakuLauncher::start()
 {
     state = NotRunning;
-    startDmcPy();
 }
 
-void DanmakuLauncher::restart()
+void
+DanmakuLauncher::restart()
 {
     launch_timer->stop();
     if (socket != nullptr) {
@@ -374,10 +383,10 @@ void DanmakuLauncher::restart()
         danmaku_channel[i].begin_pts = -10000;
     }
     state = NotRunning;
-    startDmcPy();
 }
 
-void DanmakuLauncher::stop()
+void
+DanmakuLauncher::stop()
 {
     launch_timer->stop();
     if (socket != nullptr) {
@@ -385,16 +394,22 @@ void DanmakuLauncher::stop()
         socket->deleteLater();
         socket = nullptr;
     }
+    read_order = 0;
+    for (int i = 0; i < 30; i++) {
+        danmaku_channel[i].length = 1;
+        danmaku_channel[i].begin_pts = -10000;
+    }
     state = NotRunning;
 }
 
-void DanmakuLauncher::onStreamStart()
+void
+DanmakuLauncher::onStreamStart()
 {
     if (state == WaitingForStream) {
         timer.restart();
         launch_timer->start(200);
         state = Running;
-        QTimer::singleShot(100, [this]() {
+        QTimer::singleShot(100, this, [this]() {
             launchVoidDanmaku(50);
         });
     } else {
@@ -402,7 +417,8 @@ void DanmakuLauncher::onStreamStart()
     }
 }
 
-void DanmakuLauncher::setSocket()
+void
+DanmakuLauncher::setSocket()
 {
     if (socket != nullptr) {
         socket->abort();
@@ -415,7 +431,7 @@ void DanmakuLauncher::setSocket()
         timer.restart();
         launch_timer->start(200);
         state = Running;
-        QTimer::singleShot(100, [this]() {
+        QTimer::singleShot(100, this, [this]() {
             launchVoidDanmaku(50);
         });
     } else {

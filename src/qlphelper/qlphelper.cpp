@@ -1,7 +1,8 @@
 #include "qlphelper.h"
 #include "../qlpconfig.h"
 
-QLPHelper::QLPHelper(QStringList args, QObject *parent) : QObject(parent)
+QLPHelper::QLPHelper(QStringList args, QObject* parent)
+  : QObject(parent)
 {
     room_url = args.at(0);
     record_file = args.at(1).compare("null") == 0 ? "" : args.at(1);
@@ -59,10 +60,10 @@ QLPHelper::~QLPHelper()
 
     ff2mpv_fifo->close();
     ff2mpv_fifo->remove();
-
 }
 
-void QLPHelper::start()
+void
+QLPHelper::start()
 {
     stream_finder->start();
     qDebug() << "streamer started";
@@ -74,22 +75,31 @@ void QLPHelper::start()
     qDebug() << "mpv started";
 }
 
-void QLPHelper::restart()
+void
+QLPHelper::restart()
 {
     // Be careful of the order of restart, due to ffmpeg's IO policy.
     // If the last input of ffmpeg is stucked, the whole ffmpeg will be blocked.
-    danmaku_launcher->restart();
-    qDebug() << "danmaku launcher started";
-    stream_finder->restart();
-    qDebug() << "streamer started";
-
-    ffmpeg_control->restart();
-    qDebug() << "ffmpeg started";
-    mpv_control->restart();
-    qDebug() << "mpv started";
+    stream_finder->stop();
+    qDebug() << "streamer stopped";
+    danmaku_launcher->stop();
+    qDebug() << "danmaku launcher stopped";
+    ffmpeg_control->stop();
+    qDebug() << "ffmpeg stopped";
+    QTimer::singleShot(500, this, [this]() {
+        stream_finder->start();
+        qDebug() << "streamer started";
+        danmaku_launcher->start();
+        qDebug() << "danmaku launcher started";
+        ffmpeg_control->start();
+        qDebug() << "ffmpeg started";
+        mpv_control->restart();
+        qDebug() << "mpv started";
+    });
 }
 
-void QLPHelper::restarted()
+void
+QLPHelper::restarted()
 {
     reloading = false;
     streaming = true;

@@ -1,3 +1,4 @@
-[submodule "src/qlphelper/dmc/dmc/dm"]
-	path = src/qlphelper/dmc/dmc/dm
-	url = https://github.com/IsoaSFlus/danmaku
+[submodule "src/QLivePlayer-Lib"]
+	path = src/QLivePlayer-Lib
+	url = https://github.com/IsoaSFlus/QLivePlayer-Lib.git
+	branch = dev

@@ -1,14 +1,11 @@
 #include "streamfinder.h"
+#include "../Binding.h"
 
 StreamFinder::StreamFinder(QString room_url, QString stream_socket, QObject* parent)
   : QObject(parent)
 {
     this->room_url = room_url;
     this->stream_socket = stream_socket;
-
-    proc = new QProcess(this);
-
-    connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &StreamFinder::slotSfpyResponse);
 }
 
 StreamFinder::~StreamFinder()
@@ -18,8 +15,6 @@ StreamFinder::~StreamFinder()
         streamer->deleteLater();
         streamer = nullptr;
     }
-    proc->terminate();
-    proc->waitForFinished(3000);
 }
 
 void
@@ -62,93 +57,63 @@ void
 StreamFinder::startRequest()
 {
     qInfo() << "Finding stream...";
-    proc->waitForFinished(10000);
-    auto tid = ++proc_id;
-    QStringList args;
-    args.append(QStandardPaths::locate(QStandardPaths::AppDataLocation, "streamfinder.pyz"));
-    args.append(room_url);
-    if (QFileInfo::exists(QStringLiteral("/tmp/unlock-qlp"))) {
-        if (room_url.contains(QStringLiteral("live.bilibili.com/"))) {
-            QSettings s("QLivePlayer", "QLivePlayer", this);
-            args.append(s.value("bcookie", QString("")).toString());
-        }
-    }
-    proc->start("python3", args);
-    QTimer::singleShot(20000, this, [this, tid]() {
-        if (this->proc->state() == QProcess::Running && tid == this->proc_id) {
-            this->proc->kill();
-        }
-    });
-}
-
-void
-StreamFinder::slotSfpyResponse(int code, QProcess::ExitStatus es)
-{
-    Q_UNUSED(code);
-    Q_UNUSED(es);
-    real_url.clear();
-    QRegularExpression re("^(http.+)$");
-    QRegularExpression re_title("^title: +([^\n]+)$");
-    while (!proc->atEnd()) {
-        QString line(proc->readLine());
-        QRegularExpressionMatch match = re_title.match(line);
-        if (match.hasMatch()) {
-            title = match.captured(1);
-            emit titleMatched(title);
-        }
-        match = re.match(line);
-        if (match.hasMatch() && real_url.isEmpty()) {
-            real_url = match.captured(1);
-            offline_counter = 0;
-        }
-    }
-    startStreamer();
-}
-
-void
-StreamFinder::startStreamer()
-{
-    if (real_url.isEmpty()) {
+    QLivePlayerLib qlib;
+    auto res = qlib.get_url(room_url, QString());
+    //    qInfo() << res;
+    if (res.startsWith("qlp_nostream")) {
         qInfo() << "Stream url not found!";
         if (offline_counter > 30) {
             QCoreApplication::exit(0);
         } else {
             ++offline_counter;
-            QTimer::singleShot(1000, this, &StreamFinder::startRequest);
+            QTimer::singleShot(2000, this, [this]() {
+                startRequest();
+            });
         }
     } else {
-        qInfo().noquote() << "Playing: " << title;
-        if (real_url.right(5) == "::hls") {
-            real_url.chop(5);
-            streamer = new StreamerSl(real_url, stream_socket, quality, this);
-            connect(streamer, &Streamer::streamError, this, [this]() {
-                emit this->streamError();
-            });
-            connect(streamer, &Streamer::streamStart, this, [this]() {
-                emit this->streamStart();
-            });
-            streamer->start();
-            emit ready(title, 1);
-        } else if (real_url.contains(".m3u8")) {
-            streamer = new StreamerHls(real_url, stream_socket, this);
-            connect(streamer, &Streamer::streamError, this, [this]() {
-                emit this->streamError();
-            });
-            connect(streamer, &Streamer::streamStart, this, [this]() {
-                emit this->streamStart();
-            });
-            streamer->start();
-            emit this->ready(title, 1);
-        } else {
-            streamer = new StreamerFlv(real_url, room_url, stream_socket, this);
-            connect(streamer, &Streamer::streamError, this, [this]() {
-                emit this->streamError();
-            });
-            connect(streamer, &Streamer::streamStart, this, [this]() {
-                emit this->streamStart();
-            });
-            streamer->start();
-            emit ready(title, 0);
-        }
+        offline_counter = 0;
+        auto u = res.split("\n", Qt::SkipEmptyParts);
+        this->real_url = u.last();
+        this->title = u.first();
+        emit titleMatched(title);
+        startStreamer();
+    }
+}
+
+void
+StreamFinder::startStreamer()
+{
+    qInfo().noquote() << "Playing: " << title;
+    if (real_url.right(5) == "::hls") {
+        real_url.chop(5);
+        streamer = new StreamerSl(real_url, stream_socket, quality, this);
+        connect(streamer, &Streamer::streamError, this, [this]() {
+            emit this->streamError();
+        });
+        connect(streamer, &Streamer::streamStart, this, [this]() {
+            emit this->streamStart();
+        });
+        streamer->start();
+        emit ready(title, 1);
+    } else if (real_url.contains(".m3u8")) {
+        streamer = new StreamerHls(real_url, stream_socket, this);
+        connect(streamer, &Streamer::streamError, this, [this]() {
+            emit this->streamError();
+        });
+        connect(streamer, &Streamer::streamStart, this, [this]() {
+            emit this->streamStart();
+        });
+        streamer->start();
+        emit this->ready(title, 1);
+    } else {
+        streamer = new StreamerFlv(real_url, room_url, stream_socket, this);
+        connect(streamer, &Streamer::streamError, this, [this]() {
+            emit this->streamError();
+        });
+        connect(streamer, &Streamer::streamStart, this, [this]() {
+            emit this->streamStart();
+        });
+        streamer->start();
+        emit ready(title, 0);
     }
 }

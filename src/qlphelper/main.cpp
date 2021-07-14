@@ -89,15 +89,11 @@ main(int argc, char* argv[])
 
     QCommandLineOption urlOption(QStringList() << "u"
                                                << "url",
-                                 "The url to open",
-                                 "url",
-                                 "null");
+                                 "The url to open", "url", "null");
     parser.addOption(urlOption);
     QCommandLineOption recordOption(QStringList() << "r"
                                                   << "record",
-                                    "Record stream to local file",
-                                    "file",
-                                    "null");
+                                    "Record stream to local file", "file", "null");
     parser.addOption(recordOption);
     QCommandLineOption strictStreamOption(QStringList() << "strict-stream", "Useful for preventing non-monotonous DTS problem");
     parser.addOption(strictStreamOption);
@@ -118,9 +114,11 @@ main(int argc, char* argv[])
     }
 
     auto url = parser.value(urlOption);
-    if (url.left(14) == "qliveplayer://") {
-        url.remove(0, 11);
-        url = QStringLiteral("https") + url;
+    if (url.startsWith("qliveplayer://")) {
+        url.remove(0, 14);
+        if (!url.startsWith("http")) {
+            url = QStringLiteral("https://") + url;
+        }
     }
 
     if (parser.isSet(debugOption)) {
