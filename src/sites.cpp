@@ -296,7 +296,7 @@ QStringList
 Sites::decodeTwitch(const QString& s)
 {
     QRegularExpression re_rid("\"User\\}\\|\\{.+?\":.+?\"login\":\"(.+?)\"");
-    QRegularExpression re_title("\"BroadcastSettings\\}\\|\\{.+?\":.+?\"title\":\"(.+?)\"");
+    QRegularExpression re_title("\"BroadcastSettings\\}\\|\\{[^\"]+\":.+?\"title\":\"(.+?)\"");
     QRegularExpression re_owner("\"User\\}\\|\\{.+?\":.+?\"displayName\":\"(.+?)\"");
     QRegularExpression re_cover("\"Stream\\}\\|\\{.+?\":.+?\"previewImageURL\":\"(.+?)\"");
     QRegularExpression re_avatar("\"User\\}\\|\\{.+?\":.+?\"profileImageURL.+?\":\"(.+?)\"");
