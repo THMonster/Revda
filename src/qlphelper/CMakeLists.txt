@@ -20,9 +20,6 @@ target_link_libraries(qlphelper
   Qt5::Core
   Qt5::Network
   Threads::Threads
-  OpenSSL::SSL
-  #-lssl
-  # -lcrypto
   "${RUST_LIB}"
   ${CMAKE_DL_LIBS}
 )
