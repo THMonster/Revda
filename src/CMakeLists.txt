@@ -10,6 +10,8 @@ endif()
 cmake_policy(SET CMP0046 NEW)
 cmake_policy(SET CMP0063 NEW)
 cmake_policy(SET CMP0071 NEW)
+cmake_policy(SET CMP0003 NEW)
+cmake_policy(SET CMP0005 NEW)
 
 SET(RUST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/QLivePlayer-Lib")
 if (MSVC)
