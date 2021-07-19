@@ -26,7 +26,4 @@ target_link_libraries(qlphelper
   ${CMAKE_DL_LIBS}
 )
 
-#file(GLOB dmcpyz dmc.pyz streamfinder.pyz)
-install(FILES ${dmcpyz} DESTINATION share/QLivePlayer)
-
 install(TARGETS qlphelper DESTINATION bin)
