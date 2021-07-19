@@ -7,6 +7,10 @@ else()
     set(RUST_BUILD_FLAG --release)
 endif()
 
+cmake_policy(SET CMP0046 NEW)
+cmake_policy(SET CMP0063 NEW)
+cmake_policy(SET CMP0071 NEW)
+
 SET(RUST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/QLivePlayer-Lib")
 if (MSVC)
   SET(RUST_LIB "${RUST_DIR}/${RUST_TARGET_DIR}/rust.lib")
