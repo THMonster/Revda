@@ -1,10 +1,10 @@
-#include <algorithm>
 #include "datasource.h"
+#include <algorithm>
 
 using namespace DS;
 
-DataSource::DataSource(RM::RoomModel *room_model, QObject *parent)
-    : QObject(parent)
+DataSource::DataSource(RM::RoomModel* room_model, QObject* parent)
+  : QObject(parent)
 {
     this->room_model = room_model;
     this->base_model = room_model->base_model;
@@ -17,9 +17,10 @@ DataSource::~DataSource()
     saveSettings();
 }
 
-void DataSource::addRoom(QString url, QString title, QString owner, QString cover, int status, bool open)
+void
+DataSource::addRoom(QString url, QString title, QString owner, QString cover, int status, bool open)
 {
-//    qDebug() << url << title << owner << cover << status;
+    //    qDebug() << url << title << owner << cover << status;
     auto c = urlToCode(url);
     if (open) {
         openQlphelper(url);
@@ -43,24 +44,26 @@ void DataSource::addRoom(QString url, QString title, QString owner, QString cove
     const int new_row = base_model->rowCount();
     rooms[c].row = new_row;
     base_model->insertRow(new_row);
-    base_model->setData(base_model->index(new_row,0), QVariant::fromValue(room), Qt::DisplayRole);
-    base_model->setData(base_model->index(new_row,1), QVariant::fromValue(tag));
-    base_model->setData(base_model->index(new_row,2), QVariant::fromValue(status));
-    base_model->setData(base_model->index(new_row,3), QVariant::fromValue(rooms[c].order_his));
+    base_model->setData(base_model->index(new_row, 0), QVariant::fromValue(room), Qt::DisplayRole);
+    base_model->setData(base_model->index(new_row, 1), QVariant::fromValue(tag));
+    base_model->setData(base_model->index(new_row, 2), QVariant::fromValue(status));
+    base_model->setData(base_model->index(new_row, 3), QVariant::fromValue(rooms[c].order_his));
     room_model->sort();
 }
 
-void DataSource::openQlphelper(QString url)
+void
+DataSource::openQlphelper(QString url)
 {
     auto c = urlToCode(url);
     if (!c.isEmpty()) {
         addHistory(c);
     }
-    QProcess::startDetached("qlphelper", QStringList() << "-u" << url
-                            << "--strict-stream");
+    QProcess::startDetached("qlphelper", QStringList() << "-u" << url << "--quiet"
+                                                       << "--strict-stream");
 }
 
-void DataSource::refresh()
+void
+DataSource::refresh()
 {
     clear();
     for (const auto& c : rooms.keys()) {
@@ -68,7 +71,8 @@ void DataSource::refresh()
     }
 }
 
-void DataSource::openUrl(QString url)
+void
+DataSource::openUrl(QString url)
 {
     QStringList sl;
     sl = url.split('-', Qt::SkipEmptyParts);
@@ -101,7 +105,8 @@ void DataSource::openUrl(QString url)
     }
 }
 
-void DataSource::toggleLike(int like, QString url)
+void
+DataSource::toggleLike(int like, QString url)
 {
     auto c = urlToCode(url);
     // 0 for like 1 for dislike
@@ -111,7 +116,8 @@ void DataSource::toggleLike(int like, QString url)
     rooms[c].like = like == 0 ? true : false;
 }
 
-void DataSource::loadSettings()
+void
+DataSource::loadSettings()
 {
     QSettings s("QLivePlayer", "QLivePlayer");
 
@@ -135,7 +141,8 @@ void DataSource::loadSettings()
     }
 }
 
-void DataSource::saveSettings()
+void
+DataSource::saveSettings()
 {
     qDebug() << "Saving config...";
     QSettings s("QLivePlayer", "QLivePlayer");
@@ -157,8 +164,8 @@ void DataSource::saveSettings()
     s.setValue("history", QStringList(history.mid(0, 24)));
 }
 
-inline
-QString DataSource::urlToCode(QString url)
+inline QString
+DataSource::urlToCode(QString url)
 {
     if (url.contains("douyu.com/")) {
         QString rid = url.split('/', Qt::SkipEmptyParts).last();
@@ -182,7 +189,8 @@ QString DataSource::urlToCode(QString url)
     return "";
 }
 
-void DataSource::clear()
+void
+DataSource::clear()
 {
     base_model->clear();
     base_model->insertColumn(0);
@@ -194,7 +202,8 @@ void DataSource::clear()
     }
 }
 
-void DataSource::addHistory(QString code)
+void
+DataSource::addHistory(QString code)
 {
     if (!rooms.contains(code)) {
         Room r;

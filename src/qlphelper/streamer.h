@@ -95,31 +95,48 @@ class StreamerHls : public Streamer
     void setSocket();
 };
 
-// using streamlink
-class StreamerSl : public Streamer
+class StreamerDash : public Streamer
 {
     Q_OBJECT
   public:
-    explicit StreamerSl(QString real_url, QString socket_path, int quality = 1, QObject* parent = nullptr);
-    ~StreamerSl();
+    explicit StreamerDash(QString real_url, QString socket_path, QObject* parent = nullptr);
+    ~StreamerDash();
 
     void start() override;
     void close() override;
 
   private slots:
-    void onProcStdout();
-    void setSocket();
-    void onProcFinished(int code, QProcess::ExitStatus es);
+    void setSocketV();
+    void setSocketA();
 
   private:
-    QString real_url;
+    QString real_url_v;
+    QString real_url_a;
     QString stream_socket_path;
-    QProcess* proc = nullptr;
-    QLocalServer* socket_server = nullptr;
-    QLocalSocket* socket = nullptr;
-    int quality = 1;
+    QLocalServer* socket_server_v = nullptr;
+    QLocalServer* socket_server_a = nullptr;
+    QLocalSocket* socket_v = nullptr;
+    QLocalSocket* socket_a = nullptr;
+    QNetworkAccessManager* nam = nullptr;
+    qint64 downloading_dash_seg = 0;
+    qint64 yt_dash_rn = 1;
+    int no_new_seg_time = 0;
+    int download_threads_num = 1;
+    QMap<qint64, int> download_status;
+    QMap<qint64, QByteArray> video_buf;
+    QMap<qint64, QByteArray> audio_buf;
+    QTimer* push_timer = nullptr;
+    QByteArray user_agent;
+    QByteArray referer;
+    QFile* fifo_v = nullptr;
+    QFile* fifo_a = nullptr;
+    QProcess* fifo_v_proc = nullptr;
+    QProcess* fifo_a_proc = nullptr;
 
     void requestStream();
+    void initFifo();
+    void pushStream();
+    void setError();
 };
 
 #endif // STREAMER_H

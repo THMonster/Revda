@@ -28,7 +28,7 @@ do
             shift # past value
             ;;
         -t|--time)
-            time_intervel="$2"
+            time_interval="$2"
             shift # past argument
             shift # past value
             ;;

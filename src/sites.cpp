@@ -351,7 +351,7 @@ Sites::genRequest(QString url, bool is_phone, bool eng_only, bool open)
 {
     QNetworkRequest qnr(url);
     qnr.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
-    //    qnr.setMaximumRedirectsAllowed(5);
+    qnr.setMaximumRedirectsAllowed(8);
     quint32 v = QRandomGenerator::global()->bounded(21) + 68;
     if (is_phone) {
         auto ua = qsl("Mozilla/5.0 (Android 10; Mobile; rv:%1.0) Gecko/%2.0 Firefox/%3.0").arg(v).arg(v).arg(v);
@@ -365,6 +365,10 @@ Sites::genRequest(QString url, bool is_phone, bool eng_only, bool open)
     }
     if (open) {
         qnr.setRawHeader(QByteArray("qlp-open"), QByteArray().number(1));
+    }
+    if (url.contains("youtube.com/")) {
+        //        qnr.setRawHeader(QByteArray("Cookie"), QByteArray("CONSENT=YES+yt.390212085.en-US+FX+042"));
+        qnr.setRawHeader(QByteArray("Cookie"), qsl("CONSENT=YES+cb.20210810-12-p0.en+FX+%1").arg(v * 123 % 500, 3, 10, QLatin1Char('0')).toLatin1());
     }
     return qnr;
 }

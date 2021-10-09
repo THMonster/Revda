@@ -101,10 +101,12 @@ main(int argc, char* argv[])
                                                  << "debug",
                                    "Show debug info");
     parser.addOption(debugOption);
-    QCommandLineOption fontScaleOption(QStringList() << "fs", "set font scale", "float", "null");
+    QCommandLineOption fontScaleOption(QStringList() << "fs", "Set font scale", "float", "null");
     parser.addOption(fontScaleOption);
-    QCommandLineOption fontAlphaOption(QStringList() << "fa", "set font alpha", "float", "null");
+    QCommandLineOption fontAlphaOption(QStringList() << "fa", "Set font alpha", "float", "null");
     parser.addOption(fontAlphaOption);
+    QCommandLineOption quietOption(QStringList() << "quiet", "Don't print danmaku to terminal");
+    parser.addOption(quietOption);
 
     parser.process(a);
 
@@ -142,6 +144,7 @@ main(int argc, char* argv[])
         args << (parser.isSet(debugOption) ? "true" : "false");
         args << parser.value(fontScaleOption);
         args << parser.value(fontAlphaOption);
+        args << (parser.isSet(quietOption) ? "true" : "false");
         auto qlphelper = new QLPHelper(args, &a);
         qlphelper->start();
     }

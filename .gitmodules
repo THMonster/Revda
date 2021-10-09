@@ -1,4 +1,4 @@
 [submodule "src/QLivePlayer-Lib"]
 	path = src/QLivePlayer-Lib
 	url = https://github.com/IsoaSFlus/QLivePlayer-Lib.git
-	branch = dev
+	branch = exp

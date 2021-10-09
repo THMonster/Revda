@@ -11,8 +11,9 @@
 
 #define __PICK(n, i) (((n) >> (8 * i)) & 0xFF)
 
-DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket, double fs, double fa, int speed)
+DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket, double fs, double fa, int speed, bool quiet)
   : speed(speed)
+  , quiet(quiet)
 {
     fk = new FudujiKiller();
     this->danmaku_socket_path = danmaku_socket;
@@ -150,7 +151,9 @@ DanmakuLauncher::launchDanmaku()
         QStringView sv1{ dm };
         color = sv1.mid(4, 2) % sv1.mid(2, 2) % sv1.mid(0, 2);
         dm.remove(0, 6);
-        qInfo().noquote() << dm;
+        if (!this->quiet) {
+            qInfo().noquote() << dm;
+        }
         dm.remove(0, 1);
         speaker = dm.section(QChar(']'), 0, 0);
         dm = dm.section(QChar(']'), 1, -1);
@@ -405,8 +408,9 @@ DanmakuLauncher::stop()
 void
 DanmakuLauncher::onStreamStart()
 {
+    //    qInfo() << "on stream start";
+    timer.restart();
     if (state == WaitingForStream) {
-        timer.restart();
         launch_timer->start(200);
         state = Running;
         QTimer::singleShot(100, this, [this]() {
@@ -420,6 +424,7 @@ DanmakuLauncher::onStreamStart()
 void
 DanmakuLauncher::setSocket()
 {
+    //    qInfo() << "on socket start";
     if (socket != nullptr) {
         socket->abort();
         socket->deleteLater();
@@ -428,7 +433,6 @@ DanmakuLauncher::setSocket()
     socket = socket_server->nextPendingConnection();
     socket->write(QByteArray(reinterpret_cast<const char*>(mkv_header), mkv_header_len));
     if (state == WaitingForSocket) {
-        timer.restart();
         launch_timer->start(200);
         state = Running;
         QTimer::singleShot(100, this, [this]() {

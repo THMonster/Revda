@@ -60,8 +60,10 @@ void
 FFmpegControl::onStreamReady(QString title, int flag)
 {
     this->title = title;
-    if ((flag & 0x01) == 1) {
+    if ((flag & 0x01) != 0) {
         is_hls = true;
+    } else if ((flag & 0x02) != 0) {
+        is_dash = true;
     }
     if (state == Idle) {
         qDebug() << "start ffmpeg proc";
@@ -82,19 +84,32 @@ FFmpegControl::getFFmpegCmdline()
         ret << "-loglevel"
             << "quiet";
     }
-    if (strict_stream || is_hls) {
+    if (strict_stream || is_hls || is_dash) {
         ret.append("-xerror");
     }
-    ret << "-i"
-        << "unix://" + stream_socket_path;
-    ret << "-i"
-        << "unix://" + danmaku_socket_path;
-    ret << "-map"
-        << "0:v:0"
-        << "-map"
-        << "0:a:0"
-        << "-map"
-        << "1:s:0";
+    if (is_dash) {
+        ret << "-i" << stream_socket_path + "-v";
+        ret << "-i" << stream_socket_path + "-a";
+        ret << "-i"
+            << "unix://" + danmaku_socket_path;
+        ret << "-map"
+            << "0:v:0"
+            << "-map"
+            << "1:a:0"
+            << "-map"
+            << "2:s:0";
+    } else {
+        ret << "-i"
+            << "unix://" + stream_socket_path;
+        ret << "-i"
+            << "unix://" + danmaku_socket_path;
+        ret << "-map"
+            << "0:v:0"
+            << "-map"
+            << "0:a:0"
+            << "-map"
+            << "1:s:0";
+    }
     ret << "-c"
         << "copy";
     if (is_hls == true) {

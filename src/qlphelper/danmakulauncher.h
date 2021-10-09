@@ -27,7 +27,7 @@ class DanmakuLauncher : public QObject
     } state = NotRunning;
 
   public:
-    DanmakuLauncher(QString room_url, QString danmaku_socket, double fs = -1, double fa = -1, int speed = 8000);
+    DanmakuLauncher(QString room_url, QString danmaku_socket, double fs = -1, double fa = -1, int speed = 8000, bool quiet = false);
     ~DanmakuLauncher();
     void fetchDanmaku();
     void stopDanmakuClient();
@@ -70,6 +70,7 @@ class DanmakuLauncher : public QObject
     QLocalSocket* socket = nullptr;
     QString font_alpha = QStringLiteral("00");
     bool show_nick = false;
+    bool quiet = false;
     QLivePlayerLib* qlp_lib = nullptr;
 };
 
