@@ -1,5 +1,7 @@
-#include "qlphelper.h"
+#include <QRandomGenerator>
+
 #include "../qlpconfig.h"
+#include "qlphelper.h"
 
 QLPHelper::QLPHelper(QStringList args, QObject* parent)
   : QObject(parent)
@@ -24,20 +26,24 @@ QLPHelper::QLPHelper(QStringList args, QObject* parent)
     }
 
     stream_socket = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
+    stream_port = QString::number(QRandomGenerator::system()->bounded(10000, 20000));
     danmaku_socket = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
     auto f = QString("/tmp/qlp-%1").arg(QUuid::createUuid().toString());
     QProcess::execute("mkfifo", QStringList() << f);
     ff2mpv_fifo = new QFile(f, this);
 
-    ffmpeg_control = new FFmpegControl(stream_socket, danmaku_socket, ff2mpv_fifo, record_file, is_debug, strict_stream);
-    mpv_control = new MpvControl(ff2mpv_fifo, record_file);
-    stream_finder = new StreamFinder(room_url, stream_socket, this);
+    ffmpeg_control = new FFmpegControl(stream_socket, stream_port, danmaku_socket, ff2mpv_fifo, record_file, is_debug, strict_stream, this);
+    mpv_control = new MpvControl(ff2mpv_fifo, record_file, this);
+    stream_finder = new StreamFinder(room_url, stream_socket, stream_port, this);
     danmaku_launcher =
-      new DanmakuLauncher(room_url, danmaku_socket, fs, fa, QlpConfig::getInstance().readDanmakuSpeed(), args.at(6) == "true" ? true : false);
+      new DanmakuLauncher(room_url, danmaku_socket, fs, fa, QlpConfig::getInstance().readDanmakuSpeed(), args.at(6) == "true" ? true : false, this);
 
     connect(stream_finder, &StreamFinder::streamError, this, &QLPHelper::restart);
     connect(stream_finder, &StreamFinder::streamStart, danmaku_launcher, &DanmakuLauncher::onStreamStart);
-    connect(mpv_control, &MpvControl::requestReload, this, &QLPHelper::restart);
+    connect(stream_finder, &StreamFinder::streamStart, this, [this]() {
+        QTimer::singleShot(500, this, &QLPHelper::setIdle);
+    });
+    connect(mpv_control, &MpvControl::requestReload, this, &QLPHelper::restart, Qt::QueuedConnection);
     connect(mpv_control, &MpvControl::resFetched, danmaku_launcher, &DanmakuLauncher::setScale);
     connect(mpv_control, &MpvControl::onQuality, stream_finder, &StreamFinder::setQuality);
     connect(mpv_control, &MpvControl::onFont, danmaku_launcher, &DanmakuLauncher::setFont);
@@ -54,10 +60,6 @@ QLPHelper::~QLPHelper()
     danmaku_launcher->stop();
     stream_finder->stop();
     ffmpeg_control->stop();
-    delete stream_finder;
-    delete danmaku_launcher;
-    delete ffmpeg_control;
-    delete mpv_control;
 
     ff2mpv_fifo->close();
     ff2mpv_fifo->remove();
@@ -79,29 +81,31 @@ QLPHelper::start()
 void
 QLPHelper::restart()
 {
-    // Be careful of the order of restart, due to ffmpeg's IO policy.
-    // If the last input of ffmpeg is stucked, the whole ffmpeg will be blocked.
-    stream_finder->stop();
-    qDebug() << "streamer stopped";
-    danmaku_launcher->stop();
-    qDebug() << "danmaku launcher stopped";
-    ffmpeg_control->stop();
-    qDebug() << "ffmpeg stopped";
-    QTimer::singleShot(500, this, [this]() {
-        stream_finder->start();
-        qDebug() << "streamer started";
-        danmaku_launcher->start();
-        qDebug() << "danmaku launcher started";
-        ffmpeg_control->start();
-        qDebug() << "ffmpeg started";
-        mpv_control->restart();
-        qDebug() << "mpv started";
-    });
+    if (state == Idle) {
+        state = Busy;
+        // Be careful of the order of restart, due to ffmpeg's IO policy.
+        // If the last input of ffmpeg is stucked, the whole ffmpeg will be blocked.
+        stream_finder->stop();
+        qDebug() << "streamer stopped";
+        danmaku_launcher->stop();
+        qDebug() << "danmaku launcher stopped";
+        ffmpeg_control->stop();
+        qDebug() << "ffmpeg stopped";
+        QTimer::singleShot(500, this, [this]() {
+            stream_finder->start();
+            qDebug() << "streamer started";
+            danmaku_launcher->start();
+            qDebug() << "danmaku launcher started";
+            ffmpeg_control->start();
+            qDebug() << "ffmpeg started";
+            mpv_control->restart();
+            qDebug() << "mpv restarted";
+        });
+    }
 }
 
 void
-QLPHelper::restarted()
+QLPHelper::setIdle()
 {
-    reloading = false;
-    streaming = true;
+    state = Idle;
 }

@@ -8,6 +8,7 @@ class FFmpegControl : public QObject
     Q_OBJECT
   public:
     explicit FFmpegControl(QString stream_socket,
+                           QString stream_port,
                            QString danmaku_socket,
                            QFile* ff2mpv_fifo,
                            QString record_file,
@@ -36,6 +37,7 @@ class FFmpegControl : public QObject
     QProcess* ff_proc = nullptr;
     bool is_debug = false;
     QString stream_socket_path;
+    QString stream_port;
     QString danmaku_socket_path;
     QString record_file;
     int record_cnt = 0;

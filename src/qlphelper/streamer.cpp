@@ -7,8 +7,7 @@
 #define qsl(s) QStringLiteral(s)
 
 StreamerFlv::StreamerFlv(QString real_url, QString room_url, QString socket_path, QObject* parent)
-  : Streamer(parent)
-  , real_url(real_url)
+  : real_url(real_url)
   , room_url(room_url)
   , stream_socket_path(socket_path)
 {
@@ -19,8 +18,8 @@ StreamerFlv::StreamerFlv(QString real_url, QString room_url, QString socket_path
 
 StreamerFlv::~StreamerFlv()
 {
+    qDebug() << "StreamerFlv deleted";
     close();
-    QLocalServer::removeServer(stream_socket_path);
 }
 
 void
@@ -42,6 +41,9 @@ StreamerFlv::close()
         socket->abort();
         socket->deleteLater();
         socket = nullptr;
+    }
+    if (socket_server != nullptr) {
+        socket_server->close();
     }
 }
 
@@ -105,8 +107,7 @@ StreamerFlv::requestStream()
 }
 
 StreamerHls::StreamerHls(QString real_url, QString socket_path, QObject* parent)
-  : Streamer(parent)
-  , real_url(real_url)
+  : real_url(real_url)
   , stream_socket_path(socket_path)
   , ua("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36")
 {
@@ -116,8 +117,8 @@ StreamerHls::StreamerHls(QString real_url, QString socket_path, QObject* parent)
 
 StreamerHls::~StreamerHls()
 {
+    qDebug() << "StreamerHls deleted";
     close();
-    QLocalServer::removeServer(stream_socket_path);
 }
 
 void
@@ -137,6 +138,9 @@ StreamerHls::close()
         socket->abort();
         socket->deleteLater();
         socket = nullptr;
+    }
+    if (socket_server != nullptr) {
+        socket_server->close();
     }
 }
 
@@ -272,31 +276,26 @@ StreamerHls::httpFinished(QNetworkReply* reply)
 }
 
 StreamerDash::StreamerDash(QString real_url, QString socket_path, QObject* parent)
-  : Streamer(parent)
+  : real_url(real_url)
   , stream_socket_path(socket_path)
-  , user_agent("curl/7.78.0")
-  , referer("https://www.youtube.com")
 {
-    auto u = real_url.split("\n", Qt::SkipEmptyParts);
-    if (u.length() == 3) {
-        this->real_url_v = u[0];
-        this->real_url_a = u[1];
-        this->downloading_dash_seg = u[2].toLongLong();
-    }
-    nam = new QNetworkAccessManager(this);
-    nam->setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
-    initFifo();
+    connect(this, &StreamerDash::qlp_streamer_finished, this, &StreamerDash::setError, Qt::QueuedConnection);
+    connect(
+      this, &StreamerDash::qlp_streamer_stream_started, this,
+      [this]() {
+          if (state == Idle) {
+              state = Running;
+              emit streamStart();
+              qDebug() << "stream started!";
+          }
+      },
+      Qt::QueuedConnection);
 }
 
 StreamerDash::~StreamerDash()
 {
+    qDebug() << "StreamerDash deleted";
     close();
-    fifo_v->close();
-    fifo_v->remove();
-    fifo_a->close();
-    fifo_a->remove();
-    //    QLocalServer::removeServer(stream_socket_path + qsl("-v"));
-    //    QLocalServer::removeServer(stream_socket_path + qsl("-a"));
 }
 
 void
@@ -304,229 +303,40 @@ StreamerDash::start()
 {
     state = Idle;
 
-    //    socket_server_v = new QLocalServer(this);
-    //    connect(socket_server_v, &QLocalServer::newConnection, this, &StreamerDash::setSocketV);
-    //    socket_server_v->listen(stream_socket_path + qsl("-v"));
-    //    socket_server_a = new QLocalServer(this);
-    //    connect(socket_server_a, &QLocalServer::newConnection, this, &StreamerDash::setSocketA);
-    //    socket_server_a->listen(stream_socket_path + qsl("-a"));
-
-    push_timer = new QTimer(this);
-    connect(push_timer, &QTimer::timeout, this, &StreamerDash::pushStream);
-    QTimer::singleShot(500, this, &StreamerDash::requestStream);
-    this->push_timer->start(1000);
+    auto self = this->sharedFromThis();
+    qlp_lib = QSharedPointer<QLivePlayerLib>(new QLivePlayerLib());
+    auto fu = QtConcurrent::run(this, &StreamerDash::qlp_run_streamer);
+    auto fu1 = QtConcurrent::run(this, &StreamerDash::qlp_check_streamer_loading);
 }
 
 void
 StreamerDash::close()
 {
     state = Closing;
-    if (socket_v != nullptr) {
-        socket_v->abort();
-        socket_v->deleteLater();
-        socket_v = nullptr;
-    }
-    if (socket_a != nullptr) {
-        socket_a->abort();
-        socket_a->deleteLater();
-        socket_a = nullptr;
-    }
-    if (fifo_v_proc != nullptr) {
-        fifo_v_proc->terminate();
-        fifo_v_proc->waitForFinished(2000);
-    }
-    if (fifo_a_proc != nullptr) {
-        fifo_a_proc->terminate();
-        fifo_a_proc->waitForFinished(2000);
-    }
-}
-
-void
-StreamerDash::setSocketV()
-{
-    if (socket_v != nullptr) {
-        socket_v->deleteLater();
-        socket_v = nullptr;
-    }
-    socket_v = socket_server_v->nextPendingConnection();
-    connect(socket_v, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::errorOccurred), this,
-            [this](QLocalSocket::LocalSocketError socketError) {
-                qDebug() << "stream socket error" << socketError;
-                setError();
-            });
-}
-
-void
-StreamerDash::setSocketA()
-{
-    if (socket_a != nullptr) {
-        socket_a->deleteLater();
-        socket_a = nullptr;
-    }
-    socket_a = socket_server_a->nextPendingConnection();
-    connect(socket_a, QOverload<QLocalSocket::LocalSocketError>::of(&QLocalSocket::errorOccurred), this,
-            [this](QLocalSocket::LocalSocketError socketError) {
-                qDebug() << "stream socket error" << socketError;
-                setError();
-            });
-}
-
-void
-StreamerDash::requestStream()
-{
-    if (download_threads_num > 0) {
-        --download_threads_num;
-    } else {
-        return;
-    }
-    QString uv, ua;
-    uv = this->real_url_v + qsl("&sq=%1").arg(downloading_dash_seg) + qsl("&rn=%1").arg(yt_dash_rn);
-    ua = this->real_url_a + qsl("&sq=%1").arg(downloading_dash_seg) + qsl("&rn=%1").arg(yt_dash_rn);
-    QNetworkRequest qnrv(uv);
-    QNetworkRequest qnra(ua);
-    qnrv.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
-    qnra.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
-    qnrv.setRawHeader(QByteArray("User-Agent"), user_agent);
-    qnra.setRawHeader(QByteArray("User-Agent"), user_agent);
-    qnrv.setRawHeader(QByteArray("Accept"), QByteArray("*/*"));
-    qnra.setRawHeader(QByteArray("Accept"), QByteArray("*/*"));
-    //    qnrv.setRawHeader(QByteArray("Referer"), referer);
-    //    qnra.setRawHeader(QByteArray("Referer"), referer);
-    auto reply_v = nam->get(qnrv);
-    auto reply_a = nam->get(qnra);
-    //    qInfo().noquote() << uv << ua;
-    download_status[downloading_dash_seg] = 0;
-    video_buf[downloading_dash_seg].clear();
-    audio_buf[downloading_dash_seg].clear();
-    connect(reply_v, &QNetworkReply::readyRead, this, [this, reply_v, i = downloading_dash_seg] {
-        if (reply_v->error() != QNetworkReply::NoError) {
-            qInfo() << "dash stream error: " << reply_v->error();
-            setError();
-            reply_v->deleteLater();
-            return;
-        }
-        video_buf[i].append(reply_v->readAll());
-    });
-    connect(reply_v, &QNetworkReply::finished, this, [this, reply_v, i = downloading_dash_seg] {
-        if (reply_v->error() != QNetworkReply::NoError) {
-            qInfo() << "dash stream error: " << reply_v->error();
-            setError();
-            reply_v->deleteLater();
-            return;
-        }
-        download_status[i] |= 1;
-        if ((download_status[i] & 3) == 3) {
-            this->download_threads_num++;
-            this->requestStream();
-        }
-        reply_v->deleteLater();
-    });
-    connect(reply_a, &QNetworkReply::readyRead, this, [this, reply_a, i = downloading_dash_seg] {
-        if (reply_a->error() != QNetworkReply::NoError) {
-            qInfo() << "dash stream error: " << reply_a->error();
-            setError();
-            reply_a->deleteLater();
-            return;
-        }
-        audio_buf[i].append(reply_a->readAll());
-    });
-    connect(reply_a, &QNetworkReply::finished, this, [this, reply_a, i = downloading_dash_seg] {
-        if (reply_a->error() != QNetworkReply::NoError) {
-            qInfo() << "dash stream error: " << reply_a->error();
-            setError();
-            reply_a->deleteLater();
-            return;
-        }
-        download_status[i] |= 2;
-        if ((download_status[i] & 3) == 3) {
-            this->download_threads_num++;
-            this->requestStream();
-        }
-        reply_a->deleteLater();
-    });
-    ++downloading_dash_seg;
-    ++yt_dash_rn;
-    requestStream();
-}
-
-void
-StreamerDash::initFifo()
-{
-    QProcess::execute("mkfifo", QStringList() << stream_socket_path + "-v");
-    QProcess::execute("mkfifo", QStringList() << stream_socket_path + "-a");
-    fifo_v = new QFile(stream_socket_path + "-v", this);
-    fifo_a = new QFile(stream_socket_path + "-a", this);
-    fifo_v_proc = new QProcess(this);
-    fifo_a_proc = new QProcess(this);
-    connect(fifo_v_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), [this](int exitCode, QProcess::ExitStatus exitStatus) {
-        Q_UNUSED(exitStatus);
-        setError();
-    });
-    connect(fifo_a_proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), [this](int exitCode, QProcess::ExitStatus exitStatus) {
-        Q_UNUSED(exitStatus);
-        setError();
-    });
-    fifo_v_proc->start("dd", QStringList() << "of=" + stream_socket_path + "-v"
-                                           << "status=none");
-    fifo_a_proc->start("dd", QStringList() << "of=" + stream_socket_path + "-a"
-                                           << "status=none");
-}
-
-void
-StreamerDash::pushStream()
-{
-    no_new_seg_time++;
-    //    qInfo() << download_status;
-    while (video_buf.constBegin() != video_buf.constEnd()) {
-        auto seg = video_buf.constBegin().key();
-        if (((download_status[seg] & 7) == 3)) {
-            if (state == Idle) {
-                state = Running;
-                emit streamStart();
-                qDebug() << "stream started!";
-            }
-            if (fifo_v_proc->write(video_buf.constBegin().value()) == -1) {
-                setError();
-                return;
-            }
-            video_buf.remove(seg);
-            download_status[seg] |= 4;
-        } else {
-            break;
-        }
-    }
-    while (audio_buf.constBegin() != audio_buf.constEnd()) {
-        auto seg = audio_buf.constBegin().key();
-        if (((download_status[seg] & 11) == 3)) {
-            if (fifo_a_proc->write(audio_buf.constBegin().value()) == -1) {
-                setError();
-                return;
-            }
-            audio_buf.remove(seg);
-            download_status[seg] |= 8;
-        } else {
-            break;
-        }
-    }
-
-    while (download_status.constBegin() != download_status.constEnd() && download_status.constBegin().value() == 15) {
-        download_status.remove(download_status.constBegin().key());
-        //        qInfo() << "remove loaded";
-        no_new_seg_time = 0;
-    }
-
-    if (no_new_seg_time > 15) {
-        qInfo() << "stream timeout, reloading...";
-        setError();
-    }
 }
 
 void
 StreamerDash::setError()
 {
     if (state != Closing) {
-        qInfo() << "set error";
+        qDebug() << "set error";
         emit streamError();
         state = Closing;
     }
+}
+
+void
+StreamerDash::qlp_run_streamer()
+{
+    auto self = this->sharedFromThis();
+    qlp_lib->run_streamer("youtube", this->real_url, this->stream_socket_path);
+    emit qlp_streamer_finished();
+}
+
+void
+StreamerDash::qlp_check_streamer_loading()
+{
+    auto self = this->sharedFromThis();
+    qlp_lib->check_streamer_loading();
+    emit qlp_streamer_stream_started();
 }

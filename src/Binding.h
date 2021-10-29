@@ -19,9 +19,11 @@ private:
 public:
     explicit QLivePlayerLib(QObject *parent = nullptr);
     ~QLivePlayerLib();
+    Q_INVOKABLE void check_streamer_loading() const;
     Q_INVOKABLE QString get_danmaku();
     Q_INVOKABLE QString get_url(const QString& room_url, const QString& extras) const;
     Q_INVOKABLE void run_danmaku_client(const QString& room_url);
+    Q_INVOKABLE void run_streamer(const QString& streamer_type, const QString& url, const QString& extra) const;
     Q_INVOKABLE void stop_danmaku_client();
 Q_SIGNALS:
 };

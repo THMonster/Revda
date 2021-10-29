@@ -11,9 +11,11 @@ namespace {
 extern "C" {
     QLivePlayerLib::Private* q_live_player_lib_new(QLivePlayerLib*);
     void q_live_player_lib_free(QLivePlayerLib::Private*);
+    void q_live_player_lib_check_streamer_loading(const QLivePlayerLib::Private*);
     void q_live_player_lib_get_danmaku(QLivePlayerLib::Private*, QString*, qstring_set);
     void q_live_player_lib_get_url(const QLivePlayerLib::Private*, const ushort*, int, const ushort*, int, QString*, qstring_set);
     void q_live_player_lib_run_danmaku_client(QLivePlayerLib::Private*, const ushort*, int);
+    void q_live_player_lib_run_streamer(const QLivePlayerLib::Private*, const ushort*, int, const ushort*, int, const ushort*, int);
     void q_live_player_lib_stop_danmaku_client(QLivePlayerLib::Private*);
 };
 
@@ -36,6 +38,10 @@ QLivePlayerLib::~QLivePlayerLib() {
         q_live_player_lib_free(m_d);
     }
 }
+void QLivePlayerLib::check_streamer_loading() const
+{
+    return q_live_player_lib_check_streamer_loading(m_d);
+}
 QString QLivePlayerLib::get_danmaku()
 {
     QString s;
@@ -51,6 +57,10 @@ QString QLivePlayerLib::get_url(const QString& room_url, const QString& extras) 
 void QLivePlayerLib::run_danmaku_client(const QString& room_url)
 {
     return q_live_player_lib_run_danmaku_client(m_d, room_url.utf16(), room_url.size());
+}
+void QLivePlayerLib::run_streamer(const QString& streamer_type, const QString& url, const QString& extra) const
+{
+    return q_live_player_lib_run_streamer(m_d, streamer_type.utf16(), streamer_type.size(), url.utf16(), url.size(), extra.utf16(), extra.size());
 }
 void QLivePlayerLib::stop_danmaku_client()
 {

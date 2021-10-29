@@ -1,6 +1,7 @@
 #include "ffmpegcontrol.h"
 
 FFmpegControl::FFmpegControl(QString stream_socket,
+                             QString stream_port,
                              QString danmaku_socket,
                              QFile* ff2mpv_fifo,
                              QString record_file,
@@ -13,9 +14,16 @@ FFmpegControl::FFmpegControl(QString stream_socket,
     this->is_debug = is_debug;
     this->strict_stream = strict_stream;
     this->stream_socket_path = stream_socket;
+    this->stream_port = stream_port;
     this->danmaku_socket_path = danmaku_socket;
     this->ff2mpv_fifo = ff2mpv_fifo;
     this->record_file = record_file;
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this, [this]() {
+        ff_proc->terminate();
+        ff_proc->waitForFinished(2000);
+        ff_proc->terminate();
+        ff_proc->waitForFinished(3000);
+    });
 }
 
 FFmpegControl::~FFmpegControl()
@@ -33,17 +41,14 @@ FFmpegControl::start()
 void
 FFmpegControl::restart()
 {
-    qDebug() << "waiting for ffmpeg exit!";
-    ff_proc->waitForFinished(3000);
-    ff_proc->terminate();
-    ff_proc->waitForFinished();
-    state = Idle;
+    stop();
 }
 
 void
 FFmpegControl::stop()
 {
     qDebug() << "waiting for ffmpeg exit!";
+    ff_proc->terminate();
     ff_proc->waitForFinished(3000);
     ff_proc->terminate();
     ff_proc->waitForFinished();
@@ -88,8 +93,15 @@ FFmpegControl::getFFmpegCmdline()
         ret.append("-xerror");
     }
     if (is_dash) {
-        ret << "-i" << stream_socket_path + "-v";
-        ret << "-i" << stream_socket_path + "-a";
+        ret << "-listen"
+            << "1 "
+            << "-i"
+            << "tcp://127.0.0.1:" + stream_port;
+        ret << "-listen"
+            << "1 "
+            << "-i"
+            << "tcp://127.0.0.1:" + QString::number(stream_port.toUInt() + 1);
+        stream_port = QString::number(stream_port.toUInt() + 7);
         ret << "-i"
             << "unix://" + danmaku_socket_path;
         ret << "-map"

@@ -27,7 +27,13 @@ class DanmakuLauncher : public QObject
     } state = NotRunning;
 
   public:
-    DanmakuLauncher(QString room_url, QString danmaku_socket, double fs = -1, double fa = -1, int speed = 8000, bool quiet = false);
+    DanmakuLauncher(QString room_url,
+                    QString danmaku_socket,
+                    double fs = -1,
+                    double fa = -1,
+                    int speed = 8000,
+                    bool quiet = false,
+                    QObject* parent = nullptr);
     ~DanmakuLauncher();
     void fetchDanmaku();
     void stopDanmakuClient();

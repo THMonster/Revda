@@ -11,8 +11,9 @@
 
 #define __PICK(n, i) (((n) >> (8 * i)) & 0xFF)
 
-DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket, double fs, double fa, int speed, bool quiet)
-  : speed(speed)
+DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket, double fs, double fa, int speed, bool quiet, QObject* parent)
+  : QObject(parent)
+  , speed(speed)
   , quiet(quiet)
 {
     fk = new FudujiKiller();
@@ -36,7 +37,6 @@ DanmakuLauncher::DanmakuLauncher(QString room_url, QString danmaku_socket, doubl
     font_alpha = QStringLiteral("%1").arg((uint)(255 * fa), 2, 16, QLatin1Char('0'));
 
     qlp_lib = new QLivePlayerLib(this);
-    //    auto fu = QtConcurrent::run(qlp_lib, &QLivePlayerLib::run_danmaku_client, this->room_url);
     auto fu = QtConcurrent::run([this]() {
         qlp_lib->run_danmaku_client(this->room_url);
         qInfo() << "danmaku client exit";
