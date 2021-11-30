@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Name=dmlive mime
+NoDisplay=true
+Exec=env "LD_LIBRARY_PATH=''" dmlive -u %u --quiet
+Icon=revda
+Type=Application
+MimeType=x-scheme-handler/dmlive;
