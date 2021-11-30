@@ -50,20 +50,19 @@ class StreamerFlv : public Streamer
     void start() override;
     void close() override;
 
-  private slots:
-    void onProcFinished(int code, QProcess::ExitStatus es);
-    void onProcStdout();
-    void setSocket();
-
   private:
     QString real_url;
     QString room_url;
     QString stream_socket_path;
-    QLocalServer* socket_server = nullptr;
-    QLocalSocket* socket = nullptr;
-    QProcess* proc = nullptr;
+    QSharedPointer<QLivePlayerLib> qlp_lib;
 
-    void requestStream();
+    void setError();
+    void qlp_run_streamer();
+    void qlp_check_streamer_loading();
+
+  signals:
+    void qlp_streamer_finished();
+    void qlp_streamer_stream_started();
 };
 
 class StreamerHls : public Streamer
@@ -79,22 +78,15 @@ class StreamerHls : public Streamer
   private:
     QString real_url;
     QString stream_socket_path;
-    QLocalServer* socket_server = nullptr;
-    QLocalSocket* socket = nullptr;
-    QNetworkAccessManager* nam = nullptr;
-    qint64 hls_seg = -1;
-    qint64 downloading_hls_seg = 0;
-    qint64 last_downloaded_hls_seg_a = -1;
-    qint64 last_downloaded_hls_seg_b = -2;
-    int no_new_seg_time = 0;
-    QQueue<QByteArray> hls_seg_queue;
-    QMap<qint64, QPair<QByteArray, bool>> download_buf;
-    QByteArray ua;
+    QSharedPointer<QLivePlayerLib> qlp_lib;
 
-    void requestStream();
-    void requestHlsManifest();
-    void httpFinished(QNetworkReply* reply);
-    void setSocket();
+    void setError();
+    void qlp_run_streamer();
+    void qlp_check_streamer_loading();
+
+  signals:
+    void qlp_streamer_finished();
+    void qlp_streamer_stream_started();
 };
 
 class StreamerDash : public Streamer

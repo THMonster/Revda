@@ -58,8 +58,7 @@ DataSource::openQlphelper(QString url)
     if (!c.isEmpty()) {
         addHistory(c);
     }
-    QProcess::startDetached("qlphelper", QStringList() << "-u" << url << "--quiet"
-                                                       << "--strict-stream");
+    QProcess::startDetached("dmlive", QStringList() << "-u" << url << "--quiet");
 }
 
 void

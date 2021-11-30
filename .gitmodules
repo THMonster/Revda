@@ -1,4 +1,7 @@
 [submodule "src/QLivePlayer-Lib"]
 	path = src/QLivePlayer-Lib
 	url = https://github.com/THMonster/QLivePlayer-Lib.git
-	branch = dev
+	branch = exp
+[submodule "src/dmlive"]
+	path = src/dmlive
+	url = https://github.com/THMonster/dmlive.git

@@ -2,7 +2,7 @@
 Version=1.0
 Name=QLivePlayer Mime
 NoDisplay=true
-Exec=env "LD_LIBRARY_PATH=''" qlphelper -u %u --quiet
+Exec=env "LD_LIBRARY_PATH=''" dmlive -u %u --quiet
 Icon=qliveplayer
 Type=Application
-MimeType=x-scheme-handler/qliveplayer;
+MimeType=x-scheme-handler/dmlive;

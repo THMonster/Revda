@@ -89,7 +89,7 @@ FFmpegControl::getFFmpegCmdline()
         ret << "-loglevel"
             << "quiet";
     }
-    if (strict_stream || is_hls || is_dash) {
+    if (strict_stream || is_dash) {
         ret.append("-xerror");
     }
     if (is_dash) {

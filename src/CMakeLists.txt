@@ -13,22 +13,20 @@ cmake_policy(SET CMP0071 NEW)
 cmake_policy(SET CMP0003 NEW)
 cmake_policy(SET CMP0005 NEW)
 
-SET(RUST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/QLivePlayer-Lib")
+SET(RUST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dmlive")
 if (MSVC)
-  SET(RUST_LIB "${RUST_DIR}/${RUST_TARGET_DIR}/rust.lib")
+  SET(RUST_BIN "${RUST_DIR}/${RUST_TARGET_DIR}/dmlive")
 else()
-  SET(RUST_LIB "${RUST_DIR}/${RUST_TARGET_DIR}/librust.a")
+  SET(RUST_BIN "${RUST_DIR}/${RUST_TARGET_DIR}/dmlive")
 endif()
 
 add_custom_command(
-  OUTPUT "${RUST_LIB}"
+  OUTPUT "${RUST_BIN}"
   COMMAND ${Cargo_EXECUTABLE} build ${RUST_BUILD_FLAG}
-  DEPENDS QLivePlayer-Lib/src/lib.rs
-          QLivePlayer-Lib/src/implementation.rs
-          QLivePlayer-Lib/src/interface.rs
+  DEPENDS dmlive/src/main.rs
   WORKING_DIRECTORY "${RUST_DIR}"
 )
-add_custom_target(rust_target DEPENDS "${RUST_LIB}")
+add_custom_target(dmlive-bin ALL DEPENDS "${RUST_BIN}")
 
 set(qlp_file_SRCS
     main.cpp
@@ -52,8 +50,6 @@ target_link_libraries(qliveplayer
   Qt5::QuickWidgets
 )
 
-file(GLOB qlprecorder tools/qlprecorder)
-install(PROGRAMS ${qlprecorder} DESTINATION bin)
 install(TARGETS qliveplayer DESTINATION bin)
-add_subdirectory(qlphelper)
+install(PROGRAMS "${RUST_BIN}" DESTINATION bin)
 add_subdirectory(qlpjs)
