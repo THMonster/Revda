@@ -1,12 +1,20 @@
 <script setup lang="ts">
-// This starter template is using Vue 3 <script setup> SFCs
-// Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
-import HelloWorld from './components/HelloWorld.vue'
+import MainView from "./views/MainView.vue";
+import { onBeforeMount } from "vue";
+import { invoke } from "@tauri-apps/api";
+
+ onBeforeMount(() => {
+     invoke("init").then(() => {});
+     // document.addEventListener("contextmenu", (event) => event.preventDefault());
+ });
 </script>
 
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
+  <div>
+    <div id="main">
+      <main-view />
+    </div>
+  </div>
 </template>
 
 <style>
@@ -16,6 +24,13 @@ import HelloWorld from './components/HelloWorld.vue'
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+}
+.el-input__inner {
+  line-height: 0px !important;
+}
+
+.el-tabs__item {
+  font-size: 1.1rem;
+  line-height: 30px;
 }
 </style>

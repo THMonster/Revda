@@ -7,11 +7,14 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1.0.0-beta.8",
-    "vue": "^3.2.25"
+    "@tauri-apps/api": "^1.0.0-rc.0",
+    "element-plus": "^2.0.1",
+    "vue": "^3.2.31",
+    "vue-router": "4",
+    "vue3-hotkey": "^1.0.0"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.0.0-beta.10",
+    "@tauri-apps/cli": "^1.0.0-rc.2",
     "@vitejs/plugin-vue": "^2.0.0",
     "typescript": "^4.4.4",
     "vite": "^2.7.2",

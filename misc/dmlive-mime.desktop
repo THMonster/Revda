@@ -1,8 +1,8 @@
 [Desktop Entry]
 Version=1.0
-Name=QLivePlayer Mime
+Name=dmlive mime
 NoDisplay=true
 Exec=env "LD_LIBRARY_PATH=''" dmlive -u %u --quiet
-Icon=qliveplayer
+Icon=revda
 Type=Application
 MimeType=x-scheme-handler/dmlive;

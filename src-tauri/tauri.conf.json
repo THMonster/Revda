@@ -1,18 +1,18 @@
 {
   "package": {
-    "productName": "qliveplayer",
-    "version": "0.1.0"
+    "productName": "revda",
+    "version": "5.0.0"
   },
   "build": {
     "distDir": "../dist",
-    "devPath": "http://localhost:8080",
+    "devPath": "http://localhost:3000",
     "beforeDevCommand": "",
     "beforeBuildCommand": ""
   },
   "tauri": {
     "bundle": {
       "active": true,
-      "targets": "all",
+      "targets": "deb",
       "identifier": "com.tauri.dev",
       "icon": [
         "icons/32x32.png",
@@ -53,14 +53,15 @@
     },
     "windows": [
       {
-        "title": "qliveplayer",
-        "width": 800,
-        "height": 600,
+        "title": "Revda",
+        "width": 1100,
+        "height": 700,
         "resizable": true,
         "fullscreen": false
       }
     ],
     "security": {
+      "freezePrototype": false,
       "csp": "default-src blob: data: filesystem: ws: wss: http: https: tauri: 'unsafe-eval' 'unsafe-inline' 'self' img-src: 'self'"
     }
   }
