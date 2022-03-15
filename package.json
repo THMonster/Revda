@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.0.0-rc.2",
-    "element-plus": "^2.0.1",
+    "element-plus": "^2.0.6",
     "vue": "^3.2.31",
     "vue-router": "4",
     "vue3-hotkey": "^1.0.0"

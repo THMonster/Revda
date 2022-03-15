@@ -21,8 +21,8 @@ function checkUrl(u) {
 
 chrome.contextMenus.removeAll(()=>{
     chrome.contextMenus.create({
-        id: "open_with_qlp",
-        title: "Open With QLivePlayer",
+        id: "open_with_dml",
+        title: "Open With DMLive",
         contexts: ["selection", "link", "page"],
     });
 }
@@ -30,7 +30,7 @@ chrome.contextMenus.removeAll(()=>{
 
 chrome.contextMenus.onClicked.addListener((info,tab)=>{
     switch (info.menuItemId) {
-    case "open_with_qlp":
+    case "open_with_dml":
         console.log(info);
         var url = "";
         if ("selectionText"in info) {
