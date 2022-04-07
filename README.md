@@ -37,6 +37,21 @@ Linux平台下的弹幕直播播放工具。
 
 ## Installation
 
+### Archlinux
+
+#### [ArchlinuxCN](https://wiki.archlinux.org/index.php/Unofficial_user_repositories#archlinuxcn) repo
+
+```
+sudo pacman -S revda-git
+```
+Thanks for [@MarvelousBlack](https://github.com/MarvelousBlack)'s maintenance.
+
+#### AUR
+```
+paru -S revda-git # or any other aur helper
+```
+
+
 ### From source
 ```
 git clone https://github.com/THMonster/Revda.git --recursive
