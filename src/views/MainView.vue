@@ -245,7 +245,7 @@ onMounted(() => {
 
 <template>
   <el-row class="el-row">
-      <el-col :span="6" :offset="4" class="text-input-col">
+    <el-col :span="6" :offset="4" class="text-input-col">
       <el-select v-model="selection" class="m-2" placeholder="选择平台" size="large">
         <el-option v-for="item in RoomPrefixList" :key="item.value" :label="item.label" :value="item.value"/>
       </el-select>
