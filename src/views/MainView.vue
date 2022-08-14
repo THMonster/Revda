@@ -19,10 +19,31 @@ interface Room {
 }
 
 const input = ref("");
+const selection = ref("");
 const active_tab = ref("first");
 const room_info = ref(new Map<string, Room>());
 const saved_rooms = ref([""]);
 const history_rooms = ref([""]);
+
+const RoomPrefixList = [{
+    value: 'do',
+    label: '斗鱼直播',
+},{
+    value: 'hu',
+    label: '虎牙直播',
+},{
+    value: 'bi',
+    label: '哔哩'
+},{
+    value: 'yt',
+    label: 'YouTube(Channel)',
+},{
+    value: 'ytv',
+    label: 'YouTube(Video)',
+},{
+    value: 'tw',
+    label: 'Twitch'
+}];
 
 let remove_saved_room = (roomCode: string) => {
   let i = saved_rooms.value.indexOf(roomCode);
@@ -108,6 +129,27 @@ let open_room = (roomCode: string) => {
     .catch((e) => {
       console.log(e);
     });
+};
+
+let on_search = () => {
+    if (!!!selection.value) {
+        ElMessage({
+            message: '请选择平台',
+            type: 'error',
+            offset: 80,
+        });
+        return
+    };
+    if (!!!input.value) {
+        ElMessage({
+            message: '请输入房间/视频号',
+            type: 'error',
+            offset: 80,
+        });
+        return
+    }
+    const roomCode = selection.value + '-' + input.value;
+    open_room(roomCode);
 };
 
 let refresh = async () => {
@@ -203,13 +245,18 @@ onMounted(() => {
 
 <template>
   <el-row class="el-row">
-    <el-col :span="12" :offset="6" class="text-input-col">
+    <el-col :span="6" :offset="4" class="text-input-col">
+      <el-select v-model="selection" class="m-2" placeholder="选择平台" size="large">
+        <el-option v-for="item in RoomPrefixList" :key="item.value" :label="item.label" :value="item.value"/>
+      </el-select>
+    </el-col>
+    <el-col :span="6" :offset="0" class="text-input-col">
       <el-input
         class="el-input"
         v-model="input"
-        @keyup.enter="open_room(input)"
+        @keyup.enter="on_search"
         size="large"
-        placeholder="在此输入直播间代码"
+        placeholder="在此输入房间/视频号"
       ></el-input>
     </el-col>
     <el-col :span="2" :offset="4" class="text-input-col">
@@ -259,7 +306,7 @@ onMounted(() => {
 .el-row {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
-  min-height: 2.5rem;
+  min-height: 3rem;
 }
 .el-input {
   width: 15rem;
