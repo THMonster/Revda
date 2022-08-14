@@ -254,7 +254,7 @@ onMounted(() => {
       <el-input
         class="el-input"
         v-model="input"
-        @keyup.enter="open_search"
+        @keyup.enter="on_search"
         size="large"
         placeholder="在此输入房间/视频号"
       ></el-input>
