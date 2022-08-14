@@ -170,7 +170,7 @@ impl Sites {
             .await?
             .text()
             .await?;
-        println!("{}", &resp);
+        // println!("{}", &resp);
         let re = fancy_regex::Regex::new(r"HNF_GLOBAL_INIT\s*=\s*(\{.+?\});*\s*\</script\>").unwrap();
         let j = re
             .captures(&resp)
@@ -186,13 +186,18 @@ impl Sites {
             .ok_or(anyhow!("ghri err 2"))?
             .as_str()
             .unwrap();
+        let avatar = j
+            .pointer("/roomInfo/tProfileInfo/sAvatar180")
+            .ok_or(anyhow!("ghri err 6"))?
+            .as_str()
+            .unwrap();
         let title = j.pointer("/roomInfo/tLiveInfo/sRoomName").ok_or(anyhow!("ghri err 3"))?.as_str().unwrap();
-        let owner = j.pointer("/roomInfo/tLiveInfo/sNick").ok_or(anyhow!("ghri err 4"))?.as_str().unwrap();
+        let owner = j.pointer("/roomInfo/tProfileInfo/sNick").ok_or(anyhow!("ghri err 4"))?.as_str().unwrap();
         let is_living = j.pointer("/roomInfo/eLiveStatus").ok_or(anyhow!("ghri err 5"))?.as_i64().unwrap();
         Ok(RoomInfo {
             room_code: format!("hu-{}", rid),
-            cover: cover.into(),
-            title: title.into(),
+            cover: if cover.is_empty() { avatar.into() } else { cover.into() },
+            title: if title.is_empty() { "没有直播标题".into() } else { title.into() },
             owner: owner.into(),
             is_living: if is_living == 2 { true } else { false },
         })

@@ -59,8 +59,10 @@ cd Revda
 mkdir build
 cd ./build
 cmake -DCMAKE_BUILD_TYPE=Release ..
+# build revda without dmlive
+# cmake -DCMAKE_BUILD_TYPE=Release -DNODMLIVE=1 ..
 make
-sudo make install
+sudo make install/fast
 ```
 
 ## Usage
