@@ -2925,9 +2925,9 @@ dependencies = [
 
 [[package]]
 name = "tauri"
-version = "1.1.0"
+version = "1.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1613a40b1cdab831ff38f237ffba4d5cf6a00320696e8a92d90608a60e03035b"
+checksum = "2643e2769a6bf922c274a0e6828a7dd20f9fa6d0fe4e04775d0a7eae81f82d37"
 dependencies = [
  "anyhow",
  "attohttpc",
@@ -2994,9 +2994,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-codegen"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a7a28567222d759b5ebd74ad0d70585b1494475c71f3047e9f41c5e1824c7418"
+checksum = "afcb77cf7bfe3d8f886e73a7fa6157587d015c599671180b76595c1aef175ba8"
 dependencies = [
  "base64",
  "brotli",
@@ -3020,9 +3020,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-macros"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a005349efa196c7ca5b8bdc46008e2145f09c54e225ba965d31acf6a13f5d68d"
+checksum = "f24f481b0b2acfc288ac78755f00ebea53992c7365a165af64cb5ae00806edea"
 dependencies = [
  "heck 0.4.0",
  "proc-macro2",
@@ -3034,9 +3034,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-runtime"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8c8eff18537f98196c2c93f0d715e9b81a51f5a545e5d3f28f759b4ec7436c4"
+checksum = "d49439a5ea47f474572b854972f42eda2e02a470be5ca9609cc83bb66945abe2"
 dependencies = [
  "gtk",
  "http",
@@ -3055,9 +3055,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-runtime-wry"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7cf832dd07842c89e5d563b1402ad7e5d8980b6c8523e6febcc919fb5aeefecb"
+checksum = "28dce920995fd49907aa9bea7249ed1771454f11f7611924c920a1f75fb614d4"
 dependencies = [
  "cocoa",
  "gtk",
@@ -3075,15 +3075,16 @@ dependencies = [
 
 [[package]]
 name = "tauri-utils"
-version = "1.1.0"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfb828c364bdc65846b787e3c45887a1fe016a0bfdff26d333cad2c8a6afbcd9"
+checksum = "5abbc109a6eb45127956ffcc26ef0e875d160150ac16cfa45d26a6b2871686f1"
 dependencies = [
  "brotli",
  "ctor",
  "glob",
  "heck 0.4.0",
  "html5ever",
+ "infer",
  "json-patch",
  "kuchiki",
  "memchr",
