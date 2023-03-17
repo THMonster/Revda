@@ -25,8 +25,11 @@ impl Sites {
             .unwrap();
         Sites {
             client,
-            ua: format!("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:{0}.0) Gecko/20100101 Firefox/{0}.0", 94),
-            ua_mobile: format!("Mozilla/5.0 (Android 10; Mobile; rv:{0}.0) Gecko/{0}.0 Firefox/{0}.0", 94),
+            ua: format!(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:{1}.0) Gecko/20100101 Firefox/{0}.0",
+                111, 109
+            ),
+            ua_mobile: format!("Mozilla/5.0 (Android 10; Mobile; rv:{1}.0) Gecko/{0}.0 Firefox/{0}.0", 111, 109),
         }
     }
 
@@ -164,15 +167,17 @@ impl Sites {
     pub async fn get_huya_room_info(&self, rid: &str) -> anyhow::Result<RoomInfo> {
         let resp = self
             .client
-            .get(format!("https://m.huya.com/{}", &rid))
-            .header("User-Agent", &self.ua_mobile)
+            .get(format!("https://www.huya.com/{}", &rid))
+            .header("User-Agent", &self.ua)
             .send()
             .await?
             .text()
             .await?;
         // println!("{}", &resp);
-        let re = fancy_regex::Regex::new(r"HNF_GLOBAL_INIT\s*=\s*(\{.+?\});*\s*\</script\>").unwrap();
-        let j = re
+        // let re = fancy_regex::Regex::new(r"HNF_GLOBAL_INIT\s*=\s*(\{.+?\});*\s*\</script\>").unwrap();
+        let re1 = fancy_regex::Regex::new(r"var\s+TT_PROFILE_INFO\s+=\s+(.+\});").unwrap();
+        let re2 = fancy_regex::Regex::new(r"var\s+TT_ROOM_DATA\s+=\s+(.+\});").unwrap();
+        let j_pi = re1
             .captures(&resp)
             .map(|r| {
                 r.map(|r| {
@@ -181,25 +186,34 @@ impl Sites {
                 })
             })?
             .ok_or(anyhow!("ghri err 1"))??;
-        let cover = j
-            .pointer("/roomInfo/tLiveInfo/sScreenshot")
+        let j_rd = re2
+            .captures(&resp)
+            .map(|r| {
+                r.map(|r| {
+                    let j: Result<serde_json::Value, _> = serde_json::from_str(r[1].to_string().as_ref());
+                    j
+                })
+            })?
+            .ok_or(anyhow!("ghri err 7"))??;
+        let cover = j_rd
+            .pointer("/screenshot")
             .ok_or(anyhow!("ghri err 2"))?
             .as_str()
             .unwrap();
-        let avatar = j
-            .pointer("/roomInfo/tProfileInfo/sAvatar180")
+        let avatar = j_pi
+            .pointer("/avatar")
             .ok_or(anyhow!("ghri err 6"))?
             .as_str()
             .unwrap();
-        let title = j.pointer("/roomInfo/tLiveInfo/sRoomName").ok_or(anyhow!("ghri err 3"))?.as_str().unwrap();
-        let owner = j.pointer("/roomInfo/tProfileInfo/sNick").ok_or(anyhow!("ghri err 4"))?.as_str().unwrap();
-        let is_living = j.pointer("/roomInfo/eLiveStatus").ok_or(anyhow!("ghri err 5"))?.as_i64().unwrap();
+        let title = j_rd.pointer("/introduction").ok_or(anyhow!("ghri err 3"))?.as_str().unwrap();
+        let owner = j_pi.pointer("/nick").ok_or(anyhow!("ghri err 4"))?.as_str().unwrap();
+        let is_living = j_rd.pointer("/isOn").ok_or(anyhow!("ghri err 5"))?.as_bool().unwrap();
         Ok(RoomInfo {
             room_code: format!("hu-{}", rid),
-            cover: if cover.is_empty() { avatar.into() } else { cover.into() },
+            cover: if is_living { cover.into() } else { avatar.into() },
             title: if title.is_empty() { "没有直播标题".into() } else { title.into() },
             owner: owner.into(),
-            is_living: if is_living == 2 { true } else { false },
+            is_living,
         })
     }
 

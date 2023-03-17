@@ -10,17 +10,17 @@ edition = "2021"
 build = "src/build.rs"
 
 [build-dependencies]
-tauri-build = { version = "1.2.0", features = [] }
+tauri-build = { version = "1.2.1", features = [] }
 
 [dependencies]
 serde_json = "1"
 serde = { version = "1", features = [ "derive" ] }
-tauri = { version = "1.2.0", features = ["api-all"] }
+tauri = { version = "1.2.4", features = ["api-all"] }
 tokio = { version = "1", features = [ "full" ] }
 reqwest = { version = "0.11", default-features = false, features = [ "brotli", "deflate", "gzip", "json", "rustls-tls" ] }
-toml = "0.5"
+toml = "0.7"
 anyhow = "1"
-fancy-regex = "0.10"
+fancy-regex = "0.11"
 directories = "4"
 rand = "0.8"
 
