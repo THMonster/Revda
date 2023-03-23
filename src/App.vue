@@ -5,7 +5,7 @@ import { invoke } from "@tauri-apps/api";
 
  onBeforeMount(() => {
      invoke("init").then(() => {});
-     // document.addEventListener("contextmenu", (event) => event.preventDefault());
+     document.addEventListener("contextmenu", (event) => event.preventDefault());
  });
 </script>
 
@@ -24,13 +24,5 @@ import { invoke } from "@tauri-apps/api";
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-}
-.el-input__inner {
-  line-height: 0px !important;
-}
-
-.el-tabs__item {
-  font-size: 1.1rem;
-  line-height: 30px;
 }
 </style>
