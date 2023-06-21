@@ -149,9 +149,9 @@ impl Sites {
             Ok(it) => it,
             Err(e) => {
                 // println!("{}", e);
-                let re_cover = fancy_regex::Regex::new(r#"itemprop="thumbnailUrl"\s+href="([^"]+)""#).unwrap();
-                let re_cid = fancy_regex::Regex::new(r#"itemprop="channelId"\s+content="([^"]+)""#).unwrap();
-                let re_owner = fancy_regex::Regex::new(r#"link\s+itemprop="name"\s+content="([^"]+)""#).unwrap();
+                let re_cover = fancy_regex::Regex::new(r#"link\s+rel="image_src"\s+href="([^"]+)""#).unwrap();
+                let re_cid = fancy_regex::Regex::new(r#"itemprop="identifier"\s+content="([^"]+)""#).unwrap();
+                let re_owner = fancy_regex::Regex::new(r#"meta\s+property="og:title"\s+content="([^"]+)""#).unwrap();
                 RoomInfo {
                     cover: re_cover.captures(&resp)?.ok_or(anyhow!("gyri err 7"))?[1].to_string(),
                     title: "没有直播标题".into(),
