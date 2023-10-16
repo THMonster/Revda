@@ -1,32 +1,23 @@
 {
-    "manifest_version": 2,
-
-    "name": "Open With DMLive",
-    "description": "Open With DMLive",
-    "version": "0.3.1",
-
-    "author": "THMonster <me@thmonster.com>",
-
-    "icons": {
-        "48": "icons/revda.png"
-    },
-
-    "background": {
-        "scripts": [
-            "extension.js"
-        ],
-        "persistent": false
-    },
-
-    "permissions": [
-        "tabs",
-        "contextMenus"
-    ],
-
-    "browser_specific_settings": {
-        "gecko": {
-            "id": "open-with-revda@thmonster.com",
-            "strict_min_version": "50.0"
-        }
-    }
+	"manifest_version": 3,
+	"name": "Open With DMLive",
+	"description": "Open With DMLive",
+	"version": "0.3.2",
+	"author": "THMonster <me@thmonster.com>",
+	"icons": {
+		"48": "icons/revda.png"
+	},
+	"background": {
+		"service_worker": "extension.js"
+	},
+	"permissions": [
+		"tabs",
+		"contextMenus"
+	],
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "thmonster@thmonster.com",
+			"strict_min_version": "50.0"
+		}
+	}
 }

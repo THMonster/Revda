@@ -5,7 +5,7 @@ Name=Revda
 Comment=Play streaming and video with danmaku
 Comment[zh_CN]=播放弹幕直播与视频
 Categories=AudioVideo;Audio;Video;Player;TV;
-Exec=revda
+Exec=env "WEBKIT_DISABLE_COMPOSITING_MODE=1" revda
 Icon=revda
 StartupNotify=true
 Terminal=false

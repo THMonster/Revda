@@ -1,6 +1,12 @@
-use anyhow::anyhow;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use tokio::sync::Semaphore;
+
+macro_rules! rvderr {
+    ($($args: expr),*) => {
+        anyhow::anyhow!("file: {}, line: {}, column: {}", file!(), line!(), column!())
+    };
+}
 
 #[derive(Serialize, Deserialize, Debug, Default, Clone)]
 pub struct RoomInfo {
@@ -15,6 +21,8 @@ pub struct Sites {
     client: Client,
     ua: String,
     ua_mobile: String,
+    semaphore_c: Semaphore,
+    semaphore_g: Semaphore,
 }
 
 impl Sites {
@@ -27,9 +35,11 @@ impl Sites {
             client,
             ua: format!(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:{1}.0) Gecko/20100101 Firefox/{0}.0",
-                111, 109
+                118, 109
             ),
-            ua_mobile: format!("Mozilla/5.0 (Android 10; Mobile; rv:{1}.0) Gecko/{0}.0 Firefox/{0}.0", 111, 109),
+            ua_mobile: format!("Mozilla/5.0 (Android 10; Mobile; rv:{1}.0) Gecko/{0}.0 Firefox/{0}.0", 118, 109),
+            semaphore_c: Semaphore::new(3),
+            semaphore_g: Semaphore::new(3),
         }
     }
 
@@ -38,20 +48,17 @@ impl Sites {
             .client
             .get("https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom")
             .header("User-Agent", &self.ua_mobile)
+            .header("Connection", "keep-alive")
             .query(&[("room_id", rid)])
             .send()
             .await?
             .json::<serde_json::Value>()
             .await?;
         // println!("{:?}", &j);
-        let cover = j.pointer("/data/room_info/keyframe").ok_or(anyhow!("gbri err 1"))?.as_str().unwrap();
-        let title = j.pointer("/data/room_info/title").ok_or(anyhow!("gbri err 2"))?.as_str().unwrap();
-        let owner = j
-            .pointer("/data/anchor_info/base_info/uname")
-            .ok_or(anyhow!("gbri err 3"))?
-            .as_str()
-            .unwrap();
-        let is_living = j.pointer("/data/room_info/live_status").ok_or(anyhow!("gbri err 4"))?.as_i64().unwrap();
+        let cover = j.pointer("/data/room_info/keyframe").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let title = j.pointer("/data/room_info/title").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let owner = j.pointer("/data/anchor_info/base_info/uname").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let is_living = j.pointer("/data/room_info/live_status").ok_or_else(|| rvderr!())?.as_i64().unwrap();
         Ok(RoomInfo {
             room_code: format!("bi-{}", rid),
             cover: cover.into(),
@@ -66,16 +73,17 @@ impl Sites {
             .client
             .get(format!("https://www.douyu.com/betard/{}", &rid))
             .header("User-Agent", &self.ua)
+            .header("Connection", "keep-alive")
             .send()
             .await?
             .json::<serde_json::Value>()
             .await?;
         // println!("{:?}", &j);
-        let cover = j.pointer("/room/room_pic").ok_or(anyhow!("gdri err 1"))?.as_str().unwrap();
-        let title = j.pointer("/room/room_name").ok_or(anyhow!("gdri err 2"))?.as_str().unwrap();
-        let owner = j.pointer("/room/nickname").ok_or(anyhow!("gdri err 3"))?.as_str().unwrap();
-        let is_living = j.pointer("/room/show_status").ok_or(anyhow!("gdri err 4"))?.as_i64().unwrap();
-        let is_living2 = j.pointer("/room/videoLoop").ok_or(anyhow!("gdri err 5"))?.as_i64().unwrap();
+        let cover = j.pointer("/room/room_pic").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let title = j.pointer("/room/room_name").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let owner = j.pointer("/room/nickname").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let is_living = j.pointer("/room/show_status").ok_or_else(|| rvderr!())?.as_i64().unwrap();
+        let is_living2 = j.pointer("/room/videoLoop").ok_or_else(|| rvderr!())?.as_i64().unwrap();
         Ok(RoomInfo {
             room_code: format!("do-{}", rid),
             cover: cover.into(),
@@ -96,6 +104,7 @@ impl Sites {
             .get(u)
             .header("User-Agent", &self.ua)
             .header("accept-language", "en-US")
+            .header("Connection", "keep-alive")
             .header(
                 "Cookie",
                 format!("CONSENT=YES+cb.20210810-12-p0.en+FX+{:03}", rand::random::<u64>() % 500),
@@ -115,27 +124,27 @@ impl Sites {
                         j
                     })
                 })?
-                .ok_or(anyhow!("gyri err 1"))??;
+                .ok_or_else(|| rvderr!())??;
             let is_living = match j.pointer("/videoDetails/isLive") {
-                Some(it) => it.as_bool().ok_or(anyhow!("gyri err 2"))?,
+                Some(it) => it.as_bool().ok_or_else(|| rvderr!())?,
                 None => false,
             };
             let tn = j
                 .pointer("/videoDetails/thumbnail/thumbnails")
-                .ok_or(anyhow!("gyri err 3"))?
+                .ok_or_else(|| rvderr!())?
                 .as_array()
                 .unwrap();
             let cover = tn
                 .last()
-                .ok_or(anyhow!("gyri err 10"))?
+                .ok_or_else(|| rvderr!())?
                 .pointer("/url")
-                .ok_or(anyhow!("gyri err 11"))?
+                .ok_or_else(|| rvderr!())?
                 .as_str()
                 .unwrap();
 
-            let title = j.pointer("/videoDetails/title").ok_or(anyhow!("gyri err 4"))?.as_str().unwrap();
-            let owner = j.pointer("/videoDetails/author").ok_or(anyhow!("gyri err 5"))?.as_str().unwrap();
-            let cid = j.pointer("/videoDetails/channelId").ok_or(anyhow!("gyri err 6"))?.as_str().unwrap();
+            let title = j.pointer("/videoDetails/title").ok_or_else(|| rvderr!())?.as_str().unwrap();
+            let owner = j.pointer("/videoDetails/author").ok_or_else(|| rvderr!())?.as_str().unwrap();
+            let cid = j.pointer("/videoDetails/channelId").ok_or_else(|| rvderr!())?.as_str().unwrap();
 
             Ok(RoomInfo {
                 cover: cover.into(),
@@ -147,17 +156,17 @@ impl Sites {
         };
         let ret = match f1() {
             Ok(it) => it,
-            Err(e) => {
+            Err(_e) => {
                 // println!("{}", e);
                 let re_cover = fancy_regex::Regex::new(r#"link\s+rel="image_src"\s+href="([^"]+)""#).unwrap();
                 let re_cid = fancy_regex::Regex::new(r#"itemprop="identifier"\s+content="([^"]+)""#).unwrap();
                 let re_owner = fancy_regex::Regex::new(r#"meta\s+property="og:title"\s+content="([^"]+)""#).unwrap();
                 RoomInfo {
-                    cover: re_cover.captures(&resp)?.ok_or(anyhow!("gyri err 7"))?[1].to_string(),
+                    cover: re_cover.captures(&resp)?.ok_or_else(|| rvderr!())?[1].to_string(),
                     title: "没有直播标题".into(),
-                    owner: re_owner.captures(&resp)?.ok_or(anyhow!("gyri err 8"))?[1].to_string(),
+                    owner: re_owner.captures(&resp)?.ok_or_else(|| rvderr!())?[1].to_string(),
                     is_living: false,
-                    room_code: format!("yt-{}", re_cid.captures(&resp)?.ok_or(anyhow!("gyri err 9"))?[1].to_string()),
+                    room_code: format!("yt-{}", re_cid.captures(&resp)?.ok_or_else(|| rvderr!())?[1].to_string()),
                 }
             }
         };
@@ -169,6 +178,7 @@ impl Sites {
             .client
             .get(format!("https://www.huya.com/{}", &rid))
             .header("User-Agent", &self.ua)
+            .header("Connection", "keep-alive")
             .send()
             .await?
             .text()
@@ -185,7 +195,7 @@ impl Sites {
                     j
                 })
             })?
-            .ok_or(anyhow!("ghri err 1"))??;
+            .ok_or_else(|| rvderr!())??;
         let j_rd = re2
             .captures(&resp)
             .map(|r| {
@@ -194,20 +204,12 @@ impl Sites {
                     j
                 })
             })?
-            .ok_or(anyhow!("ghri err 7"))??;
-        let cover = j_rd
-            .pointer("/screenshot")
-            .ok_or(anyhow!("ghri err 2"))?
-            .as_str()
-            .unwrap();
-        let avatar = j_pi
-            .pointer("/avatar")
-            .ok_or(anyhow!("ghri err 6"))?
-            .as_str()
-            .unwrap();
-        let title = j_rd.pointer("/introduction").ok_or(anyhow!("ghri err 3"))?.as_str().unwrap();
-        let owner = j_pi.pointer("/nick").ok_or(anyhow!("ghri err 4"))?.as_str().unwrap();
-        let is_living = j_rd.pointer("/isOn").ok_or(anyhow!("ghri err 5"))?.as_bool().unwrap();
+            .ok_or_else(|| rvderr!())??;
+        let cover = j_rd.pointer("/screenshot").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let avatar = j_pi.pointer("/avatar").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let title = j_rd.pointer("/introduction").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let owner = j_pi.pointer("/nick").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let is_living = j_rd.pointer("/isOn").ok_or_else(|| rvderr!())?.as_bool().unwrap();
         Ok(RoomInfo {
             room_code: format!("hu-{}", rid),
             cover: if is_living { cover.into() } else { avatar.into() },
@@ -224,6 +226,7 @@ impl Sites {
             .header("User-Agent", &self.ua_mobile)
             .header("Accept-Language", "en-US")
             .header("Referer", "https://m.twitch.tv/")
+            .header("Connection", "keep-alive")
             .send()
             .await?
             .text()
@@ -234,10 +237,10 @@ impl Sites {
         let re_avatar = fancy_regex::Regex::new(r#""User\}\|\{.+?":.+?"profileImageURL.+?":"(.+?)""#).unwrap();
         // let re_status = fancy_regex::Regex::new(r#""User\}\|\{.+?":.+?"stream":null"#).unwrap();
 
-        let owner = re_owner.captures(&resp)?.ok_or(anyhow!("gtri err 1"))?[1].to_string();
+        let owner = re_owner.captures(&resp)?.ok_or_else(|| rvderr!())?[1].to_string();
         let cover = match re_cover.captures(&resp)? {
             Some(it) => it[1].to_string().replace("{width}x{height}", "320x180"),
-            None => re_avatar.captures(&resp)?.ok_or(anyhow!("gtri err 3"))?[1].replace("150x150", "300x300"),
+            None => re_avatar.captures(&resp)?.ok_or_else(|| rvderr!())?[1].replace("150x150", "300x300"),
         };
         // println!("{}", &cover);
         let (title, is_living) = match re_title.captures(&resp)? {
@@ -251,5 +254,30 @@ impl Sites {
             is_living,
             room_code: format!("tw-{}", rid),
         })
+    }
+
+    pub async fn get_room_info_by_code(&self, room_code: &str) -> anyhow::Result<RoomInfo> {
+        let ret = if room_code.starts_with("bi-") {
+            let _permit = self.semaphore_c.acquire().await?;
+            self.get_bilibili_room_info(&room_code[3..]).await?
+        } else if room_code.starts_with("do-") {
+            let _permit = self.semaphore_c.acquire().await?;
+            self.get_douyu_room_info(&room_code[3..]).await?
+        } else if room_code.starts_with("hu-") {
+            let _permit = self.semaphore_c.acquire().await?;
+            self.get_huya_room_info(&room_code[3..]).await?
+        } else if room_code.starts_with("yt-") {
+            let _permit = self.semaphore_g.acquire().await?;
+            self.get_youtube_room_info(&room_code[3..], 0).await?
+        } else if room_code.starts_with("ytv-") {
+            let _permit = self.semaphore_g.acquire().await?;
+            self.get_youtube_room_info(&room_code[4..], 1).await?
+        } else if room_code.starts_with("tw-") {
+            let _permit = self.semaphore_g.acquire().await?;
+            self.get_twitch_room_info(&room_code[3..]).await?
+        } else {
+            return Err(anyhow::anyhow!("unknown room code"));
+        };
+        Ok(ret)
     }
 }

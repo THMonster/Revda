@@ -127,20 +127,21 @@ pub async fn remove_history_room(state: tauri::State<'_, Arc<crate::State>>, roo
 
 #[tauri::command]
 pub async fn get_room_info_by_code(state: tauri::State<'_, Arc<crate::State>>, room_code: String) -> Result<RoomInfo, String> {
-    let ret = if room_code.starts_with("bi-") {
-        state.sites.get_bilibili_room_info(&room_code[3..]).await.map_err(|e| e.to_string())?
-    } else if room_code.starts_with("do-") {
-        state.sites.get_douyu_room_info(&room_code[3..]).await.map_err(|e| e.to_string())?
-    } else if room_code.starts_with("hu-") {
-        state.sites.get_huya_room_info(&room_code[3..]).await.map_err(|e| e.to_string())?
-    } else if room_code.starts_with("yt-") {
-        state.sites.get_youtube_room_info(&room_code[3..], 0).await.map_err(|e| e.to_string())?
-    } else if room_code.starts_with("ytv-") {
-        state.sites.get_youtube_room_info(&room_code[4..], 1).await.map_err(|e| e.to_string())?
-    } else if room_code.starts_with("tw-") {
-        state.sites.get_twitch_room_info(&room_code[3..]).await.map_err(|e| e.to_string())?
-    } else {
-        return Err("unknown room code!".into());
-    };
+    // let ret = if room_code.starts_with("bi-") {
+    //     state.sites.get_bilibili_room_info(&room_code[3..]).await.map_err(|e| e.to_string())?
+    // } else if room_code.starts_with("do-") {
+    //     state.sites.get_douyu_room_info(&room_code[3..]).await.map_err(|e| e.to_string())?
+    // } else if room_code.starts_with("hu-") {
+    //     state.sites.get_huya_room_info(&room_code[3..]).await.map_err(|e| e.to_string())?
+    // } else if room_code.starts_with("yt-") {
+    //     state.sites.get_youtube_room_info(&room_code[3..], 0).await.map_err(|e| e.to_string())?
+    // } else if room_code.starts_with("ytv-") {
+    //     state.sites.get_youtube_room_info(&room_code[4..], 1).await.map_err(|e| e.to_string())?
+    // } else if room_code.starts_with("tw-") {
+    //     state.sites.get_twitch_room_info(&room_code[3..]).await.map_err(|e| e.to_string())?
+    // } else {
+    //     return Err("unknown room code!".into());
+    // };
+    let ret = state.sites.get_room_info_by_code(&room_code).await.map_err(|e| e.to_string())?;
     Ok(ret)
 }
