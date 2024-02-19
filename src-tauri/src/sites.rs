@@ -35,9 +35,9 @@ impl Sites {
             client,
             ua: format!(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:{1}.0) Gecko/20100101 Firefox/{0}.0",
-                118, 109
+                122, 122
             ),
-            ua_mobile: format!("Mozilla/5.0 (Android 10; Mobile; rv:{1}.0) Gecko/{0}.0 Firefox/{0}.0", 118, 109),
+            ua_mobile: format!("Mozilla/5.0 (Android 10; Mobile; rv:{1}.0) Gecko/{0}.0 Firefox/{0}.0", 122, 122),
             semaphore_c: Semaphore::new(3),
             semaphore_g: Semaphore::new(3),
         }
@@ -46,8 +46,8 @@ impl Sites {
     pub async fn get_bilibili_room_info(&self, rid: &str) -> anyhow::Result<RoomInfo> {
         let j = self
             .client
-            .get("https://api.live.bilibili.com/xlive/web-room/v1/index/getH5InfoByRoom")
-            .header("User-Agent", &self.ua_mobile)
+            .get("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom")
+            .header("User-Agent", &self.ua)
             .header("Connection", "keep-alive")
             .query(&[("room_id", rid)])
             .send()
@@ -94,10 +94,12 @@ impl Sites {
     }
 
     pub async fn get_youtube_room_info(&self, rid: &str, tp: u8) -> anyhow::Result<RoomInfo> {
+        let mut cid = "null".to_string();
         let u = if tp == 1 {
             format!("https://www.youtube.com/watch?v={}", &rid)
         } else {
-            format!("https://www.youtube.com/channel/{}/live", &rid)
+            cid = rid.to_string();
+            format!("https://www.youtube.com/@{}/live", &rid)
         };
         let resp = self
             .client
@@ -105,17 +107,17 @@ impl Sites {
             .header("User-Agent", &self.ua)
             .header("accept-language", "en-US")
             .header("Connection", "keep-alive")
-            .header(
-                "Cookie",
-                format!("CONSENT=YES+cb.20210810-12-p0.en+FX+{:03}", rand::random::<u64>() % 500),
-            )
+            // .header(
+            //     "Cookie",
+            //     format!("CONSENT=YES+cb.20210810-12-p0.en+FX+{:03}", rand::random::<u64>() % 500),
+            // )
             .send()
             .await?
             .text()
             .await?;
-        // println!("{:?}", &j);
-        let re = fancy_regex::Regex::new(r"ytInitialPlayerResponse\s*=\s*(\{.+?\});.*?\</script\>").unwrap();
-        let f1 = || -> anyhow::Result<_> {
+        // println!("{:?}", &resp);
+        let re = fancy_regex::Regex::new(r"ytInitialPlayerResponse\s*=\s*(\{.+?\});.*?</script>").unwrap();
+        let mut f1 = || -> anyhow::Result<_> {
             let j = re
                 .captures(&resp)
                 .map(|r| {
@@ -125,6 +127,19 @@ impl Sites {
                     })
                 })?
                 .ok_or_else(|| rvderr!())??;
+
+            cid = j
+                .pointer("/microformat/playerMicroformatRenderer/ownerProfileUrl")
+                .ok_or_else(|| rvderr!())?
+                .as_str()
+                .ok_or_else(|| rvderr!())?
+                .split('/')
+                .last()
+                .ok_or_else(|| rvderr!())?
+                .strip_prefix("@")
+                .ok_or_else(|| rvderr!())?
+                .to_string();
+
             let is_living = match j.pointer("/videoDetails/isLive") {
                 Some(it) => it.as_bool().ok_or_else(|| rvderr!())?,
                 None => false,
@@ -144,7 +159,6 @@ impl Sites {
 
             let title = j.pointer("/videoDetails/title").ok_or_else(|| rvderr!())?.as_str().unwrap();
             let owner = j.pointer("/videoDetails/author").ok_or_else(|| rvderr!())?.as_str().unwrap();
-            let cid = j.pointer("/videoDetails/channelId").ok_or_else(|| rvderr!())?.as_str().unwrap();
 
             Ok(RoomInfo {
                 cover: cover.into(),
@@ -159,14 +173,13 @@ impl Sites {
             Err(_e) => {
                 // println!("{}", e);
                 let re_cover = fancy_regex::Regex::new(r#"link\s+rel="image_src"\s+href="([^"]+)""#).unwrap();
-                let re_cid = fancy_regex::Regex::new(r#"itemprop="identifier"\s+content="([^"]+)""#).unwrap();
                 let re_owner = fancy_regex::Regex::new(r#"meta\s+property="og:title"\s+content="([^"]+)""#).unwrap();
                 RoomInfo {
                     cover: re_cover.captures(&resp)?.ok_or_else(|| rvderr!())?[1].to_string(),
                     title: "没有直播标题".into(),
                     owner: re_owner.captures(&resp)?.ok_or_else(|| rvderr!())?[1].to_string(),
                     is_living: false,
-                    room_code: format!("yt-{}", re_cid.captures(&resp)?.ok_or_else(|| rvderr!())?[1].to_string()),
+                    room_code: format!("yt-{}", cid),
                 }
             }
         };

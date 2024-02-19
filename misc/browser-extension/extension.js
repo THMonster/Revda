@@ -11,7 +11,7 @@ function checkUrl(u) {
 	} else {
 		url = 'dmlive://' + url.hostname + url.pathname;
 	}
-	if (u.includes('bilibili.com/video') || u.includes('bilibili.com/bangumi/play') || u.includes('live.bilibili.com/') || u.includes('twitch.tv/') || u.includes('douyu.com/') || u.includes('huya.com/') || u.includes('youtube.com/watch') || u.includes('youtube.com/channel/')) {
+	if (u.includes('bilibili.com/video') || u.includes('bilibili.com/bangumi/play') || u.includes('live.bilibili.com/') || u.includes('twitch.tv/') || u.includes('douyu.com/') || u.includes('huya.com/') || u.includes('youtube.com/watch') || u.includes('youtube.com/@')) {
 		return url;
 	} else {
 		return "";

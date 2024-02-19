@@ -33,7 +33,7 @@ pub async fn open_room(room_code: String) -> Result<(), String> {
     } else if room_code.starts_with("hu-") {
         format!("https://www.huya.com/{}", &room_code[3..])
     } else if room_code.starts_with("yt-") {
-        format!("https://www.youtube.com/channel/{}", &room_code[3..])
+        format!("https://www.youtube.com/@{}", &room_code[3..])
     } else if room_code.starts_with("ytv-") {
         format!("https://www.youtube.com/watch?v={}", &room_code[4..])
     } else if room_code.starts_with("tw-") {
