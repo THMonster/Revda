@@ -107,6 +107,7 @@ impl Sites {
             .header("User-Agent", &self.ua)
             .header("accept-language", "en-US")
             .header("Connection", "keep-alive")
+            // .version(reqwest::Version::HTTP_2)
             // .header(
             //     "Cookie",
             //     format!("CONSENT=YES+cb.20210810-12-p0.en+FX+{:03}", rand::random::<u64>() % 500),
@@ -192,6 +193,7 @@ impl Sites {
             .get(format!("https://www.huya.com/{}", &rid))
             .header("User-Agent", &self.ua)
             .header("Connection", "keep-alive")
+            // .version(reqwest::Version::HTTP_2)
             .send()
             .await?
             .text()
@@ -233,32 +235,70 @@ impl Sites {
     }
 
     pub async fn get_twitch_room_info(&self, rid: &str) -> anyhow::Result<RoomInfo> {
+        let f1 = |html: &str| {
+            let re = fancy_regex::Regex::new(r#"".+<script type="application/ld\+json">(.+?)</script>.+""#).unwrap();
+            let j = re.captures(html)?.ok_or_else(|| rvderr!())?[1].to_string();
+            let j: serde_json::Value = serde_json::from_str(&j)?;
+            let title = j
+                .pointer("/@graph/0/description")
+                .ok_or_else(|| rvderr!())?
+                .as_str()
+                .ok_or_else(|| rvderr!())?
+                .to_string();
+            let owner = j
+                .pointer("/@graph/0/name")
+                .ok_or_else(|| rvderr!())?
+                .as_str()
+                .ok_or_else(|| rvderr!())?
+                .to_string();
+            let cover = j
+                .pointer("/@graph/0/thumbnailUrl/2")
+                .ok_or_else(|| rvderr!())?
+                .as_str()
+                .ok_or_else(|| rvderr!())?
+                .to_string();
+            anyhow::Ok((title, owner, cover, true))
+        };
+        let f2 = |html: &str| {
+            let re_owner = fancy_regex::Regex::new(r#"".+<meta property="og:title" content="(.+?)"/>.+""#).unwrap();
+            let re_owner_b = fancy_regex::Regex::new(r#"".+<meta content="(.+?)" property="og:title"/>.+""#).unwrap();
+            let re_cover = fancy_regex::Regex::new(r#"".+<meta property="og:image" content="(.+?)"/>.+""#).unwrap();
+            let re_cover_b = fancy_regex::Regex::new(r#"".+<meta content="(.+?)" property="og:image"/>.+""#).unwrap();
+            let owner = match re_owner.captures(html)? {
+                Some(it) => it[1].to_string(),
+                None => re_owner_b.captures(html)?.ok_or_else(|| rvderr!())?[1].to_string(),
+            };
+            let cover = match re_cover.captures(html)? {
+                Some(it) => it[1].to_string(),
+                None => {
+                    re_cover_b.captures(html)?.ok_or_else(|| rvderr!())?[1].to_string()
+                }
+            };
+            anyhow::Ok(("没有直播标题".to_string(), owner, cover, false))
+        };
         let resp = self
             .client
-            .get(format!("https://m.twitch.tv/{}/profile", &rid))
-            .header("User-Agent", &self.ua_mobile)
-            .header("Accept-Language", "en-US")
-            .header("Referer", "https://m.twitch.tv/")
-            .header("Connection", "keep-alive")
+            .get(format!("https://www.twitch.tv/{}", &rid))
+            .header("User-Agent", &self.ua)
+            // .header("User-Agent", "curl/8.8.0")
+            // .header("Accept-Language", "en-US")
+            // .header("Referer", "https://www.twitch.tv/")
+            // .header("Connection", "keep-alive")
+            .version(reqwest::Version::HTTP_11)
             .send()
             .await?
             .text()
             .await?;
-        let re_title = fancy_regex::Regex::new(r#""BroadcastSettings\}\|\{[^"]+":.+?"title":"(.+?)""#).unwrap();
-        let re_owner = fancy_regex::Regex::new(r#""User\}\|\{.+?":.+?"displayName":"(.+?)""#).unwrap();
-        let re_cover = fancy_regex::Regex::new(r#""Stream\}\|\{.+?":.+?"previewImageURL":"(.+?)""#).unwrap();
-        let re_avatar = fancy_regex::Regex::new(r#""User\}\|\{.+?":.+?"profileImageURL.+?":"(.+?)""#).unwrap();
-        // let re_status = fancy_regex::Regex::new(r#""User\}\|\{.+?":.+?"stream":null"#).unwrap();
+        // println!("{}", &resp);
 
-        let owner = re_owner.captures(&resp)?.ok_or_else(|| rvderr!())?[1].to_string();
-        let cover = match re_cover.captures(&resp)? {
-            Some(it) => it[1].to_string().replace("{width}x{height}", "320x180"),
-            None => re_avatar.captures(&resp)?.ok_or_else(|| rvderr!())?[1].replace("150x150", "300x300"),
+        let (title, owner, cover, is_living) = match f1(&resp) {
+            Ok(it) => it,
+            Err(_) => f2(&resp)?,
         };
-        // println!("{}", &cover);
-        let (title, is_living) = match re_title.captures(&resp)? {
-            Some(it) => (it[1].to_string(), true),
-            None => ("没有直播标题".into(), false),
+
+        let owner = match owner.strip_suffix(" - Twitch") {
+            Some(it) => it.to_string(),
+            None => owner,
         };
         Ok(RoomInfo {
             cover,
