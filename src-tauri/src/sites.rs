@@ -54,14 +54,15 @@ impl Sites {
             .await?
             .json::<serde_json::Value>()
             .await?;
-        // println!("{:?}", &j);
-        let cover = j.pointer("/data/room_info/keyframe").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        // println!("{:#?}", &j);
+        let cover = j.pointer("/data/room_info/cover").ok_or_else(|| rvderr!())?.as_str().unwrap();
+        let keyframe = j.pointer("/data/room_info/keyframe").ok_or_else(|| rvderr!())?.as_str().unwrap();
         let title = j.pointer("/data/room_info/title").ok_or_else(|| rvderr!())?.as_str().unwrap();
         let owner = j.pointer("/data/anchor_info/base_info/uname").ok_or_else(|| rvderr!())?.as_str().unwrap();
         let is_living = j.pointer("/data/room_info/live_status").ok_or_else(|| rvderr!())?.as_i64().unwrap();
         Ok(RoomInfo {
             room_code: format!("bi-{}", rid),
-            cover: cover.into(),
+            cover: if keyframe.is_empty() { cover.into() } else { keyframe.into() },
             title: title.into(),
             owner: owner.into(),
             is_living: if is_living == 1 { true } else { false },
@@ -270,9 +271,7 @@ impl Sites {
             };
             let cover = match re_cover.captures(html)? {
                 Some(it) => it[1].to_string(),
-                None => {
-                    re_cover_b.captures(html)?.ok_or_else(|| rvderr!())?[1].to_string()
-                }
+                None => re_cover_b.captures(html)?.ok_or_else(|| rvderr!())?[1].to_string(),
             };
             anyhow::Ok(("没有直播标题".to_string(), owner, cover, false))
         };
