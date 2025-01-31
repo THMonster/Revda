@@ -106,6 +106,7 @@ const emit = defineEmits(["remove_saved", "open_room"]);
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+  color: light-dark(#2c3e50, #e5e5e5);
 }
 .room-card-owner {
   margin: 0;
@@ -115,5 +116,6 @@ const emit = defineEmits(["remove_saved", "open_room"]);
   white-space: nowrap;
   text-overflow: ellipsis;
   overflow: hidden;
+  color: light-dark(#2c3e50, #e5e5e5);
 }
 </style>
