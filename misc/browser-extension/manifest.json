@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "Open With DMLive",
 	"description": "Open With DMLive",
-	"version": "0.3.2",
+	"version": "0.3.5",
 	"author": "THMonster <me@thmonster.com>",
 	"icons": {
 		"48": "icons/revda.png"
@@ -10,9 +10,20 @@
 	"background": {
 		"service_worker": "extension.js"
 	},
+	"content_scripts": [
+		{
+			"matches": [
+				"<all_urls>"
+			],
+			"js": [
+				"content-script.js"
+			]
+		}
+	],
 	"permissions": [
-		"tabs",
-		"contextMenus"
+		"windows",
+		"contextMenus",
+		"scripting"
 	],
 	"browser_specific_settings": {
 		"gecko": {

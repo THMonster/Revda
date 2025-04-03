@@ -35,38 +35,83 @@ impl Sites {
             client,
             ua: format!(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:{1}.0) Gecko/20100101 Firefox/{0}.0",
-                122, 122
+                136, 136
             ),
-            ua_mobile: format!("Mozilla/5.0 (Android 10; Mobile; rv:{1}.0) Gecko/{0}.0 Firefox/{0}.0", 122, 122),
+            ua_mobile: format!("Mozilla/5.0 (Android 10; Mobile; rv:{1}.0) Gecko/{0}.0 Firefox/{0}.0", 136, 136),
             semaphore_c: Semaphore::new(3),
             semaphore_g: Semaphore::new(3),
         }
     }
 
     pub async fn get_bilibili_room_info(&self, rid: &str) -> anyhow::Result<RoomInfo> {
-        let j = self
+        let resp = self
             .client
-            .get("https://api.live.bilibili.com/xlive/web-room/v1/index/getInfoByRoom")
+            .get(format!("https://live.bilibili.com/{}", rid))
             .header("User-Agent", &self.ua)
             .header("Connection", "keep-alive")
-            .query(&[("room_id", rid)])
             .send()
             .await?
-            .json::<serde_json::Value>()
+            .text()
             .await?;
-        // println!("{:#?}", &j);
-        let cover = j.pointer("/data/room_info/cover").ok_or_else(|| rvderr!())?.as_str().unwrap();
-        let keyframe = j.pointer("/data/room_info/keyframe").ok_or_else(|| rvderr!())?.as_str().unwrap();
-        let title = j.pointer("/data/room_info/title").ok_or_else(|| rvderr!())?.as_str().unwrap();
-        let owner = j.pointer("/data/anchor_info/base_info/uname").ok_or_else(|| rvderr!())?.as_str().unwrap();
-        let is_living = j.pointer("/data/room_info/live_status").ok_or_else(|| rvderr!())?.as_i64().unwrap();
-        Ok(RoomInfo {
-            room_code: format!("bi-{}", rid),
-            cover: if keyframe.is_empty() { cover.into() } else { keyframe.into() },
-            title: title.into(),
-            owner: owner.into(),
-            is_living: if is_living == 1 { true } else { false },
-        })
+        let re = fancy_regex::Regex::new(r"window.__NEPTUNE_IS_MY_WAIFU__\s*=\s*(\{.+?\})\s*</script>").unwrap();
+        if let Some(cap) = re.captures(&resp)? {
+            let j: serde_json::Value = serde_json::from_str(cap[1].to_string().as_ref())?;
+            // println!("{:#?}", &j);
+            let cover = j.pointer("/roomInfoRes/data/room_info/cover").ok_or_else(|| rvderr!())?.as_str().unwrap();
+            let keyframe = j
+                .pointer("/roomInfoRes/data/room_info/keyframe")
+                .ok_or_else(|| rvderr!())?
+                .as_str()
+                .unwrap();
+            let title = j.pointer("/roomInfoRes/data/room_info/title").ok_or_else(|| rvderr!())?.as_str().unwrap();
+            let owner = j
+                .pointer("/roomInfoRes/data/anchor_info/base_info/uname")
+                .ok_or_else(|| rvderr!())?
+                .as_str()
+                .unwrap();
+            let is_living = j
+                .pointer("/roomInfoRes/data/room_info/live_status")
+                .ok_or_else(|| rvderr!())?
+                .as_i64()
+                .unwrap();
+            Ok(RoomInfo {
+                room_code: format!("bi-{}", rid),
+                cover: if keyframe.is_empty() { cover.to_string() } else { keyframe.to_string() },
+                title: title.to_string(),
+                owner: owner.to_string(),
+                is_living: if is_living == 1 { true } else { false },
+            })
+        } else {
+            let mut param1 = Vec::new();
+            param1.push(("room_ids", rid));
+            param1.push(("req_biz", "web_room_componet"));
+            let resp = self
+                .client
+                .get("https://api.live.bilibili.com/xlive/web-room/v1/index/getRoomBaseInfo")
+                .query(&param1)
+                .send()
+                .await?
+                .json::<serde_json::Value>()
+                .await?;
+            let j = resp
+                .pointer("/data/by_room_ids")
+                .ok_or_else(|| rvderr!())?
+                .as_object()
+                .ok_or_else(|| rvderr!())?;
+            let j = j.iter().next().ok_or_else(|| rvderr!())?.1;
+            let bg = j.pointer("/background").ok_or_else(|| rvderr!())?.as_str().unwrap();
+            let cover = j.pointer("/cover").ok_or_else(|| rvderr!())?.as_str().unwrap();
+            let title = j.pointer("/title").ok_or_else(|| rvderr!())?.as_str().unwrap();
+            let owner = j.pointer("/uname").ok_or_else(|| rvderr!())?.as_str().unwrap();
+            let is_living = j.pointer("/live_status").ok_or_else(|| rvderr!())?.as_i64().unwrap();
+            Ok(RoomInfo {
+                room_code: format!("bi-{}", rid),
+                cover: if cover.is_empty() { bg.to_string() } else { cover.to_string() },
+                title: title.to_string(),
+                owner: owner.to_string(),
+                is_living: if is_living == 1 { true } else { false },
+            })
+        }
     }
 
     pub async fn get_douyu_room_info(&self, rid: &str) -> anyhow::Result<RoomInfo> {

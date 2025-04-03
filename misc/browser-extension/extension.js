@@ -40,11 +40,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 				url = checkUrl(info.pageUrl);
 			}
 			if (url !== "") {
-				console.log(url);
-				chrome.tabs.create({
-					url: url,
-					active: true
-				});
+				chrome.tabs.sendMessage(tab.id, { action: "dmlive-open-link", url });
 			}
 			break;
 	}

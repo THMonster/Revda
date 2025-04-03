@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.6)
 # SET(CMAKE_INSTALL_PREFIX /usr CACHE PATH "Set install prefix.")
 project(revda)
 set(PROJECT_VERSION "5.5.7")
