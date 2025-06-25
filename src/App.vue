@@ -2,7 +2,9 @@
 import MainView from "./views/MainView.vue";
 import { onBeforeMount } from "vue";
 import { invoke } from "@tauri-apps/api";
+import { useDark, useToggle } from '@vueuse/core'
 
+const isDark = useDark()
  onBeforeMount(() => {
      invoke("init").then(() => {});
      document.addEventListener("contextmenu", (event) => event.preventDefault());
