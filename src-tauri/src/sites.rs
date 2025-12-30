@@ -37,9 +37,9 @@ impl Sites {
     }
 
     pub async fn get_bilibili_room_info(&self, rid: &str) -> anyhow::Result<RoomInfo> {
-        let info = dmlive::streamfinder::bilibili::Bilibili::get_live_info(&self.client, rid).await?;
+        let info = dmlive::streamfinder::bilibili::get_live_info(&self.client, rid).await?;
         Ok(RoomInfo {
-            room_code: format!("bi-{}", rid),
+            room_code: format!("bi-{rid}"),
             cover: info.2,
             title: info.1,
             owner: info.0,
@@ -48,9 +48,9 @@ impl Sites {
     }
 
     pub async fn get_douyu_room_info(&self, rid: &str) -> anyhow::Result<RoomInfo> {
-        let info = dmlive::streamfinder::douyu::Douyu::get_live_info(&self.client, rid).await?;
+        let info = dmlive::streamfinder::douyu::get_live_info(&self.client, rid).await?;
         Ok(RoomInfo {
-            room_code: format!("do-{}", rid),
+            room_code: format!("do-{rid}"),
             cover: info.2,
             title: info.1,
             owner: info.0,
@@ -64,7 +64,7 @@ impl Sites {
         } else {
             format!("https://www.youtube.com/@{}/live", &rid)
         };
-        let info = dmlive::streamfinder::youtube::Youtube::get_live_info(&self.client, &u).await?;
+        let info = dmlive::streamfinder::youtube::get_live_info(&self.client, &u).await?;
         Ok(RoomInfo {
             owner: info.0,
             title: info.1,
@@ -76,9 +76,9 @@ impl Sites {
 
     pub async fn get_huya_room_info(&self, rid: &str) -> anyhow::Result<RoomInfo> {
         let url = format!("https://www.huya.com/{}", &rid);
-        let info = dmlive::streamfinder::huya::Huya::get_live_info(&self.client, &url).await?;
+        let info = dmlive::streamfinder::huya::get_live_info(&self.client, &url).await?;
         Ok(RoomInfo {
-            room_code: format!("hu-{}", rid),
+            room_code: format!("hu-{rid}"),
             cover: info.2,
             title: info.1,
             owner: info.0,
@@ -87,13 +87,13 @@ impl Sites {
     }
 
     pub async fn get_twitch_room_info(&self, rid: &str) -> anyhow::Result<RoomInfo> {
-        let info = dmlive::streamfinder::twitch::Twitch::get_live_info(&self.client, rid).await?;
+        let info = dmlive::streamfinder::twitch::get_live_info(&self.client, rid).await?;
         Ok(RoomInfo {
             cover: info.2,
             title: info.1,
             owner: info.0,
             is_living: info.3,
-            room_code: format!("tw-{}", rid),
+            room_code: format!("tw-{rid}"),
         })
     }
 
