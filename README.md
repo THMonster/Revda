@@ -1,8 +1,6 @@
 # Revda
 Linux平台下的弹幕直播播放工具。
 
-5.0.0发布，更名为Revda，gui工具使用`tauri`重写，不再依赖qt，很多地方有较大改动，请阅读[Github Wiki](https://github.com/THMonster/Revda/wiki)。
-
 ## Features
 * 支持国内外各大主流直播平台的直播播放。
 * 稳定60帧的弹幕。
@@ -31,9 +29,7 @@ Linux平台下的弹幕直播播放工具。
 * a proper [rust](https://kaisery.github.io/trpl-zh-cn/ch01-01-installation.html) compiler with cargo (for build)
 * [mpv](https://github.com/mpv-player/mpv)
 * ffmpeg
-* curl
 * webkit2gtk
-* nodejs (optional, for douyu support)
 
 ## Installation
 
