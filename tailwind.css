@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme inline {
+	--font-sans: sans-serif, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei';
+
+	--color-text-primary: var(--color-slate-900);
+	--color-bg-base: var(--color-white);
+	--color-primary: var(--color-red-400);
+	--color-border: var(--color-gray-200);
+
+	--color-text-primary-dark: var(--color-slate-100);
+	--color-bg-base-dark: var(--color-slate-950);
+	--color-primary-dark: var(--color-blue-600);
+	--color-border-dark: var(--color-gray-200);
+}
+
+body {
+	@apply font-sans bg-bg-base dark:bg-bg-base-dark text-text-primary dark:text-text-primary-dark
+}
