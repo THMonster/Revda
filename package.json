@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.5.6",
+    "@vueuse/core": "^12.4.0",
     "element-plus": "^2.7.5",
     "vue": "^3.4.29",
     "vue-router": "4.3.3"
