@@ -21,7 +21,6 @@ directories = "6"
 rand = "0.10"
 tracing = "0.1"
 chrono = "0.4"
-# dmlive = { path = "../dmlive" }
 dmlive = { git = "https://github.com/THMonster/dmlive", branch = "dev" }
 
 [features]
