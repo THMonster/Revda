@@ -41,8 +41,7 @@ html[data-theme="light"] [class~="dxc-system"] {
   --primary-color: var(--dark, #000) var(--light, #fff);
   --primary-color-1: var(--dark, #0e0e0e) var(--light, #fbfbfb);
   --primary-color-2: var(--dark, #0a0a0a) var(--light, #fff);
-  /* --primary-color-3: var(--dark, #141313) var(--light, #f8f8f8); */
-  --primary-color-3: var(--dark, var(--color-bg-base-dark)) var(--light, #f8f8f8);
+  --primary-color-3: var(--dark, #141313) var(--light, #f8f8f8);
   --primary-color-4: var(--dark, #1a1a1a) var(--light, #f8f8f8);
   --primary-color-5: var(--dark, #262626) var(--light, #f5f5f5);
   --primary-color-6: var(--dark, #232323) var(--light, #e5e5e5);

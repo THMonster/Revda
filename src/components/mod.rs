@@ -7,3 +7,4 @@ pub mod input;
 pub mod tabs;
 pub mod skeleton;
 pub mod roomcard;
+pub mod toast;

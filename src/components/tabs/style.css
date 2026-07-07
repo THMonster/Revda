@@ -62,8 +62,8 @@
     /* border: 1px solid var(--light, var(--primary-color-6)) */
     /*     var(--dark, var(--primary-color-7)); */
     /* border-radius: 0.5rem; */
-    background: var(--light, var(--primary-color))
-        var(--dark, var(--primary-color-3));
+    /* background: var(--light, var(--primary-color)) */
+    /*     var(--dark, var(--primary-color-3)); */
     /* box-shadow: var(--light, 0 1px 2px rgb(0 0 0 / 18%)) var(--dark, none); */
 }
 

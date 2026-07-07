@@ -50,7 +50,7 @@ pub fn RoomCard(
             onclick: move |_| {
                 click.call();
             },
-            class: "flex flex-col gap-2 rounded-2xl hover:bg-gray-200 transition-all",
+            class: "flex flex-col gap-2 rounded-2xl hover:bg-gray-200 hover:dark:bg-gray-800 transition-all",
             div {
                 class: "group/cover relative mx-2 mt-2",
                 if let Some(cover) = rv_room.cover().as_ref() {
