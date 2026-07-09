@@ -5,14 +5,14 @@
   :root, :host {
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
     monospace;
-    --color-red-400: oklch(70.4% 0.191 22.216);
-    --color-blue-600: oklch(54.6% 0.245 262.881);
+    --color-blue-400: oklch(70.7% 0.165 254.624);
+    --color-rose-400: oklch(71.2% 0.194 13.428);
     --color-slate-100: oklch(96.8% 0.007 247.896);
     --color-slate-900: oklch(20.8% 0.042 265.755);
-    --color-slate-950: oklch(12.9% 0.042 264.695);
-    --color-gray-200: oklch(92.8% 0.006 264.531);
-    --color-gray-700: oklch(37.3% 0.034 259.733);
-    --color-gray-800: oklch(27.8% 0.033 256.848);
+    --color-gray-50: oklch(98.5% 0.002 247.839);
+    --color-gray-100: oklch(96.7% 0.003 264.542);
+    --color-zinc-800: oklch(27.4% 0.006 286.033);
+    --color-zinc-950: oklch(14.1% 0.005 285.823);
     --color-white: #fff;
     --spacing: 0.25rem;
     --text-xs: 0.75rem;
@@ -30,6 +30,9 @@
     --default-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     --default-font-family: sans-serif, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei';
     --default-mono-font-family: var(--font-mono);
+    --color-bg-base: var(--color-white);
+    --color-bg-surface: var(--color-gray-100);
+    --color-bg-base-dark: var(--color-zinc-950);
   }
 }
 @layer base {
@@ -302,24 +305,24 @@
     border-width: 1px;
   }
   .border-primary {
-    border-color: var(--color-red-400);
+    border-color: var(--color-rose-400);
   }
   .border-primary\/50 {
-    border-color: color-mix(in srgb, oklch(70.4% 0.191 22.216) 50%, transparent);
+    border-color: color-mix(in srgb, oklch(71.2% 0.194 13.428) 50%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
-      border-color: color-mix(in oklab, var(--color-red-400) 50%, transparent);
+      border-color: color-mix(in oklab, var(--color-rose-400) 50%, transparent);
     }
   }
   .bg-bg-base {
     background-color: var(--color-white);
   }
   .bg-bg-base-dark {
-    background-color: var(--color-slate-950);
+    background-color: var(--color-zinc-950);
   }
   .bg-bg-base-dark\/80 {
-    background-color: color-mix(in srgb, oklch(12.9% 0.042 264.695) 80%, transparent);
+    background-color: color-mix(in srgb, oklch(14.1% 0.005 285.823) 80%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
-      background-color: color-mix(in oklab, var(--color-slate-950) 80%, transparent);
+      background-color: color-mix(in oklab, var(--color-zinc-950) 80%, transparent);
     }
   }
   .bg-bg-base\/70 {
@@ -327,6 +330,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-white) 70%, transparent);
     }
+  }
+  .bg-bg-surface {
+    background-color: var(--color-gray-100);
   }
   .object-cover {
     object-fit: cover;
@@ -359,7 +365,7 @@
     line-height: var(--tw-leading, var(--text-xs--line-height));
   }
   .text-primary {
-    color: var(--color-red-400);
+    color: var(--color-rose-400);
   }
   .text-text-primary-dark {
     color: var(--color-slate-100);
@@ -409,44 +415,44 @@
       }
     }
   }
-  .hover\:bg-gray-200 {
+  .hover\:bg-bg-surface {
     &:hover {
       @media (hover: hover) {
-        background-color: var(--color-gray-200);
+        background-color: var(--color-gray-100);
+      }
+    }
+  }
+  .dark\:border-primary-dark\/50 {
+    @media (prefers-color-scheme: dark) {
+      border-color: color-mix(in srgb, oklch(70.7% 0.165 254.624) 50%, transparent);
+      @supports (color: color-mix(in lab, red, red)) {
+        border-color: color-mix(in oklab, var(--color-blue-400) 50%, transparent);
       }
     }
   }
   .dark\:bg-bg-base-dark\/70 {
     @media (prefers-color-scheme: dark) {
-      background-color: color-mix(in srgb, oklch(12.9% 0.042 264.695) 70%, transparent);
+      background-color: color-mix(in srgb, oklch(14.1% 0.005 285.823) 70%, transparent);
       @supports (color: color-mix(in lab, red, red)) {
-        background-color: color-mix(in oklab, var(--color-slate-950) 70%, transparent);
+        background-color: color-mix(in oklab, var(--color-zinc-950) 70%, transparent);
       }
     }
   }
-  .hover\:dark\:bg-bg-base-dark {
-    &:hover {
-      @media (hover: hover) {
-        @media (prefers-color-scheme: dark) {
-          background-color: var(--color-slate-950);
-        }
-      }
+  .dark\:bg-bg-surface-dark {
+    @media (prefers-color-scheme: dark) {
+      background-color: var(--color-zinc-800);
     }
   }
-  .hover\:dark\:bg-gray-700 {
-    &:hover {
-      @media (hover: hover) {
-        @media (prefers-color-scheme: dark) {
-          background-color: var(--color-gray-700);
-        }
-      }
+  .dark\:text-primary-dark {
+    @media (prefers-color-scheme: dark) {
+      color: var(--color-blue-400);
     }
   }
-  .hover\:dark\:bg-gray-800 {
+  .hover\:dark\:bg-bg-surface-dark {
     &:hover {
       @media (hover: hover) {
         @media (prefers-color-scheme: dark) {
-          background-color: var(--color-gray-800);
+          background-color: var(--color-zinc-800);
         }
       }
     }
@@ -457,7 +463,7 @@ body {
   font-family: sans-serif, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei';
   color: var(--color-slate-900);
   @media (prefers-color-scheme: dark) {
-    background-color: var(--color-slate-950);
+    background-color: var(--color-zinc-950);
   }
   @media (prefers-color-scheme: dark) {
     color: var(--color-slate-100);

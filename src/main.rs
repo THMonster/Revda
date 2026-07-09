@@ -161,7 +161,7 @@ pub fn Main() -> Element {
                     }
                 }
                 TabList {
-                    class: "justify-self-center",
+                    class: "justify-self-center bg-bg-surface dark:bg-bg-surface-dark",
                     TabTrigger { value: "tab1".to_string(), index: 0usize, "收藏" }
                     TabTrigger { value: "tab2".to_string(), index: 1usize, "历史" }
                 }

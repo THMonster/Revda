@@ -18,8 +18,8 @@
 }
 
 [data-variant="default"] .dx-tabs-list {
-    background: var(--light, var(--primary-color-3))
-        var(--dark, var(--primary-color-5));
+    /* background: var(--light, var(--primary-color-3)) */
+    /*     var(--dark, var(--primary-color-5)); */
 }
 
 .dx-tabs-trigger {
@@ -32,8 +32,10 @@
 }
 
 [data-variant="default"] .dx-tabs-trigger[data-state="active"] {
-    background-color: var(--light, var(--primary-color))
-        var(--dark, var(--primary-color-6));
+    /* background-color: var(--light, var(--primary-color)) */
+    background-color: var(--light, var(--color-bg-base))
+        var(--dark, var(--color-bg-base-dark));
+        /* var(--dark, var(--primary-color-6)); */
     box-shadow: var(--dark, inset 0 0 0 1px var(--primary-color-7))
         var(--light, 0 1px 2px rgb(0 0 0 / 18%));
 }

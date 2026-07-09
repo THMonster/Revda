@@ -50,7 +50,7 @@ pub fn RoomCard(
             onclick: move |_| {
                 click.call();
             },
-            class: "flex flex-col gap-2 rounded-2xl hover:bg-gray-200 hover:dark:bg-gray-800 transition-all",
+            class: "flex flex-col gap-2 rounded-2xl hover:bg-bg-surface hover:dark:bg-bg-surface-dark transition-all",
             div {
                 class: "group/cover relative mx-2 mt-2",
                 if let Some(cover) = rv_room.cover().as_ref() {
@@ -66,7 +66,8 @@ pub fn RoomCard(
                 if rv_room.on_air()() {
                     div {
                         class: "absolute top-1 left-1 px-1 py-0 bg-bg-base/70 dark:bg-bg-base-dark/70",
-                        class: "rounded-md border border-primary/50 px text-primary text-xs backdrop-blur-sm",
+                        class: "rounded-md border border-primary/50 dark:border-primary-dark/50",
+                        class: "text-primary dark:text-primary-dark text-xs backdrop-blur-sm",
                         "直播中"
                     }
                 }

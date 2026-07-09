@@ -31,7 +31,8 @@
 
 .dx-input:hover:not(:disabled),
 .dx-input:focus-visible {
-  background: var(--light, var(--primary-color-4))
+  /* background: var(--light, var(--primary-color-4)) */
+  background: var(--light, var(--color-bg-surface))
     var(--dark, color-mix(in oklab, #FFFFFF26 50%, transparent));
   color: var(--secondary-color-1);
   outline: none;
