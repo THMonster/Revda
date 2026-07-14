@@ -2,15 +2,12 @@ mod components;
 mod config;
 mod sites;
 
-use std::time::Duration;
 
 use anyhow::bail;
 use dioxus::desktop::Config;
 use dioxus::desktop::WindowBuilder;
 use dioxus::prelude::*;
 use dioxus_icons::lucide::RefreshCcw;
-use dioxus_primitives::toast::ToastOptions;
-use dioxus_primitives::toast::use_toast;
 use futures::StreamExt;
 
 use components::button::*;
@@ -21,7 +18,6 @@ use components::tabs::*;
 use crate::components::button::Button;
 use crate::components::roomcard::CardType::History;
 use crate::components::roomcard::CardType::Saved;
-use crate::components::toast::ToastProvider;
 use crate::config::ConfigLoader;
 use crate::sites::Sites;
 use crate::sites::code_to_url_other;

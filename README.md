@@ -23,42 +23,22 @@ Linux平台下的弹幕直播播放工具。
 [![Screenshot.png](https://raw.githubusercontent.com/THMonster/Revda/master/pictures/s2.png)](https://raw.githubusercontent.com/THMonster/Revda/master/pictures/s2.png)
 
 ## Requirements
-* cmake (for build)
-* yarn (for build)
-* extra-cmake-modules (for build)
+* [just](https://github.com/casey/just) (for build)
+* [dioxus-cli](https://crates.io/crates/dioxus-cli) (for build)
 * a proper [rust](https://kaisery.github.io/trpl-zh-cn/ch01-01-installation.html) compiler with cargo (for build)
 * [mpv](https://github.com/mpv-player/mpv)
 * ffmpeg
-* webkit2gtk
+* webkit2gtk-4.1
+* libxdo-dev
 
 ## Installation
-
-### Archlinux
-
-#### [ArchlinuxCN](https://wiki.archlinux.org/index.php/Unofficial_user_repositories#archlinuxcn) repo
-
-```
-sudo pacman -S revda-git
-```
-Thanks for [@MarvelousBlack](https://github.com/MarvelousBlack)'s maintenance.
-
-#### AUR
-```
-paru -S revda-git # or any other aur helper
-```
-
 
 ### From source
 ```
 git clone https://github.com/THMonster/Revda.git --recursive
 cd Revda
-mkdir build
-cd ./build
-cmake -DCMAKE_BUILD_TYPE=Release ..
-# build revda without dmlive
-# cmake -DCMAKE_BUILD_TYPE=Release -DNODMLIVE=1 ..
-make
-sudo make install/fast
+just build-all
+sudo just install-all --prefix-dir /usr
 ```
 
 ## Usage
