@@ -28,8 +28,8 @@ Linux平台下的弹幕直播播放工具。
 * a proper [rust](https://kaisery.github.io/trpl-zh-cn/ch01-01-installation.html) compiler with cargo (for build)
 * [mpv](https://github.com/mpv-player/mpv)
 * ffmpeg
-* webkit2gtk-4.1
 * libxdo-dev
+* libwebkit2gtk-4.1-dev
 
 ## Installation
 

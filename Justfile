@@ -1,3 +1,6 @@
+default:
+	@just --list
+
 build-dmlive:
 	cd dmlive && cargo build --release
 
@@ -7,11 +10,11 @@ build-revda:
 build-all: build-revda build-dmlive
 
 [arg("dir", long="prefix-dir", short="d")]
-install-dmlive dir: build-dmlive
-	install -Dm755 dmlive/target/release/dmlive -t "{{dir}}/bin/"
+install-dmlive dir:
+	install -vDm755 dmlive/target/release/dmlive -t "{{dir}}/bin/"
 
 [arg("dir", long="prefix-dir", short="d")]
-install-revda dir: build-revda
+install-revda dir:
 	install -vDm 755 "target/dx/revda/release/linux/app/revda" -t "{{dir}}/bin/"
 	install -vDm 644 target/dx/revda/release/linux/app/assets/*.css -t "{{dir}}/lib/revda/assets/"
 	install -vDm 644 "misc/icon/revda.svg" -t "{{dir}}/share/icons/hicolor/scalable/apps"

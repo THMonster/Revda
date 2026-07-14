@@ -1,3 +1,4 @@
 [submodule "dmlive"]
 	path = dmlive
 	url = https://github.com/THMonster/dmlive.git
+	branch = dev
