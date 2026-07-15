@@ -8,8 +8,12 @@ edition = "2024"
 
 [dependencies]
 dioxus = { version = "0.7.9", features = [] }
-dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false }
+# dioxus = { git = "https://github.com/DioxusLabs/dioxus", branch = "main" }
+# dioxus-native = { git = "https://github.com/DioxusLabs/blitz", branch = "main", features = ["prelude"] }
+# dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false }
+# dioxus-primitives = { git = "https://github.com/DioxusLabs/components", branch = "main", default-features = false }
 dioxus-icons = "0.1"
+# dioxus-icons = { git = "https://github.com/DioxusLabs/dioxus-icons", branch = "0.8" }
 tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 reqwest = { version = "0.13", features = [ "json" ] }
@@ -28,6 +32,7 @@ default = ["desktop"]
 # The feature that are only required for the web = ["dioxus/web"] build target should be optional and only enabled in the web = ["dioxus/web"] feature
 web = ["dioxus/web"]
 # The feature that are only required for the desktop = ["dioxus/desktop"] build target should be optional and only enabled in the desktop = ["dioxus/desktop"] feature
+# desktop = ["dioxus/native"]
 desktop = ["dioxus/desktop"]
 # The feature that are only required for the mobile = ["dioxus/mobile"] build target should be optional and only enabled in the mobile = ["dioxus/mobile"] feature
 mobile = ["dioxus/mobile"]

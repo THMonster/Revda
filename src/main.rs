@@ -3,19 +3,15 @@ mod config;
 mod sites;
 
 use anyhow::bail;
-use dioxus::desktop::Config;
-use dioxus::desktop::WindowBuilder;
-use dioxus::desktop::use_window;
 use dioxus::prelude::*;
 use dioxus_icons::lucide::RefreshCcw;
 use futures::StreamExt;
 
-use components::button::*;
+// use components::button::*;
 use components::input::*;
 use components::roomcard::*;
-use components::tabs::*;
+use components::rvtabs::*;
 
-use crate::components::button::Button;
 use crate::components::roomcard::CardType::History;
 use crate::components::roomcard::CardType::Saved;
 use crate::config::ConfigLoader;
@@ -45,8 +41,8 @@ fn main() {
     // dioxus::launch(App);
     dioxus::LaunchBuilder::new()
         .with_cfg(desktop! {
-           Config::new().with_menu(None).with_window(
-               WindowBuilder::new().with_title("Revda").with_decorations(true)
+           dioxus::desktop::Config::new().with_menu(None).with_window(
+               dioxus::desktop::WindowBuilder::new().with_title("Revda").with_decorations(true)
            )
         })
         .launch(App);
@@ -68,8 +64,7 @@ pub fn Main() -> Element {
     let sites = use_signal(Sites::new);
     let mut rc_input = use_signal(String::new);
     let mut config = use_signal(ConfigLoader::new);
-    let window = use_window();
-
+    let window = dioxus::desktop::use_window();
 
     let saved_rooms = use_memo(move || {
         let mut ret: Vec<(usize, usize, bool)> = rv_rooms
@@ -141,7 +136,8 @@ pub fn Main() -> Element {
         div {
             tabindex: -1,
             autofocus: true,
-            onkeypress: move |e: KeyboardEvent| {
+            class: "outline-none",
+            onkeydown: move |e: KeyboardEvent| {
                 if e.key() == Key::Character("r".into()) && e.modifiers().alt()
                     && !e.modifiers().ctrl() && !e.modifiers().shift() {
                     refresh.call();
@@ -151,12 +147,8 @@ pub fn Main() -> Element {
                 }
             },
             Tabs {
-                class: "py-4 px-4",
-                gap: "1rem",
-                default_value: "tab1".to_string(),
-                horizontal: true,
                 div {
-                    class: "grid w-full items-center grid-cols-[1fr_auto_1fr]",
+                    class: "grid w-full px-4 py-2 items-center grid-cols-[1fr_auto_1fr]",
                     div {
                         Input {
                             oninput: move |e: FormEvent| { rc_input.set(e.value()) },
@@ -171,19 +163,16 @@ pub fn Main() -> Element {
                         }
                     }
                     TabList {
-                        class: "justify-self-center bg-bg-surface dark:bg-bg-surface-dark",
-                        TabTrigger { value: "tab1".to_string(), index: 0usize, "收藏" }
-                        TabTrigger { value: "tab2".to_string(), index: 1usize, "历史" }
+                        TabTrigger { index: 0usize, "收藏" }
+                        TabTrigger { index: 1usize, "历史" }
                     }
                     div {
                         class: "justify-self-end",
-                        Button {
+                        button {
+                            class: "p-2 border-text-primary/20 border-1 rounded-full hover:bg-bg-surface",
                             onclick: move |_| {
                                 refresh.call();
                             },
-                            variant: ButtonVariant::Outline,
-                            size: ButtonSize::Icon,
-                            border_radius: "50%",
                             RefreshCcw {
                                 size: "1rem",
                             }
@@ -192,10 +181,8 @@ pub fn Main() -> Element {
                 }
                 TabContent {
                     index: 0usize,
-                    value: "tab1".to_string(),
-                    padding: "0rem",
                     div {
-                        class: "grid grid-cols-[repeat(auto-fit,_minmax(16rem,_1fr))] gap-2",
+                        class: "grid grid-cols-[repeat(auto-fit,_minmax(16rem,_1fr))] gap-2 px-2",
                         for r in saved_rooms.iter().filter_map(|x| rv_rooms.get(x.0)) {
                             RoomCard {
                                 key: "{r.id()}",
@@ -209,10 +196,8 @@ pub fn Main() -> Element {
                 }
                 TabContent {
                     index: 1usize,
-                    value: "tab2".to_string(),
-                    padding: "0rem",
                     div {
-                        class: "grid grid-cols-[repeat(auto-fit,_minmax(16rem,_1fr))] gap-2",
+                        class: "grid grid-cols-[repeat(auto-fit,_minmax(16rem,_1fr))] gap-2 px-2",
                         for r in rv_rooms.iter().rev().filter(|x| *x.history().read()) {
                             RoomCard {
                                 key: "{r.id()}",

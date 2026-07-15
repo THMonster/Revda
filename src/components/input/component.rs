@@ -30,7 +30,9 @@ pub fn Input(
 ) -> Element {
     rsx! {
         input {
-            class: Styles::dx_input,
+            // class: Styles::dx_input,
+            class: "border-text-primary/20 border-1 rounded-md hover:bg-bg-surface",
+            class: "px-2 py-1 focus:outline-none",
             oninput: move |e| _ = oninput.map(|callback| callback(e)),
             onchange: move |e| _ = onchange.map(|callback| callback(e)),
             oninvalid: move |e| _ = oninvalid.map(|callback| callback(e)),
