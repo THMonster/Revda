@@ -3,18 +3,24 @@
 @theme inline {
 	--font-sans: sans-serif, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei';
 
-	--color-bg-base: var(--color-white);
-	--color-bg-surface: var(--color-gray-100);
-	--color-bg-base-dark: var(--color-zinc-950);
-	--color-bg-surface-dark: var(--color-zinc-800);
+	--color-bg-a: var(--color-white);
+	--color-bg-b: var(--color-gray-100);
+	--color-bg-c: var(--color-gray-200);
+	--color-bg-dark-a: var(--color-zinc-950);
+	--color-bg-dark-b: var(--color-zinc-800);
+	--color-bg-dark-c: var(--color-zinc-700);
 
 	--color-primary: var(--color-rose-400);
 	--color-primary-dark: var(--color-blue-400);
 
-	--color-text-primary: var(--color-slate-900);
-	--color-text-primary-dark: var(--color-slate-100);
+	--color-text-a: var(--color-slate-900);
+	--color-text-b: var(--color-gray-500);
+	--color-text-c: var(--color-gray-300);
+	--color-text-dark-a: var(--color-slate-100);
+	--color-text-dark-b: var(--color-zinc-400);
+	--color-text-dark-c: var(--color-zinc-600);
 }
 
 body {
-	@apply font-sans bg-bg-base dark:bg-bg-base-dark text-text-primary dark:text-text-primary-dark
+	@apply font-sans bg-bg-a dark:bg-bg-dark-a text-text-a dark:text-text-dark-a
 }

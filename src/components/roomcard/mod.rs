@@ -17,6 +17,7 @@ pub fn RoomCard(
     sort_rooms: Action<(), ()>,
     card_type: CardType,
 ) -> Element {
+    let mut cover_loaded = use_signal(|| false);
     let mut click = use_action(move || async move {
         let _ = tokio::process::Command::new("dmlive")
             .arg("--quiet")
@@ -50,22 +51,24 @@ pub fn RoomCard(
             onclick: move |_| {
                 click.call();
             },
-            class: "flex flex-col gap-2 rounded-2xl hover:bg-bg-surface hover:dark:bg-bg-surface-dark transition-all",
+            class: "flex flex-col gap-2 -mx-1 rounded-2xl hover:bg-bg-b hover:dark:bg-bg-dark-b transition-all",
             div {
                 class: "group/cover relative mx-2 mt-2",
-                if let Some(cover) = rv_room.cover().as_ref() {
-                    img {
-                        class: "object-cover aspect-16/10 w-full rounded-xl",
-                        src: "{cover}",
-                    }
-                } else {
-                    Skeleton {
-                        class: "aspect-16/10 rounded-xl w-full",
-                    }
+                Skeleton {
+                    class: if !cover_loaded() { "absolute aspect-16/10 rounded-xl w-full" } else { "opacity-0" },
+                }
+                img {
+                    class: "object-cover aspect-16/10 w-full rounded-xl",
+                    onload: move |_| cover_loaded.set(true),
+                    onerror: move |_| {
+                        cover_loaded.set(false);
+                        rv_room.cover().set(None);
+                    },
+                    src: rv_room.cover(),
                 }
                 if rv_room.on_air()() {
                     div {
-                        class: "absolute top-1 left-1 px-1 py-0 bg-bg-base/70 dark:bg-bg-base-dark/70",
+                        class: "absolute top-1 left-1 px-1 py-0 bg-bg-a/70 dark:bg-bg-dark-a/70",
                         class: "rounded-md border border-primary/50 dark:border-primary-dark/50",
                         class: "text-primary dark:text-primary-dark text-xs backdrop-blur-sm",
                         "直播中"
@@ -75,7 +78,7 @@ pub fn RoomCard(
                     class: "absolute flex bottom-1 right-1 gap-1 opacity-0 group-hover/cover:opacity-100 transition-all",
                     if card_type == CardType::History {
                         button {
-                            class: "bg-bg-base-dark/80 rounded-md p-1 hover:scale-110 transition-all",
+                            class: "bg-bg-dark-a/80 rounded-md p-1 hover:scale-110 transition-all",
                             onclick: move |e| {
                                 e.stop_propagation();
                                 save_room.call();
@@ -83,12 +86,12 @@ pub fn RoomCard(
                             Heart {
                                 size: "1.5rem",
                                 stroke_width: "1.5",
-                                class: "text-text-primary-dark",
+                                class: "text-text-dark-a",
                             }
                         }
                     }
                     button {
-                        class: "bg-bg-base-dark/80 rounded-md p-1 hover:scale-110 transition-all",
+                        class: "bg-bg-dark-a/80 rounded-md p-1 hover:scale-110 transition-all",
                         onclick: move |e| {
                             e.stop_propagation();
                             delete_room.call();
@@ -96,7 +99,7 @@ pub fn RoomCard(
                         Trash2 {
                             size: "1.5rem",
                             stroke_width: "1.5",
-                            class: "text-text-primary-dark",
+                            class: "text-text-dark-a",
                         }
                     }
                 }
@@ -114,7 +117,7 @@ pub fn RoomCard(
                     }
                 } else {
                     Skeleton { class: "w-full rounded-sm h-5 my-1" }
-                    Skeleton { class: "w-3/4 rounded-sm h-4 mt-1" }
+                    Skeleton { class: "w-3/4 rounded-sm h-4 my-0.5" }
                 }
             }
         }

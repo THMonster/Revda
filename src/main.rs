@@ -169,7 +169,8 @@ pub fn Main() -> Element {
                     div {
                         class: "justify-self-end",
                         button {
-                            class: "p-2 border-text-primary/20 border-1 rounded-full hover:bg-bg-surface",
+                            class: "p-2 border-text-c dark:border-text-dark-c border-1 rounded-full",
+                            class: "hover:bg-bg-b dark:hover:bg-bg-dark-b",
                             onclick: move |_| {
                                 refresh.call();
                             },
@@ -182,7 +183,7 @@ pub fn Main() -> Element {
                 TabContent {
                     index: 0usize,
                     div {
-                        class: "grid grid-cols-[repeat(auto-fit,_minmax(16rem,_1fr))] gap-2 px-2",
+                        class: "grid grid-cols-[repeat(auto-fit,_minmax(16rem,_1fr))] gap-2 px-3",
                         for r in saved_rooms.iter().filter_map(|x| rv_rooms.get(x.0)) {
                             RoomCard {
                                 key: "{r.id()}",
@@ -197,7 +198,7 @@ pub fn Main() -> Element {
                 TabContent {
                     index: 1usize,
                     div {
-                        class: "grid grid-cols-[repeat(auto-fit,_minmax(16rem,_1fr))] gap-2 px-2",
+                        class: "grid grid-cols-[repeat(auto-fit,_minmax(16rem,_1fr))] gap-2 px-3",
                         for r in rv_rooms.iter().rev().filter(|x| *x.history().read()) {
                             RoomCard {
                                 key: "{r.id()}",

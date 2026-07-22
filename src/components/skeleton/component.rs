@@ -5,15 +5,22 @@ use dioxus::prelude::*;
 struct Styles;
 
 #[component]
-pub fn Skeleton(#[props(extends=GlobalAttributes)] attributes: Vec<Attribute>) -> Element {
+pub fn Skeleton(
+    // class: &'static str,
+    class: String,
+    #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
+) -> Element {
     // let base = attributes!(div {
     //     class: Styles::dx_skeleton,
     // });
     // let merged = merge_attributes(vec![base, attributes]);
+    //
+
+    let class = format!("bg-bg-c dark:bg-bg-dark-c animate-pulse {}", class);
 
     rsx! {
         div {
-            class: "bg-bg-surface",
+            class,
             ..attributes
         }
     }
