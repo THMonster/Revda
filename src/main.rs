@@ -148,7 +148,7 @@ pub fn Main() -> Element {
             },
             Tabs {
                 div {
-                    class: "grid w-full px-4 py-2 items-center grid-cols-[1fr_auto_1fr]",
+                    class: "grid w-full px-4 py-2 items-center grid-cols-[1fr_auto_1fr] outline-none",
                     div {
                         Input {
                             oninput: move |e: FormEvent| { rc_input.set(e.value()) },
