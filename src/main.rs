@@ -146,6 +146,9 @@ pub fn Main() -> Element {
                     window.close();
                 }
             },
+            div {
+                class: "fixed bg-primary top-0 left-0 z-9999 w-1/2 h-0.5 animate-progress",
+            }
             Tabs {
                 div {
                     class: "grid w-full px-4 py-2 items-center grid-cols-[1fr_auto_1fr]",
