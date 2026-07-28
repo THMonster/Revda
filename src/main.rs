@@ -136,7 +136,7 @@ pub fn Main() -> Element {
         div {
             tabindex: -1,
             autofocus: true,
-            class: "outline-none",
+            class: "focus:outline-none",
             onkeydown: move |e: KeyboardEvent| {
                 if e.key() == Key::Character("r".into()) && e.modifiers().alt()
                     && !e.modifiers().ctrl() && !e.modifiers().shift() {
@@ -148,7 +148,7 @@ pub fn Main() -> Element {
             },
             Tabs {
                 div {
-                    class: "grid w-full px-4 py-2 items-center grid-cols-[1fr_auto_1fr] outline-none",
+                    class: "grid w-full px-4 py-2 items-center grid-cols-[1fr_auto_1fr]",
                     div {
                         Input {
                             oninput: move |e: FormEvent| { rc_input.set(e.value()) },
