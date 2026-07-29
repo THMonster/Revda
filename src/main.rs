@@ -61,6 +61,7 @@ fn App() -> Element {
 #[component]
 pub fn Main() -> Element {
     let mut rv_rooms = use_store(|| Vec::<RvRoom>::new());
+    let mut refresh_progress = use_signal(|| 0usize);
     let sites = use_signal(Sites::new);
     let mut rc_input = use_signal(String::new);
     let mut config = use_signal(ConfigLoader::new);
@@ -90,7 +91,15 @@ pub fn Main() -> Element {
                 anyhow::Ok(())
             });
         }
-        while let Some(_res) = tasks.next().await {}
+        let mut finished = 1;
+        while let Some(_res) = tasks.next().await {
+            finished += 1;
+            if finished > rv_rooms.len() {
+                refresh_progress.set(0);
+            } else {
+                refresh_progress.set(finished * 100 / rv_rooms.len());
+            }
+        }
         anyhow::Ok(())
     });
 
@@ -147,7 +156,8 @@ pub fn Main() -> Element {
                 }
             },
             div {
-                class: "fixed bg-primary top-0 left-0 z-9999 w-1/2 h-0.5 animate-progress",
+                class: "fixed bg-primary dark:bg-primary-dark top-0 left-0 z-9999 h-0.5 transition-all ease-in-out",
+                width: "{refresh_progress}%",
             }
             Tabs {
                 div {

@@ -32,6 +32,7 @@ pub fn Input(
         input {
             class: "border-text-c dark:border-text-dark-c border-1 rounded-md",
             class: "hover:bg-bg-b dark:hover:bg-bg-dark-b px-2 py-1 focus:outline-none",
+            class: "w-2/3 min-w-34 max-w-60",
             oninput: move |e| _ = oninput.map(|callback| callback(e)),
             onchange: move |e| _ = onchange.map(|callback| callback(e)),
             oninvalid: move |e| _ = oninvalid.map(|callback| callback(e)),

@@ -19,15 +19,6 @@
 	--color-text-dark-a: var(--color-slate-100);
 	--color-text-dark-b: var(--color-zinc-400);
 	--color-text-dark-c: var(--color-zinc-600);
-
-	--animate-progress: wiggle 1s ease-in-out;
-	@keyframes progress {
-		0%   {width: 0%;}
-		25%  {width: 22%;}
-		50%  {width: 55%;}
-		75%  {width: 83%;}
-		100% {width:100%;}
-	}
 }
 
 body {
