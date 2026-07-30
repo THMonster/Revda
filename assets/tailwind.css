@@ -216,8 +216,8 @@
   .left-1 {
     left: calc(var(--spacing) * 1);
   }
-  .z-9999 {
-    z-index: 9999;
+  .z-9900 {
+    z-index: 9900;
   }
   .-mx-1 {
     margin-inline: calc(var(--spacing) * -1);
@@ -302,6 +302,9 @@
   }
   .animate-pulse {
     animation: var(--animate-pulse);
+  }
+  .animate-startup {
+    animation: startup 0.7s ease-in-out both;
   }
   .cursor-pointer {
     cursor: pointer;
@@ -496,6 +499,10 @@
   .ease-in-out {
     --tw-ease: var(--ease-in-out);
     transition-timing-function: var(--ease-in-out);
+  }
+  .outline-none {
+    --tw-outline-style: none;
+    outline-style: none;
   }
   .group-hover\/cover\:opacity-100 {
     &:is(:where(.group\/cover):hover *) {
@@ -830,6 +837,17 @@ body {
 @keyframes pulse {
   50% {
     opacity: 0.5;
+  }
+}
+@keyframes startup {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }
 @layer properties {

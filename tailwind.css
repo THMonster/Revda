@@ -19,6 +19,19 @@
 	--color-text-dark-a: var(--color-slate-100);
 	--color-text-dark-b: var(--color-zinc-400);
 	--color-text-dark-c: var(--color-zinc-600);
+
+	--animate-startup: startup 0.7s ease-in-out both;
+	@keyframes startup {
+		0% {
+			opacity: 0;
+		}
+		20% {
+			opacity: 0;
+		}
+		100% {
+			opacity: 1;
+		}
+	}
 }
 
 body {

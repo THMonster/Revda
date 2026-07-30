@@ -6,14 +6,13 @@ use anyhow::bail;
 use dioxus::prelude::*;
 use dioxus_icons::lucide::RefreshCcw;
 use futures::StreamExt;
+use std::time::Duration;
 
-// use components::button::*;
-use components::input::*;
-use components::roomcard::*;
-use components::rvtabs::*;
-
+use crate::components::input::*;
 use crate::components::roomcard::CardType::History;
 use crate::components::roomcard::CardType::Saved;
+use crate::components::roomcard::*;
+use crate::components::rvtabs::*;
 use crate::config::ConfigLoader;
 use crate::sites::Sites;
 use crate::sites::code_to_url_other;
@@ -52,8 +51,8 @@ fn main() {
 fn App() -> Element {
     rsx! {
         // document::Link { rel: "icon", href: FAVICON }
+        // document::Link { rel: "stylesheet", href: COMPONENTS_CSS }
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
-        document::Link { rel: "stylesheet", href: COMPONENTS_CSS }
         Main {}
     }
 }
@@ -91,13 +90,13 @@ pub fn Main() -> Element {
                 anyhow::Ok(())
             });
         }
-        let mut finished = 1;
+        let mut finished = 0;
         while let Some(_res) = tasks.next().await {
             finished += 1;
-            if finished > rv_rooms.len() {
+            refresh_progress.set(finished * 100 / rv_rooms.len());
+            if finished == rv_rooms.len() {
+                tokio::time::sleep(Duration::from_millis(500)).await;
                 refresh_progress.set(0);
-            } else {
-                refresh_progress.set(finished * 100 / rv_rooms.len());
             }
         }
         anyhow::Ok(())
@@ -143,9 +142,7 @@ pub fn Main() -> Element {
 
     rsx! {
         div {
-            tabindex: -1,
-            autofocus: true,
-            class: "focus:outline-none",
+            class: "animate-startup",
             onkeydown: move |e: KeyboardEvent| {
                 if e.key() == Key::Character("r".into()) && e.modifiers().alt()
                     && !e.modifiers().ctrl() && !e.modifiers().shift() {
@@ -156,8 +153,11 @@ pub fn Main() -> Element {
                 }
             },
             div {
-                class: "fixed bg-primary dark:bg-primary-dark top-0 left-0 z-9999 h-0.5 transition-all ease-in-out",
+                class: "fixed bg-primary dark:bg-primary-dark top-0 left-0 z-9900 h-0.5 transition-all ease-in-out",
+                class: "outline-none",
                 width: "{refresh_progress}%",
+                tabindex: -1,
+                autofocus: true,
             }
             Tabs {
                 div {
