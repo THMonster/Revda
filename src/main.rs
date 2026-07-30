@@ -34,7 +34,7 @@ struct RvRoom {
 
 // const FAVICON: Asset = asset!("/assets/favicon.ico");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
-const COMPONENTS_CSS: Asset = asset!("/assets/dx-components-theme.css");
+// const COMPONENTS_CSS: Asset = asset!("/assets/dx-components-theme.css");
 
 fn main() {
     // dioxus::launch(App);

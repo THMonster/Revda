@@ -21,17 +21,34 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="21.445374"
-     inkscape:cx="5.898708"
-     inkscape:cy="12.636758"
+     inkscape:zoom="132.75714"
+     inkscape:cx="5.8377274"
+     inkscape:cy="4.7003122"
      inkscape:window-width="1440"
      inkscape:window-height="868"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg8" />
+     inkscape:current-layer="g6" />
   <defs
      id="defs4">
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect1"
+       is_visible="true"
+       lpeversion="1"
+       nodesatellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1 @ F,0,0,1,0,0,0,1"
+       radius="0"
+       unit="px"
+       method="auto"
+       mode="F"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
     <linearGradient
        id="title"
        x1="5.9696201"
@@ -104,6 +121,16 @@
        fill="url(#body)"
        id="rect4"
        style="fill:url(#body);stroke-width:0.941404" />
+    <rect
+       x="14.121557"
+       y="19.162895"
+       width="176"
+       height="155.97865"
+       rx="14"
+       fill="url(#body)"
+       id="rect4-5"
+       style="opacity:0.200441;fill:#000000;fill-opacity:1;stroke-width:0.941404"
+       inkscape:label="rect6" />
     <!-- Title Bar -->
     <path
        d="M 14,25.802599 C 14,19.058257 20,14 28,14 h 148 c 8,0 14,5.058257 14,11.802599 V 40.977368 H 14 Z"
@@ -118,6 +145,27 @@
        style="display:none;fill:#4d4d4d;stroke-width:0.959959"
        inkscape:label="path5" />
     <!-- Window Buttons -->
+    <circle
+       cx="30.272202"
+       cy="29.549919"
+       r="4.5"
+       fill="#d7d7f2"
+       id="circle4-8"
+       style="opacity:0.2;fill:#000000" />
+    <circle
+       cx="45.288692"
+       cy="29.549919"
+       r="4.5"
+       fill="#d7d7f2"
+       id="circle4-8-7"
+       style="opacity:0.2;fill:#000000" />
+    <circle
+       cx="60.283886"
+       cy="29.549919"
+       r="4.5"
+       fill="#d7d7f2"
+       id="circle4-8-6"
+       style="opacity:0.2;fill:#000000" />
     <circle
        cx="30.296021"
        cy="27.488684"
@@ -137,6 +185,11 @@
        fill="#d7d7f2"
        id="circle6" />
   </g>
+  <path
+     d="m 4.3654386,11.143034 c 0,-0.42141 0.488182,-0.632115 0.976364,-0.316058 l 4.149548,2.528457 c 0.488182,0.316057 0.488182,0.948172 0,1.264229 l -4.149548,2.528458 c -0.488182,0.316058 -0.976364,0.105352 -0.976364,-0.316058 z"
+     fill="#f5f5f5"
+     id="path6-0"
+     style="opacity:0.2;fill:#000000;stroke-width:0.113391" />
   <!-- Play -->
   <path
      d="m 4.3624344,10.480436 c 0,-0.42141 0.488182,-0.6321146 0.976364,-0.316058 l 4.149548,2.528457 c 0.488182,0.316057 0.488182,0.948172 0,1.264229 l -4.149548,2.528458 c -0.488182,0.316058 -0.976364,0.105352 -0.976364,-0.316058 z"
@@ -144,6 +197,15 @@
      id="path6"
      style="stroke-width:0.113391" />
   <!-- Pills -->
+  <rect
+     x="12.003141"
+     y="9.9323101"
+     width="6.3344541"
+     height="1.8427502"
+     rx="0.9213751"
+     fill="#8ed5cc"
+     id="rect6-3"
+     style="opacity:0.200074;fill:#000000;stroke-width:0.115172" />
   <rect
      x="11.998562"
      y="9.4279156"
@@ -154,6 +216,15 @@
      id="rect6"
      style="stroke-width:0.115172" />
   <rect
+     x="13.85847"
+     y="13.1154"
+     width="6.6799998"
+     height="1.8427502"
+     rx="0.9213751"
+     fill="#f0b247"
+     id="rect7-5"
+     style="opacity:0.2;fill:#000000;stroke-width:0.115172" />
+  <rect
      x="13.841312"
      y="12.652727"
      width="6.6799703"
@@ -162,6 +233,15 @@
      fill="#f0b247"
      id="rect7"
      style="stroke-width:0.115172" />
+  <rect
+     x="10.846175"
+     y="16.334219"
+     width="5.6434226"
+     height="1.8427502"
+     rx="0.9213751"
+     fill="#af82e8"
+     id="rect8-2"
+     style="opacity:0.2;fill:#000000;stroke-width:0.115172" />
   <rect
      x="10.846842"
      y="15.877541"
@@ -188,4 +268,11 @@
      fill="#f4f4f4"
      id="text8"
      style="display:none;stroke-width:0.111198">LIVE</text>
+  <path
+     d="M 1.963165,4.6932631 C 1.9626582,3.9311621 2.6568495,3.3595861 3.5817635,3.3595861 H 20.692657 c 0.924913,0 1.618597,0.571576 1.618597,1.333677 v 0.579198 C 22.311254,5.2724611 22.019232,4 20.692407,4 H 3.5819556 C 2.2708361,4 1.9635502,5.2724611 1.9635502,5.2724611 Z"
+     fill="url(#title)"
+     id="path4-9"
+     style="opacity:0.198234;fill:#ffffff;fill-opacity:1;stroke-width:0.104946"
+     inkscape:label="path4-1"
+     sodipodi:nodetypes="ssssczzcs" />
 </svg>
