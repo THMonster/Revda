@@ -21,15 +21,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="132.75714"
-     inkscape:cx="5.8377274"
-     inkscape:cy="4.7003122"
+     inkscape:zoom="7.8630744"
+     inkscape:cx="7.6941914"
+     inkscape:cy="-1.3989439"
      inkscape:window-width="1440"
      inkscape:window-height="868"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="g6" />
+     inkscape:current-layer="svg8" />
   <defs
      id="defs4">
     <inkscape:path-effect
@@ -58,9 +58,10 @@
        gradientTransform="scale(2.3452079,0.42640143)"
        gradientUnits="userSpaceOnUse">
       <stop
-         offset="0%"
+         offset="0"
          stop-color="#8B80F5"
-         id="stop1" />
+         id="stop1"
+         style="stop-color:#ef4444;stop-opacity:1;" />
       <stop
          offset="100%"
          stop-color="#7468D7"
@@ -120,7 +121,7 @@
        rx="14"
        fill="url(#body)"
        id="rect4"
-       style="fill:url(#body);stroke-width:0.941404" />
+       style="fill:#3b4054;stroke-width:0.941404;fill-opacity:1" />
     <rect
        x="14.121557"
        y="19.162895"
@@ -136,8 +137,9 @@
        d="M 14,25.802599 C 14,19.058257 20,14 28,14 h 148 c 8,0 14,5.058257 14,11.802599 V 40.977368 H 14 Z"
        fill="url(#title)"
        id="path4"
-       style="fill:url(#linearGradient10);stroke-width:0.918174"
+       style="fill:#e34052;stroke-width:0.918174;fill-opacity:1"
        inkscape:label="path4" />
+    <!-- style="fill:url(#linearGradient10);stroke-width:0.918174" -->
     <path
        d="m 189.96376,157.03254 c 0,7.37217 -6,12.9013 -14,12.9013 H 27.963753 c -8,0 -14,-5.52913 -14,-12.9013 V 140.44516 H 189.96376 Z"
        fill="url(#title)"
@@ -195,7 +197,7 @@
      d="m 4.3624344,10.480436 c 0,-0.42141 0.488182,-0.6321146 0.976364,-0.316058 l 4.149548,2.528457 c 0.488182,0.316057 0.488182,0.948172 0,1.264229 l -4.149548,2.528458 c -0.488182,0.316058 -0.976364,0.105352 -0.976364,-0.316058 z"
      fill="#f5f5f5"
      id="path6"
-     style="stroke-width:0.113391" />
+     style="stroke-width:0.113391;fill:#93bef1;fill-opacity:1" />
   <!-- Pills -->
   <rect
      x="12.003141"
@@ -272,7 +274,7 @@
      d="M 1.963165,4.6932631 C 1.9626582,3.9311621 2.6568495,3.3595861 3.5817635,3.3595861 H 20.692657 c 0.924913,0 1.618597,0.571576 1.618597,1.333677 v 0.579198 C 22.311254,5.2724611 22.019232,4 20.692407,4 H 3.5819556 C 2.2708361,4 1.9635502,5.2724611 1.9635502,5.2724611 Z"
      fill="url(#title)"
      id="path4-9"
-     style="opacity:0.198234;fill:#ffffff;fill-opacity:1;stroke-width:0.104946"
+     style="opacity:0.1;fill:#ffffff;fill-opacity:1;stroke-width:0.104946"
      inkscape:label="path4-1"
      sodipodi:nodetypes="ssssczzcs" />
 </svg>

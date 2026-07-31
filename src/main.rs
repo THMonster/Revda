@@ -142,6 +142,7 @@ pub fn Main() -> Element {
 
     rsx! {
         div {
+            opacity: 0,
             class: "animate-startup",
             onkeydown: move |e: KeyboardEvent| {
                 if e.key() == Key::Character("r".into()) && e.modifiers().alt()
