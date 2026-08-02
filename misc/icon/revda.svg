@@ -21,9 +21,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="7.8630744"
-     inkscape:cx="7.6941914"
-     inkscape:cy="-1.3989439"
+     inkscape:zoom="9.7836125"
+     inkscape:cx="20.493453"
+     inkscape:cy="14.003008"
      inkscape:window-width="1440"
      inkscape:window-height="868"
      inkscape:window-x="0"
@@ -197,7 +197,7 @@
      d="m 4.3624344,10.480436 c 0,-0.42141 0.488182,-0.6321146 0.976364,-0.316058 l 4.149548,2.528457 c 0.488182,0.316057 0.488182,0.948172 0,1.264229 l -4.149548,2.528458 c -0.488182,0.316058 -0.976364,0.105352 -0.976364,-0.316058 z"
      fill="#f5f5f5"
      id="path6"
-     style="stroke-width:0.113391;fill:#93bef1;fill-opacity:1" />
+     style="stroke-width:0.113391;fill:#f5f5f5;fill-opacity:1" />
   <!-- Pills -->
   <rect
      x="12.003141"
@@ -216,7 +216,7 @@
      rx="0.9213751"
      fill="#8ed5cc"
      id="rect6"
-     style="stroke-width:0.115172" />
+     style="stroke-width:0.115172;fill:#85d97f;fill-opacity:1" />
   <rect
      x="13.85847"
      y="13.1154"
@@ -234,7 +234,7 @@
      rx="0.9213751"
      fill="#f0b247"
      id="rect7"
-     style="stroke-width:0.115172" />
+     style="stroke-width:0.115172;fill:#eb9031;fill-opacity:1" />
   <rect
      x="10.846175"
      y="16.334219"
